@@ -1,0 +1,541 @@
+%!TEX root = forallxyyc.tex
+\chapter[Quick reference]{Quick reference}
+%\pagestyle{plain}
+\section{Characteristic truth tables}
+\label{app.CharacteristicTTs}
+
+\begin{tabular}{c|c}
+\metav{A} & \enot\metav{A}\\
+\hline
+T & F\\
+F & T \\
+\phantom{.}\\
+\phantom{.}
+\end{tabular}
+\hfill
+\begin{tabular}{c c|c|c|c|c}
+\metav{A} & \metav{B} & $\metav{A}\eand\metav{B}$ & $\metav{A}\eor\metav{B}$ & $\metav{A}\eif\metav{B}$ & $\metav{A}\eiff\metav{B}$\\
+\hline
+T & T & T & T & T & T\\
+T & F & F & T & F & F\\
+F & T & F & T & T & F\\
+F & F & F & F & T & T
+\end{tabular}
+
+
+\vfill
+
+\section{Symbolization}
+\begin{center}
+\label{app.symbolization}
+\begin{tabular*}{\textwidth}{rl}
+\multicolumn{2}{c}{\textsc{Sentential Connectives}}\\ \\
+It is not the case that $P$ & $\enot P$\\
+Either $P$ or $Q$ & $(P \eor Q)$\\
+Neither $P$ nor $Q$ & $\enot(P \eor Q)$\ or \ $(\enot P \eand \enot Q)$\\
+Both $P$ and $Q$ & $(P \eand Q)$\\
+If $P$ then $Q$ & $(P \eif Q)$\\
+$P$ only if $Q$ & $(P \eif Q)$\\
+$P$ if and only if $Q$ & $(P \eiff Q)$\\
+$P$ unless $Q$ & $(\enot Q \eif P)$ or $(P \eor Q)$\\[12pt]
+\multicolumn{2}{c}{\label{SymbolizingPredicates}\textsc{Predicates}}\\ \\
+All $F$s are $G$s & $\forall x(\atom{F}{x} \eif \atom{G}{x})$\\
+Some $F$s are $G$s & $\exists x(\atom{F}{x} \eand \atom{G}{x})$\\
+Not all $F$s are $G$s & $\enot\forall x(\atom{F}{x} \eif \atom{G}{x})$\ or\\
+& $\exists x(\atom{F}{x} \eand \enot \atom{G}{x})$\\
+No $F$s are $G$s & $\forall x(\atom{F}{x} \eif\enot \atom{G}{x})$\ or\\
+& $\enot\exists x(\atom{F}{x} \eand \atom{G}{x})$\\
+Only $F$s are $G$s & $\forall x(\atom{G}{x} \eif \atom{F}{x})$\\
+& $\enot\exists x(\enot\atom{F}{x} \eand \atom{G}{x})$\\[12pt]
+\multicolumn{2}{c}{\textsc{Identity}}\\ \\
+Only $c$ is $G$ & $\forall x(\atom{G}{x} \eiff x=c)$\\
+Everything other &\\ than $c$ 
+is $G$ & $\forall x(\enot\, {x = c} \eif \atom{G}{x} )$\\
+Everything \\except $c$ 
+ is $G$ & $\forall x(\enot\, {x = c} \eiff \atom{G}{x} )$\\
+%$j$ is more $R$ than anyone else. & $\forall x(x\neq j \eif Rjx)$\\
+The $F$ is $G$ & $\exists x(\atom{F}{x} \eand \forall y(\atom{F}{y} \eif x=y) \eand \atom{G}{x} )$\\
+It is not the case \\ that
+ the $F$ is $G$ & $\enot\exists x(\atom{F}{x} \eand \forall y(\atom{F}{y} \eif x=y) \eand \atom{G}{x} )$\\
+The $F$ is non-$G$ & $\exists x(\atom{F}{x} \eand \forall y(\atom{F}{y} \eif x=y) \eand \enot \atom{G}{x} )$
+\end{tabular*}
+\end{center}
+
+
+
+
+
+
+% BEGIN: symbolizing cardinality
+
+\newpage
+\section{Using identity to symbolize quantities}
+
+\subsection*{There are at least \blank\ $F$s.}
+\label{summary.atleast}
+
+
+\ifHTMLtarget
+\begin{tabular*}{\textwidth}{rl}
+	one & $\exists x\,\atom{F}{x}$\\
+	two & $\exists x_1\exists x_2(\atom{F}{x_1} \eand \atom{F}{x_2}
+	\eand \enot x_1  = x_2)$\\
+	three & $\exists x_1\exists x_2\exists x_3(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \enot x_1 = x_2 \eand\enot x_1 = x_3 \eand \enot x_2 = x_3)$\\
+	four & $\exists x_1\exists x_2\exists x_3\exists x_4 (\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \atom{F}{x_4} \eand \enot x_1 = x_2 \eand \enot x_1 = x_3 \eand \enot x_1 = x_4 \eand \enot x_2 = x_3 \eand \enot x_2 = x_4 \eand \enot x_3 = x_4)$\\
+	$n$ & $\exists x_1\ldots\exists x_n(\atom{F}{x_1} \eand \ldots \eand \atom{F}{x_n} \eand \enot x_1 = x_2 \eand\ldots\eand \enot x_{n-1} = x_n)$ 
+\end{tabular*}
+\else
+\begin{tabular*}{\textwidth}{rl}
+	one & $\exists x\,\atom{F}{x}$\\
+	two & $\exists x_1\exists x_2(\atom{F}{x_1} \eand \atom{F}{x_2}
+	\eand \enot x_1  = x_2)$\\
+	three & $\exists x_1\exists x_2\exists x_3(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand {}$\\
+	& \quad$\enot x_1 = x_2 \eand\enot x_1 = x_3 \eand \enot x_2 = x_3)$\\
+	four & $\exists x_1\exists x_2\exists x_3\exists x_4 (\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \atom{F}{x_4} \eand {}$\\
+	& \quad $\enot x_1 = x_2 \eand \enot x_1 = x_3 \eand \enot x_1 = x_4 \eand {}$\\
+	& \qquad$ \enot x_2 = x_3 \eand \enot x_2 = x_4 \eand \enot x_3 = x_4)$\\
+	$n$ & $\exists x_1\ldots\exists x_n(\atom{F}{x_1} \eand \ldots \eand \atom{F}{x_n} \eand {}$\\
+	& \quad$\enot x_1 = x_2 \eand\ldots\eand \enot x_{n-1} = x_n)$ 
+\end{tabular*}
+\fi
+
+\subsection*{There are at most \blank\ $F$s.}
+\label{summary.atmost}
+
+One way to say `there are at most $n$ $F$s' is to put a negation sign in front of the symbolization for `there are at least $n+1$ $F$s'. Equivalently, we can offer:
+
+\noindent
+\ifHTMLtarget
+\begin{tabular*}{\textwidth}{rl}
+	one & $\forall x_1\forall x_2\bigl[(\atom{F}{x_1} \eand
+	\atom{F}{x_2}) \eif x_1=x_2\bigr]$\\
+	two & $\forall x_1\forall x_2\forall x_3\bigl[(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3}) \eif (x_1=x_2 \eor x_1=x_3 \eor x_2=x_3)\bigr]$\\
+	three & $\forall x_1\forall x_2\forall x_3\forall x_4\bigl[(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \atom{F}{x_4}) \eif (x_1=x_2 \eor x_1=x_3 \eor x_1=x_4 \eor x_2=x_3 \eor x_2=x_4 \eor x_3=x_4)\bigr]$\\
+	$n$ & $\forall x_1\ldots\forall x_{n+1} \bigl[(\atom{F}{x_1} \eand \ldots \eand \atom{F}{x_{n+1}}) \eif (x_1=x_2 \eor \ldots \eor x_n=x_{n+1})\bigr]$ 
+\end{tabular*}
+\else
+\begin{tabular*}{\textwidth}{rl}
+	one & $\forall x_1\forall x_2\bigl[(\atom{F}{x_1} \eand
+	\atom{F}{x_2}) \eif x_1=x_2\bigr]$\\
+	two & $\forall x_1\forall x_2\forall x_3\bigl[(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3}) \eif {}$\\ & \quad$(x_1=x_2 \eor x_1=x_3 \eor x_2=x_3)\bigr]$\\
+	three & $\forall x_1\forall x_2\forall x_3\forall x_4\bigl[(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \atom{F}{x_4}) \eif {}$\\
+	& \quad$(x_1=x_2 \eor x_1=x_3 \eor x_1=x_4 \eor {}$\\
+	& \qquad$x_2=x_3 \eor x_2=x_4 \eor x_3=x_4)\bigr]$\\
+	$n$ & $\forall x_1\ldots\forall x_{n+1}
+	\bigl[(\atom{F}{x_1} \eand \ldots \eand \atom{F}{x_{n+1}}) \eif {}$\\
+	& \quad$(x_1=x_2 \eor \ldots \eor x_n=x_{n+1})\bigr]$ 
+\end{tabular*}
+\fi
+
+
+\subsection*{There are exactly \blank\ $F$s.}
+\label{summary.exactly}
+
+One way to say `there are exactly $n$ $F$s' is to conjoin two of the symbolizations above and say `there are at least $n$ $F$s and there are at most $n$ $F$s.' The following equivalent formulas are shorter:
+
+\noindent
+\ifHTMLtarget
+\begin{tabular*}{\textwidth}{rl}
+	zero & $\forall x\,\enot \atom{F}{x}$\\
+	one & $\exists x\bigl[\atom{F}{x} \eand \forall y(\atom{F}{y} \eif x = y)\bigr]$\\
+	two & $\exists x_1\exists x_2\bigl[\atom{F}{x_1} \eand \atom{F}{x_2} \eand \enot x_1 = x_2 \eand \forall y\bigl(\atom{F}{y} \eif (y= x_1 \eor y = x_2)\bigr) \bigr]$\\
+	three & $\exists x_1\exists x_2\exists x_3\bigl[\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand \enot x_1 =  x_2 \eand \enot  x_1 = x_3 \eand \enot x_2 = x_3 \eand \forall y\bigl(\atom{F}{y} \eif (y = x_1 \eor y = x_2 \eor y =  x_3)\bigr) \bigr]$\\
+	$n$ & $\exists x_1\ldots\exists x_n\bigl[\atom{F}{x_1} \eand\ldots\eand \atom{F}{x_n}  \eand \enot x_1 = x_2 \eand\ldots\eand \enot x_{n-1}= x_n \eand \forall y\bigl(\atom{F}{y} \eif (y= x_1 \eor \ldots \eor y= x_n)\bigr)\bigr]$ 
+\end{tabular*}
+\else
+\begin{tabular*}{\textwidth}{rl}
+	zero & $\forall x\,\enot \atom{F}{x}$\\
+	one & $\exists x\bigl[\atom{F}{x} \eand \forall y(\atom{F}{y} \eif x = y)\bigr]$\\
+	two & $\exists x_1\exists x_2\bigl[\atom{F}{x_1} \eand \atom{F}{x_2} \eand {}$\\
+	& \quad$\enot x_1 = x_2 \eand \forall y\bigl(\atom{F}{y} \eif (y= x_1 \eor y = x_2)\bigr) \bigr]$\\
+	three & $\exists x_1\exists x_2\exists x_3\bigl[\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand {}$\\
+	& \quad$\enot x_1 =  x_2 \eand \enot  x_1 = x_3 \eand \enot x_2 = x_3 \eand {}$\\
+	& \qquad$\forall y\bigl(\atom{F}{y} \eif (y = x_1 \eor y = x_2 \eor y =  x_3)\bigr) \bigr]$\\
+	$n$ & $\exists x_1\ldots\exists x_n\bigl[\atom{F}{x_1} \eand\ldots\eand \atom{F}{x_n}  \eand {}$\\
+	& \quad$\enot x_1 = x_2 \eand\ldots\eand \enot x_{n-1}= x_n \eand {}$\\
+	& \qquad$\forall y\bigl(\atom{F}{y} \eif (y= x_1 \eor \ldots \eor y= x_n)\bigr)\bigr]$ 
+\end{tabular*}
+\fi
+%\item[one] $\exists x\forall y\bigl[\atom{F}{x} \eand (\atom{F}{y} \eif y = x)\bigr]$
+%\item[two] $\exists x\exists y\forall z\Bigl(\atom{F}{x} \eand \atom{F}{y} \eand \bigl[\atom{F}{z} \eif (z=x \eor z=y)\bigr] \eand x \neq y\Bigr)$
+%\item[three] $\exists x_1\exists x_2\exists x_3\forall y\Bigl(\atom{F}{x_1} \eand \atom{F}{x_2} \eand \atom{F}{x_3} \eand [\atom{F}{y} \eif (y=x_1 \eor y=x_2 \eor y=x_3)] \eand x_1 \neq x_2 \eand x_1 \neq x_3 \eand x_2 \neq x_3\Bigr)$
+%\item[n] $\exists x_1\cdots\exists x_n\forall y\Bigl(\atom{F}{x_1} \eand \cdots \eand \atom{F}{x_n} \eand \bigl[\atom{F}{y} \eif (y=x_1 \eor \cdots \eor y=x_n)\bigr] \eand x_1 \neq x_2 \eand\cdots\eand x_{n-1}\neq x_n\Bigr)$ 
+
+
+\label{ProofRules}
+\newpage\section{Basic deduction rules for TFL}
+
+% \mathem is an empty box the same width as $m$; used to align rules
+% properly
+\newlength{\mathemwd}
+\settowidth{\mathemwd}{\mbox{\small$m$}}
+\def\mathem{{\hbox to\mathemwd{}}}
+
+% If compiling to PDF, make all the rules small(er) and avoid left margin
+\ifHTMLtarget\else
+% \renewenvironment{fitchproof}
+% 	{\noindent\par\noindent\small$\begin{nd}}
+% 	{\end{nd}$\noindent\normalsize\ignorespacesafterend}
+% 
+\renewenvironment{fitchproof}[1][]
+  {\begin{flushleft}\small\begin{nd}[#1]}
+  {\end{nd}\end{flushleft}}
+\fi
+%{\LARGE \textbf{Basic Rules of Proof}}
+\begin{multicols}{2}
+\subsection*{Reiteration}
+
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}}
+	\have[\ ]{c}{\metav{A}} \by{R}{a}
+\end{fitchproof}
+
+\subsection*{Conjunction}
+
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}}
+	\have[n]{b}{\metav{B}}
+	\have[\ ]{c}{\metav{A}\eand\metav{B}} \ai{a, b}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eand\metav{B}}
+	\have[\ ]{a}{\metav{A}} \ae{ab}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eand\metav{B}}
+	\have[\ ]{b}{\metav{B}} \ae{ab}
+\end{fitchproof}
+
+\subsection*{Conditional}
+
+\begin{fitchproof}
+	\open
+		\hypo[m]{a}{\metav{A}}\AS
+		\have[n]{b}{\metav{B}}
+	\close
+	\have[\ ]{ab}{\metav{A}\eif\metav{B}}\ci{a-b}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eif\metav{B}}
+	\have[n]{a}{\metav{A}}
+	\have[\ ]{b}{\metav{B}} \ce{ab,a}
+\end{fitchproof}
+
+\subsection*{Negation}
+
+\begin{fitchproof}
+\open
+	\hypo[m]{a}{\metav{A}}\AS
+	\have[n]{nb}{\ered}
+\close
+\have[\ ]{na}{\enot\metav{A}}\ni{a-nb}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{na}{\enot\metav{A}}
+	\have[n]{a}{\metav{A}}
+	\have[ ]{bot}{\ered}\ri{na, a}
+\end{fitchproof}
+
+\subsection*{Indirect proof}
+
+\begin{fitchproof}
+\open
+	\hypo[i]{a}{\enot\metav{A}}\AS
+	\have[j]{nb}{\ered}
+\close
+\have[\mathem]{na}{\metav{A}}\ip{a-nb}
+\end{fitchproof}
+
+
+\subsection*{Explosion}
+
+\begin{fitchproof}
+\have[m]{bot}{\ered}
+\have[ ]{}{\metav{A}}\re{bot}
+\end{fitchproof}
+
+\subsection*{Disjunction}
+
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}}
+	\have[\ ]{ab}{\metav{A}\eor\metav{B}}\oi{a}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}}
+	\have[\ ]{ba}{\metav{B}\eor\metav{A}}\oi{a}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eor\metav{B}}
+	\open
+		\hypo[i]{a}{\metav{A}}\AS
+		\have[j]{c1}{\metav{C}}
+	\close
+	\open
+		\hypo[k]{b}{\metav{B}}\AS
+		\have[l]{c2}{\metav{C}}
+	\close
+	\have[\mathem]{c}{\metav{C}} \oe{ab,a-c1, b-c2}
+\end{fitchproof}
+
+\subsection*{Biconditional}
+
+\begin{fitchproof}
+	\open
+		\hypo[i]{a1}{\metav{A}} \AS
+		\have[j]{b1}{\metav{B}}
+	\close
+	\open
+		\hypo[k]{b2}{\metav{B}}\AS
+		\have[l]{a2}{\metav{A}}
+	\close
+	\have[\mathem]{ab}{\metav{A}\eiff\metav{B}}\bi{a1-b1,b2-a2}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eiff\metav{B}}
+	\have[n]{a}{\metav{A}}
+	\have[\ ]{b}{\metav{B}} \be{ab,a}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eiff\metav{B}}
+	\have[n]{a}{\metav{B}}
+	\have[\ ]{b}{\metav{A}} \be{ab,a}
+\end{fitchproof}
+
+\end{multicols}
+
+\section{Derived rules for TFL}
+\begin{multicols}{2}
+\subsection*{Disjunctive syllogism}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A} \eor \metav{B}}
+	\have[n]{nb}{\enot \metav{A}}
+	\have[\ ]{con}{\metav{B}}\by{DS}{ab, nb}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A} \eor \metav{B}}
+	\have[n]{nb}{\enot \metav{B}}
+	\have[\ ]{con}{\metav{A}}\by{DS}{ab, nb}
+\end{fitchproof}
+
+\subsection*{Modus Tollens}
+
+\begin{fitchproof}
+	\have[m]{ab}{\metav{A}\eif\metav{B}}
+	\have[n]{a}{\enot\metav{B}}
+	\have[\ ]{b}{\enot\metav{A}} \by{MT}{ab,a}
+\end{fitchproof}
+
+\subsection*{Double-negation elimination}
+	\begin{fitchproof}
+		\have[m]{dna}{\enot \enot \metav{A}}
+		\have[ ]{a}{\metav{A}}\dne{dna}
+	\end{fitchproof}
+
+
+\subsection*{Excluded middle}
+	\begin{fitchproof}
+		\open
+			\hypo[i]{a}{\metav{A}}\AS
+			\have[j]{c1}{\metav{B}}
+		\close
+		\open
+			\hypo[k]{b}{\enot\metav{A}}\AS
+			\have[l]{c2}{\metav{B}}
+		\close
+		\have[\mathem]{ab}{\metav{B}}\tnd{a-c1,b-c2}
+	\end{fitchproof}
+
+%
+%\subsection*{Hypothetical Syllogism}
+%
+%\begin{fitchproof}
+%	\have[m]{ab}{\metav{A}\eif\metav{B}}
+%	\have[n]{bc}{\metav{B}\eif\metav{C}}
+%	\have[\ ]{ac}{\metav{A}\eif\metav{C}}\by{HS}{ab,bc}
+%\end{fitchproof}
+
+\subsection*{De Morgan Rules}
+\begin{fitchproof}
+	\have[m]{ab}{\enot (\metav{A} \eor \metav{B})}
+	\have[\ ]{dm}{\enot \metav{A} \eand \enot \metav{B}}\dem{ab}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\enot \metav{A} \eand \enot \metav{B}}
+	\have[\ ]{dm}{\enot (\metav{A} \eor \metav{B})}\dem{ab}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\enot (\metav{A} \eand \metav{B})}
+	\have[\ ]{dm}{\enot \metav{A} \eor \enot \metav{B}}\dem{ab}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\enot \metav{A} \eor \enot \metav{B}}
+	\have[\ ]{dm}{\enot (\metav{A} \eand \metav{B})}\dem{ab}
+\end{fitchproof}
+\end{multicols}
+
+%\newpage
+
+\section{Basic deduction rules for FOL}
+
+\begin{multicols}{2}
+\subsection*{Universal elimination}
+
+\begin{fitchproof}
+	\have[m]{a}{\forall \metav{x}\,\metav{A}(\ldots \metav{x} \ldots \metav{x}\ldots)}
+	\have[\ ]{c}{\metav{A}(\ldots \metav{c} \ldots \metav{c}\ldots)} \Ae{a}
+\end{fitchproof}
+
+\subsection*{Universal introduction}
+
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}(\ldots \metav{c} \ldots \metav{c}\ldots)}
+	\have[\ ]{c}{\forall \metav{x}\,\metav{A}(\ldots \metav{x} \ldots \metav{x}\ldots)} \Ai{a}
+\end{fitchproof}
+\begin{raggedright}
+\metav{c} must not occur in any undischarged assumption
+\end{raggedright}
+\end{multicols}
+
+\begin{multicols}{2}
+\subsection*{Existential introduction}
+
+\begin{fitchproof}
+	\have[m]{a}{\metav{A}(\ldots \metav{c} \ldots \metav{c}\ldots)}
+	\have[\ ]{c}{\exists \metav{x}\,\metav{A}(\ldots \metav{x} \ldots \metav{c}\ldots)}\Ei{a}
+\end{fitchproof}
+
+\vfill\null\columnbreak
+
+\subsection*{Existential elimination}
+
+\begin{fitchproof}
+	\have[m]{a}{\exists \metav{x}\,\metav{A}(\ldots \metav{x} \ldots \metav{x}\ldots)}
+	\open	
+		\hypo[i]{b}{\metav{A}(\ldots \metav{c} \ldots \metav{c}\ldots)}\AS
+		\have[j]{c}{\metav{B}}
+	\close
+	\have[\ ]{d}{\metav{B}}\Ee{a,b-c}
+\end{fitchproof}
+\begin{raggedright}
+\noindent \metav{c} must not occur in any undischarged assumption, in $\exists \metav{x}\,\metav{A}(\ldots \metav{x} \ldots \metav{x}\ldots)$, or in \metav{B}\end{raggedright}
+\end{multicols}
+
+\subsection*{Identity introduction}
+
+\begin{fitchproof}
+	\have[\mathem]{x}{\metav{c}=\metav{c}} \by{=I}{}
+\end{fitchproof}
+
+
+\subsection*{Identity elimination}
+
+\begin{multicols}{2}
+\begin{fitchproof}
+	\have[m]{e}{\metav{a}=\metav{b}}
+	\have[n]{a}{\metav{A}(\ldots \metav{a} \ldots \metav{a}\ldots)}
+	\have[\ ]{ea1}{\metav{A}(\ldots \metav{b} \ldots \metav{a}\ldots)} \by{=E}{e,a}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{e}{\metav{a}=\metav{b}}
+	\have[n]{a}{\metav{A}(\ldots \metav{b} \ldots \metav{b}\ldots)}
+	\have[\ ]{ea2}{\metav{A}(\ldots \metav{a} \ldots \metav{b}\ldots)} \by{=E}{e,a}
+\end{fitchproof}
+\end{multicols}
+
+%\begin{minipage}{\textwidth} % hack to keep section header with table
+\section{Derived rules for FOL}
+
+\begin{multicols}{2}
+\begin{fitchproof}
+	\have[m]{ab}{\forall \metav{x}\enot \metav{A}}
+	\have[\ ]{ac}{\enot \exists \metav{x} \metav{A}}\cq{m}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\enot \exists \metav{x}  \metav{A}}
+	\have[\ ]{ac}{\forall \metav{x}\enot\metav{A}}\cq{m}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\exists \metav{x}\enot\metav{A}}
+	\have[\ ]{ac}{\enot \forall \metav{x} \metav{A}}\cq{m}
+\end{fitchproof}
+\begin{fitchproof}
+	\have[m]{ab}{\enot \forall \metav{x}  \metav{A}}
+	\have[\ ]{ac}{\exists \metav{x}\enot \metav{A}}\cq{m}
+\end{fitchproof}
+\end{multicols}
+%\end{minipage}
+
+\section{Rules for the use of subproofs and citations}
+
+To cite an individual line when applying a rule:
+\begin{compactlist}
+\item the line must come before the line where the rule is applied, but 
+\item not occur within a subproof that has been closed before the line where the rule is applied.
+\end{compactlist}
+To cite a subproof when applying a rule:
+\begin{compactlist} 
+\item the cited subproof must come entirely before the application of the rule where it is cited,
+\item the cited subproof must not lie within some other closed subproof which is closed at the line it is cited, and 
+\item the last line of the cited subproof must not occur inside a nested subproof.
+\end{compactlist}
+
+\section{Rules for chains of equivalences}
+
+\ifHTMLtarget
+\begin{align*}
+\lnot\lnot \metav{P} & \Leftrightarrow \metav{P} && \text{(DN)}\\[2ex]
+(\metav{P} \eif \metav{Q}) & \Leftrightarrow (\lnot \metav{P} \lor \metav{Q})
+&& \text{(Cond)}\\
+\lnot(\metav{P} \eif \metav{Q}) & \Leftrightarrow (\metav{P} \land \lnot\metav{Q}) \\[2ex]
+(\metav{P} \eiff \metav{Q}) & \Leftrightarrow ((\metav{P} \eif \metav{Q}) \land  (\metav{Q} \eif \metav{P}))
+&& \text{(Bicond)}\\[2ex]
+\lnot(\metav{P} \land \metav{Q}) & \Leftrightarrow (\lnot\metav{P} \lor \lnot\metav{Q})
+&& \text{(DeM)}\\
+\lnot(\metav{P} \lor \metav{Q}) & \Leftrightarrow (\lnot\metav{P} \land \lnot\metav{Q}) \\[2ex]
+(\metav{P} \lor \metav{Q}) & \Leftrightarrow (\metav{Q} \lor \metav{P}) & &\text{(Comm)}\\
+(\metav{P} \land \metav{Q}) & \Leftrightarrow (\metav{Q} \land \metav{P})\\[2ex]
+(\metav{P} \land (\metav{Q} \lor \metav{R})) & \Leftrightarrow ((\metav{P} \land \metav{Q}) \lor (\metav{P} \land \metav{R}))
+&& \text{(Dist)}\\
+(\metav{P} \lor (\metav{Q} \land \metav{R})) & \Leftrightarrow ((\metav{P} \lor \metav{Q}) \land (\metav{P} \lor \metav{R}))\\
+(\metav{P} \lor (\metav{Q} \lor \metav{R})) & \Leftrightarrow ((\metav{P} \lor \metav{Q}) \lor \metav{R}) & &\text{(Assoc)}\\
+(\metav{P} \land (\metav{Q} \land \metav{R})) & \Leftrightarrow ((\metav{P} \land \metav{Q}) \land \metav{R})\\[2ex]
+(\metav{P} \lor \metav{P}) & \Leftrightarrow \metav{P} && \text{(Id)}\\
+(\metav{P} \land \metav{P}) & \Leftrightarrow \metav{P}\\[2ex]
+(\metav{P} \land (\metav{P} \lor \metav{Q})) & \Leftrightarrow \metav{P}&& \text{(Abs)}\\
+(\metav{P} \lor (\metav{P} \land \metav{Q})) & \Leftrightarrow \metav{P}\\[2ex]
+(\metav{P} \land (\metav{Q} \lor \lnot\metav{Q})) & \Leftrightarrow \metav{P}  && \text{(Simp)}\\
+(\metav{P} \lor (\metav{Q} \land \lnot\metav{Q})) & \Leftrightarrow \metav{P}\\[2ex]
+(\metav{P} \lor (\metav{Q} \lor \lnot\metav{Q})) & \Leftrightarrow (\metav{Q} \lor \lnot\metav{Q}) \\
+(\metav{P} \land (\metav{Q} \land \lnot\metav{Q})) & \Leftrightarrow (\metav{Q} \land \lnot\metav{Q})
+\end{align*}
+\else
+
+\begin{align*}
+\lnot\lnot \metav{P} & \Leftrightarrow \metav{P} && \text{(DN)}\\[2ex]
+(\metav{P} \eif \metav{Q}) & \Leftrightarrow (\lnot \metav{P} \lor \metav{Q})
+&& \text{(Cond)}\\
+\lnot(\metav{P} \eif \metav{Q}) & \Leftrightarrow (\metav{P} \land \lnot\metav{Q}) \\[2ex]
+(\metav{P} \eiff \metav{Q}) & \Leftrightarrow ((\metav{P} \eif \metav{Q}) \land  (\metav{Q} \eif \metav{P}))
+&& \text{(Bicond)}\\[2ex]
+\lnot(\metav{P} \land \metav{Q}) & \Leftrightarrow (\lnot\metav{P} \lor \lnot\metav{Q})
+&& \text{(DeM)}\\
+\lnot(\metav{P} \lor \metav{Q}) & \Leftrightarrow (\lnot\metav{P} \land \lnot\metav{Q}) \\[2ex]
+(\metav{P} \lor \metav{Q}) & \Leftrightarrow (\metav{Q} \lor \metav{P}) & &\text{(Comm)}\\
+(\metav{P} \land \metav{Q}) & \Leftrightarrow (\metav{Q} \land \metav{P})\\[2ex]
+(\metav{P} \land (\metav{Q} \lor \metav{R})) & \Leftrightarrow ((\metav{P} \land \metav{Q}) \lor (\metav{P} \land \metav{R}))
+&& \text{(Dist)}\\
+(\metav{P} \lor (\metav{Q} \land \metav{R})) & \Leftrightarrow ((\metav{P} \lor \metav{Q}) \land (\metav{P} \lor \metav{R}))\\
+(\metav{P} \lor (\metav{Q} \lor \metav{R})) & \Leftrightarrow ((\metav{P} \lor \metav{Q}) \lor \metav{R}) & &\text{(Assoc)}\\
+(\metav{P} \land (\metav{Q} \land \metav{R})) & \Leftrightarrow ((\metav{P} \land \metav{Q}) \land \metav{R})\\[2ex]
+(\metav{P} \lor \metav{P}) & \Leftrightarrow \metav{P} && \text{(Id)}\\
+(\metav{P} \land \metav{P}) & \Leftrightarrow \metav{P}\\[2ex]
+(\metav{P} \land (\metav{P} \lor \metav{Q})) & \Leftrightarrow \metav{P}&& \text{(Abs)}\\
+(\metav{P} \lor (\metav{P} \land \metav{Q})) & \Leftrightarrow \metav{P}\\[2ex]
+(\metav{P} \land (\metav{Q} \lor \lnot\metav{Q})) & \Leftrightarrow \metav{P}  && \text{(Simp)}\\
+(\metav{P} \lor (\metav{Q} \land \lnot\metav{Q})) & \Leftrightarrow \metav{P}
+\end{align*}
+\begin{align*}
+(\metav{P} \lor (\metav{Q} \lor \lnot\metav{Q})) & \Leftrightarrow (\metav{Q} \lor \lnot\metav{Q}) \\
+(\metav{P} \land (\metav{Q} \land \lnot\metav{Q})) & \Leftrightarrow (\metav{Q} \land \lnot\metav{Q})
+\end{align*}
+\fi

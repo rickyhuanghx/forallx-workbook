@@ -1,0 +1,83 @@
+% forallxyyc-html
+% Driver file to produce HTML etc. version of forall x:YYC 
+% using LaTeXML/bookml
+
+\documentclass{book}
+\usepackage{bookml/bookml}
+\bmlImageEnvironment{tikzpicture}
+
+\RequirePackage{xcolor,tabularx,wrapfig}
+\definecolor{lyallpink}{RGB}{222,31,149}
+\colorlet{leadbeater}{lyallpink}
+\colorlet{dkleadbeater}{lyallpink!80!black}
+\colorlet{ltleadbeater}{lyallpink!50}
+\colorlet{vltleadbeater}{lyallpink!3}
+
+\usepackage{forallxyyc}
+\usepackage{forallxyyc-html}
+\usepackage{gitinfo2}
+
+\usepackage{fitchml}% patch fitch for HTML
+\usepackage{longtable}
+
+\HTMLtargettrue
+
+\title{forall x: Calgary}
+
+\author{P.~D. Magnus\and
+Tim Button\and
+Robert Trueman\and
+Richard Zach}
+
+\date{\forallxversion{} (\gitCommitterDate~\gitAbbrevHash)}
+
+\bmlAltFormat{forallxyyc.pdf}{PDF}
+\bmlAltFormat{forallxyyc-accessible.pdf}{PDF (accessible)}
+\bmlAltFormat{\jobname.pdf}{}
+
+\begin{document}
+
+\begin{wrapfigure}{r}{.4\textwidth}
+\includegraphics[width=.4\textwidth,
+  alt={Book cover with title, authors, and a large forall sign in red on pink background}]
+  {forallxyyc.png}\bmlPlusClass{bml\_no\_invert fxcover}
+\end{wrapfigure}
+% \iflatexml
+% \<div class="header">
+% \<h1 class="title">forall x: Calgary\<br />An Introduction to Formal Logic\</h1>
+% \<p class="author">\<span class="ltx\_creator ltx\_role\_author">\<span class="ltx\_personname">P. D. Magnus\</span>\</span>
+% \<span class="ltx\_author\_before">  \</span>\<span class="ltx\_creator ltx\_role\_author">\<span class="ltx\_personname">Tim Button\</span>\</span>
+% \<span class="ltx\_author\_before">  \</span>\<span class="ltx\_creator ltx\_role\_author">\<span class="ltx\_personname">Robert Trueman
+% \</span>\</span>
+% \<span class="ltx\_author\_before">  \</span>\<span class="ltx\_creator ltx\_role\_author">\<span class="ltx\_personname">Richard Zach\</span>\</span>\</p>
+% \<p class="date">\forallxversion{} (\gitCommitterDate~\gitAbbrevHash)\</p>
+% \</div>
+% \<div id="p1" class="ltx\_para">
+% \<p class="ltx\_p">With contributions by J. Robert Loftis and Aaron Thomas-Bolduc\</p>
+% \</div>
+% \else
+   \maketitle
+
+   With contributions by J. Robert Loftis and Aaron Thomas-Bolduc
+% \fi
+
+\input{forallx-yyc-content}
+
+\setkeys{fitch}{arrayenv=longtable}
+\setlength{\LTleft}{0pt}
+\setlength\LTright\fill
+
+\part*{Solutions to selected exercices}
+\makeatletter\renewcommand{\appendixname}{Solutions to Chapter}\makeatother
+\setcounter{chapter}{0}
+\def\thechapter{\arabic{chapter}}
+\input{solutions/forallx-sol-what}
+\input{solutions/forallx-sol-tfl}
+\input{solutions/forallx-sol-truthtables}
+\input{solutions/forallx-sol-prooftfl}
+\input{solutions/forallx-sol-fol}
+\input{solutions/forallx-sol-interpretations}
+\input{solutions/forallx-sol-prooffol}
+\input{solutions/forallx-sol-ml}
+\input{solutions/forallx-sol-metatheory}
+\end{document}

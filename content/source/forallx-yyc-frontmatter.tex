@@ -1,0 +1,127 @@
+%!TEX root = forallxyyc.tex
+
+\ifHTMLtarget\else
+% Bastard Title, but not in HTML version
+
+\pagestyle{empty}
+
+\vspace*{80pt}
+
+% tagging as title
+% see https://github.com/latex3/latex2e/blob/develop/required/latex-lab/latex-lab-title.dtx
+
+% use the tagging socket for the title if it's loaded
+\IfSocketExistsTF{tagsupport/title}{%
+  \begin{flushright}[tagging-suppress-paras=true,
+        tagging-recipe=standalone,
+        tag-name=\UseStructureName{title/block}]
+  \UseTaggingSocket{title}{}{%
+    \fontsize{30pt}{24pt}\sffamily\selectfont
+    \textbf{forall
+    {\fontsize{37pt}{24pt}\selectfont\rmfamily\textit{x}}:
+    Calgary}
+
+    \medskip\fontsize{18pt}{20pt}\selectfont
+    \textbf{An Introduction to\\ Formal Logic}}
+  \end{flushright}
+}{%
+  \begin{flushright}
+    \fontsize{30pt}{24pt}\sffamily\selectfont
+    \textbf{forall
+    {\fontsize{37pt}{24pt}\selectfont\rmfamily\textit{x}}:
+    Calgary}
+
+    \medskip\fontsize{18pt}{20pt}\selectfont
+    \textbf{An Introduction to\\ Formal Logic}
+  \end{flushright}
+}
+
+\vfill
+\begin{flushright}
+\fontsize{12pt}{16pt}\selectfont \textit{By } \textbf{P.~D. Magnus}\\
+\textbf{Tim Button}\\
+\textbf{Robert Trueman}\\
+\textbf{Richard Zach}\\
+\textit{with contributions by}\\
+\textbf{J.~Robert Loftis}\\
+\textbf{Aaron Thomas-Bolduc}\\ 
+
+\vfill
+\textbf{\forallxversion}\par
+\end{flushright}
+
+\newpage
+\noindent\small%
+\fi
+This book is based on
+\href{https://www.homepages.ucl.ac.uk/~uctytbu/OERs.html}{\forallx:
+\textit{Cambridge}}, by 
+\href{https://www.homepages.ucl.ac.uk/~uctytbu/}{Tim Button} (University College London), 
+used under a \href{https://creativecommons.org/licenses/by/4.0/}{CC BY
+4.0} license, which is based in turn
+on \href{https://www.fecundity.com/logic/}{\forallx}, by
+\href{https://www.fecundity.com/job/}{P.D.\ Magnus} 
+(University at Albany, State University of New York),
+used under a \href{https://creativecommons.org/licenses/by/4.0/}{CC BY
+4.0} license, 
+and was remixed, revised, \& expanded by Aaron
+Thomas-Bolduc \& \href{https://richardzach.org/}{Richard Zach}
+(University of Calgary).
+It includes additional material from \forallx{} by P.~D. Magnus and
+\href{https://www.homepages.ucl.ac.uk/~uctytbu/OERs.html}{\textit{Metatheory}} by Tim Button, 
+used under a \href{https://creativecommons.org/licenses/by/4.0/}{CC BY
+4.0} license, 
+from \href{https://github.com/rob-helpy-chalk/openintroduction}{\forallx: \textit{Lorain
+County Remix}},
+by \href{https://sites.google.com/site/cathalwoods/}{Cathal Woods} and
+J. Robert Loftis, and from \href{http://www.rtrueman.com/uploads/7/0/3/2/70324387/modal_logic_primer.pdf}{\textit{A Modal Logic Primer}} by \href{http://www.rtrueman.com/}{Robert Trueman}, used with permission.
+
+
+\ifHTMLtarget\else
+  \bigskip
+
+  \noindent\footnotesize
+\fi
+This work is licensed under a \href{https://creativecommons.org/licenses/by/4.0/}{Creative Commons Attribution 4.0} license.
+You are free to copy and redistribute the material in any medium or format, and  remix, transform, and build upon the material for any purpose, even commercially, under the following terms:
+\begin{itemize}
+\item You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+\item You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+\end{itemize}
+
+\ifHTMLtarget\else
+\vfil\normalsize\noindent
+\fi
+The \LaTeX{} source for this book is available on Github at
+\href{https://github.com/rzach/forallx-yyc/}{github.com/rzach/forallx-yyc/} and in PDF and
+HTML format at
+\href{https://forallx.openlogicproject.org}{forallx.openlogicproject.org}.
+This version is revision \gitAbbrevHash{}
+(\gitCommitterDate).
+
+\bigskip
+\noindent
+The preparation of this textbook was made possible by a grant from the \href{https://taylorinstitute.ucalgary.ca/}{Taylor Institute for Teaching and Learning}.
+
+\bigskip
+\noindent
+\href{https://taylorinstitute.ucalgary.ca/}{%
+  \iflatexml
+    \includegraphics[alt={Logo of the Taylor Institute for Teaching and Learning}]
+      {assets/ti-color}
+  \else
+    \includegraphics[width=8cm,alt={Logo of the Taylor Institute for Teaching and Learning}]{assets/ti-color}
+  \fi
+  }
+
+\ifHTMLtarget
+The HTML format is produced using
+\href{https://vlmantova.github.io/bookml/}{BookML} by
+\href{https://eps.leeds.ac.uk/maths/staff/4058/dr-vincenzo-l-mantova}{Vincenzo Mantova}
+and \href{https://dlmf.nist.gov/LaTeXML/}{\LaTeX{}ML} by
+\href{https://www.nist.gov/people/bruce-r-miller}{Bruce Miller} and
+\href{https://prodg.org/}{Deyan Ginev}. 
+\else
+\bigskip
+\noindent Cover design by Mark Lyall.
+\fi

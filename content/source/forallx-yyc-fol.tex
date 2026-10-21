@@ -1,0 +1,1925 @@
+%!TEX root = forallxyyc.tex
+\part{First-order logic}
+\label{ch.FOL}
+\addtocontents{toc}{\protect\mbox{}\protect\hrulefill\par}
+\chapter{Building blocks of FOL}\label{s:FOLBuildingBlocks}
+
+\section{The need to decompose sentences}
+Consider the following argument, which is obviously valid in English:
+\begin{earg}
+\label{willard1}
+\item[] Willard is a logician.
+\item[] All logicians wear funny hats.
+\item[\texttherefore] Willard wears a funny hat.
+\end{earg}
+To symbolize it in TFL, we might offer a symbolization key:
+\begin{ekey}
+\item[L] Willard is a logician.
+\item[A] All logicians wear funny hats.
+\item[F] Willard wears a funny hat.
+\end{ekey}
+And the argument itself becomes:
+$$L, A \therefore F$$
+But the truth-table test will now indicate that this is \emph{invalid}. What has gone wrong?
+
+The problem is not that we have made a mistake while symbolizing the argument. This is the best symbolization we can give \emph{in TFL}. The problem lies with TFL itself. `All logicians wear funny hats' is about both logicians and hat-wearing. By not retaining this structure in our symbolization, we lose the connection between Willard's being a logician and Willard's wearing a hat.
+
+The basic units of TFL are sentence letters, and TFL cannot decompose
+these. To symbolize arguments like the preceding one, we will have to
+develop a new logical language which will allow us to \emph{split the
+atom}. We will call this the language of \emph{first-order logic},
+or~\emph{FOL}.\footnote{First-order logic is also often called (classical)
+``predicate'' or ``quantificational'' logic.}
+
+The details of FOL will be explained throughout this chapter, but here is the basic idea for splitting the atom.
+
+First, we have \emph{names}. In FOL, we indicate these with lowercase italic letters. For instance, we might let `$b$' stand for Bertie, or let `$i$' stand for Willard.
+
+Second, we have predicates. English predicates are expressions like `\blank\ is a dog' or `\blank\ is a logician'. These are not complete sentences by themselves. In order to make a complete sentence, we need to fill in the gap. We need to say something like `Bertie is a dog' or `Willard is a logician'. In FOL, we indicate predicates with uppercase italic letters. For instance, we might let the FOL predicate `$D$' symbolize the English predicate `\blank\ is a dog'. Then the expression `$\atom{D}{b}$' will be a sentence in FOL, which symbolizes the English sentence `Bertie is a dog'. Equally, we might let the FOL predicate `$L$' symbolize the English predicate `\blank\ is a logician'. Then the expression `$\atom{L}{i}$' will symbolize the English sentence `Willard is a logician'.
+
+Third, we have quantifiers. For instance, `$\exists$' will roughly convey `There is at least one \ldots'. So we might symbolize the English sentence `there is a dog' with the FOL sentence `$\exists x\, \atom{D}{x}$', which we might read aloud as `there is at least one thing, $x$, such that $x$ is a dog'.
+
+That is the general idea, but FOL is significantly more subtle than TFL, so we will come at it slowly.
+
+
+\section{Names}
+In English, a \emph{singular term} is a word or phrase that is meant
+to refer to a \emph{specific} person, place, or thing. The word `dog'
+is not a singular term, because there are a great many dogs. The
+name `Bertie' is a singular term, because it refers to a specific
+terrier. Likewise, the phrase `Philip's dog' is a singular
+term, because it also refers to a specific little terrier.
+
+\emph{Proper names} are a particularly important kind of singular term. These are expressions that pick out individuals without describing them. The name `Emerson' is a proper name, and the name alone does not tell you anything about Emerson. Of course, some names are traditionally given to boys and others are traditionally given to girls. If `Hilary' is used as a singular term, you might guess that it refers to a woman. You might, though, be guessing wrongly. Indeed, the name does not necessarily mean that the person referred to is even a person: Hilary might be a giraffe, for all you could tell just from the name.
+
+In FOL, our \define{names} are lower-case letters `$a$' through to `$r$'. We can add subscripts if we want to use some letter more than once. So here are some singular terms in FOL:
+	$$a,b,c,\ldots, r, a_1, f_{32}, j_{390}, m_{12}$$ These should be
+thought of along the lines of proper names in English, but with one
+difference. `Tim Button' is a proper name, but there are several
+people with this name. We live with this kind of ambiguity in English,
+allowing context to individuate the fact that `Tim Button' refers to
+an author of this book, and not some other Tim. In FOL, we do not
+tolerate any such ambiguity. Each name must pick out \emph{exactly}
+one thing. However, just like in English, in FOL different names
+may pick out the same thing, and there can be things that don't have
+names picking them out.
+
+\newglossaryentry{name}{
+  name = name,
+  description = {A symbol of FOL used to pick out an object of the \gls{domain}}
+  }
+
+As with TFL, we can provide symbolization keys. These indicate, temporarily, what a name will pick out. So we might offer:
+	\begin{ekey}
+		\item[e] Elsa
+		\item[g] Gregor
+		\item[m] Marybeth
+	\end{ekey}
+
+
+\section{Predicates}
+The simplest predicates express properties of individuals. They are things you can say about an object. Here are some examples of English predicates:
+	\begin{itemize}
+		\item \blank\ is a dog
+		\item \blank\ is a member of Monty Python
+		\item A piano fell on \blank
+	\end{itemize}
+In general, you can think about predicates as things which combine with singular terms to make sentences. Conversely, you can start with sentences and make predicates out of them by removing terms. Consider the sentence, `Vinnie borrowed the family car from Nunzio.' By removing a singular term, we can obtain any of three different predicates:
+	\begin{itemize}
+		\item \blank\ borrowed the family car from Nunzio\\
+		\item Vinnie borrowed \blank\ from Nunzio\\
+		\item Vinnie borrowed the family car from \blank
+	\end{itemize}
+In FOL, \define{predicates} are capital letters `$A$' through `$Z$', with or without subscripts. We might write a symbolization key for predicates thus:
+	\begin{ekey}
+		\item[\atom{A}{x}] \gap{x} is angry
+		\item[\atom{H}{x}] \gap{x} is happy
+%		\item[\atom{T_1}{x,y}] \gap{x} is as tall or taller than \gap{y}
+%		\item[\atom{T_2}{x,y}] \gap{x} is as tough or tougher than \gap{y}
+%		\item[\atom{B}{x,y,z}] \gap{y} is between \gap{x} and \gap{z}
+	\end{ekey}
+        (Why the subscripts on the gaps? We will return to this in \cref{s:MultipleGenerality}.)
+
+\newglossaryentry{predicate}{
+  name = predicate,
+  description = {A symbol of FOL used to symbolize a property or relation}
+}
+
+If we combine our two symbolization keys, we can start to symbolize some English sentences that use these names and predicates in combination. For example, consider the English sentences:
+	\begin{enumerate}
+		\item\label{terms1} Elsa is angry.
+		\item\label{terms2a} Gregor and Marybeth are angry.
+		\item\label{terms2} If Elsa is angry, then so are Gregor and Marybeth.
+	\end{enumerate}
+\Cref*{terms1} is straightforward: we symbolize it by `$\atom{A}{e}$'.
+
+\Cref*{terms2a} is a conjunction of two simpler sentences. The simple sentences can be symbolized just by `$\atom{A}{g}$' and `$\atom{A}{m}$'. Then we help ourselves to our resources from TFL, and symbolize the entire sentence by `$\atom{A}{g} \eand \atom{A}{m}$'. This illustrates an important point: FOL has all of the truth-functional connectives of TFL.
+
+\Cref*{terms2} is a conditional, whose antecedent is \cref*{terms1} and whose consequent is \cref*{terms2a}, so we can symbolize this with `$\atom{A}{e} \eif (\atom{A}{g} \eand \atom{A}{m})$'.
+
+\section{Quantifiers}
+We are now ready to introduce quantifiers. Consider these sentences:
+	\begin{enumerate}
+		\item\label{q.a} Everyone is happy.
+%		\item\label{q.ac} Everyone is at least as tough as Elsa.
+		\item\label{q.e} Someone is angry.
+	\end{enumerate}
+It might be tempting to symbolize \cref*{q.a} as `$\atom{H}{e} \eand \atom{H}{g} \eand \atom{H}{m}$'. Yet this would only say that Elsa, Gregor, and Marybeth are happy. We want to say that \emph{everyone} is happy, even those with no names. In order to do this, we introduce the `$\forall$' symbol. This is called the \define{universal quantifier}.
+
+\newglossaryentry{universal quantifier}{
+  name = universal quantifier,
+  description = {The symbol $\forall$ of FOL used to symbolize generality; $\forall x\, \atom{F}{x}$ is true \ifeff{} every member of the domain is~$F$}
+}
+
+A quantifier must always be followed by a \define{variable}. In FOL, variables are italic lowercase letters `$s$' through `$z$', with or without subscripts. So we might symbolize \cref*{q.a} as `$\forall x\, \atom{H}{x}$'.  The variable `$x$' is serving as a kind of placeholder. The expression `$\forall x$' intuitively means that you can pick anyone and put them in as `$x$'. The subsequent `$\atom{H}{x}$' indicates, of that thing you picked out, that it is happy.
+
+\newglossaryentry{variable}{
+  name = variable,
+  description = {A symbol of FOL used following quantifiers and as placeholders in atomic formulas; lowercase letters between $s$ and~$z$}
+}
+
+
+It should be pointed out that there is no special reason to use `$x$'
+rather than some other variable. The sentences `$\forall x\,
+\atom{H}{x}$', `$\forall y\, \atom{H}{y}$', `$\forall z\,
+\atom{H}{z}$', and `$\forall x_5\, \atom{H}{x_5}$' use different
+variables, but they will all be logically equivalent.
+
+To symbolize \cref{q.e}, we introduce another new symbol: the
+\define{existential quantifier}, `$\exists$'. Like the universal
+quantifier, the existential quantifier requires a variable.
+\Cref*{q.e} can be symbolized by `$\exists x\,\atom{A}{x}$'. Whereas
+`$\forall x\,\atom{A}{x}$' is read naturally as `for all $x$, $x$ is
+angry', `$\exists x\,\atom{A}{x}$' is read naturally as `there is
+something, $x$, such that $x$ is angry'. Once again, the variable is a
+kind of placeholder; we could just as easily have symbolized
+\cref*{q.e} by `$\exists z\, \atom{A}{z}$', `$\exists w_{256}\,
+\atom{A}{w_{256}}$', or whatever.
+
+\newglossaryentry{existential quantifier}{
+  name = existential quantifier,
+  description = {The symbol $\exists$ of FOL used to symbolize existence; $\exists x\, \atom{F}{x}$ is true \ifeff{} at least one member of the domain is~$F$}
+}
+
+Some more examples will help. Consider these further sentences:
+	\begin{enumerate}
+		\item\label{q.ne} No one is angry.
+		\item\label{q.en} There is someone who is not happy.
+		\item\label{q.na} Not everyone is happy.
+	\end{enumerate}
+\Cref*{q.ne} can be paraphrased as, `It is not the case that someone is angry'. We can then symbolize it using negation and an existential quantifier: `$\enot \exists x\,\atom{A}{x}$'. Yet \cref*{q.ne} could also be paraphrased as, `Everyone is not angry'. With this in mind, it can be symbolized using negation and a universal quantifier: `$\forall x\, \enot \atom{A}{x}$'. Both of these are acceptable symbolizations.  Indeed, it will transpire that, in general, $\forall x\, \enot\metav{A}$ is logically equivalent to $\enot\exists x\,\metav{A}$. (Notice that we have here returned to the practice of using `$\metav{A}$' as a metavariable, from \cref{s:UseMention}.) Symbolizing a sentence one way, rather than the other, might seem more `natural' in some contexts, but it is not much more than a matter of taste.
+
+\Cref*{q.en} is most naturally paraphrased as, `There is some~$x$, such that $x$ is not happy'. This then becomes `$\exists x\, \enot \atom{H}{x}$'. Of course, we could equally have written `$\enot\forall x\,\atom{H}{x}$', which we would naturally read as `it is not the case that everyone is happy'. That too would be a perfectly adequate symbolization of \cref*{q.na}.
+
+
+\section{Domains}
+Given the symbolization key we have been using, `$\forall x\,\atom{H}{x}$' symbolizes `Everyone is happy'.  Who is included in this \emph{everyone}? When we use sentences like this in English, we usually do not mean everyone now alive on the Earth. We certainly do not mean everyone who was ever alive or who will ever live. We usually mean something more modest: everyone now in the building, everyone enrolled in the ballet class, or whatever.
+
+In order to eliminate this ambiguity, we will need to specify a \define{domain}. The domain is the collection of things that we are talking about. So if we want to talk about people in Chicago, we define the domain to be people in Chicago. We write this at the beginning of the symbolization key, like this:
+	\begin{ekey}
+		\item[\text{domain}] people in Chicago
+	\end{ekey}
+The quantifiers \emph{range over} the domain. Given this domain, `$\forall x$' is to be read roughly as `Every person in Chicago is such that\ldots' and `$\exists x$' is to be read roughly as `Some person in Chicago is such that\ldots'.
+
+\newglossaryentry{domain}{
+  name = domain,
+  description = {The collection of objects assumed for a symbolization in FOL, or that gives the range of the quantifiers in an \gls{interpretation}}
+}
+
+In FOL, the domain must always include at least one thing. Moreover, in English we can legitimately infer `something is angry' from `Gregor is angry'. In FOL, then, we will want to be able to infer `$\exists x\,\atom{A}{x}$' from `$\atom{A}{g}$'. So we will insist that each name must pick out exactly one thing in the domain. If we want to name people in places beside Chicago, then we need to include those people in the domain.
+	\factoidbox{
+		A domain must have \emph{at least} one member. Every name must pick out \emph{exactly} one member of the domain, but a member of the domain may be picked out by one name, many names, or none at all.
+	}
+
+Even allowing for a domain with just one member can produce some strange results. Suppose we have this as a symbolization key:
+\begin{ekey}
+\item[\text{domain}] the Eiffel Tower
+\item[\atom{P}{x}] \gap{x} is in Paris.
+\end{ekey}
+The sentence $\forall x\,\atom{P}{x}$ might be paraphrased in English as `Everything is in Paris.' Yet that would be misleading. It means that everything \emph{in the domain} is in Paris. This domain contains only the Eiffel Tower, so with this symbolization key $\forall x\,\atom{P}{x}$ just means that the Eiffel Tower is in Paris.
+
+\section{Non-referring terms}
+
+In FOL, each name must pick out exactly one member of the domain. A name cannot refer to more than one thing---it is a \emph{singular} term. Each name must still pick out \emph{something}. This is connected to a classic philosophical problem: the so-called problem of non-referring terms.
+
+Medieval philosophers typically used sentences about the \emph{chimera} to exemplify this problem. Chimera is a mythological creature; it does not really exist. Consider these two sentences:
+\begin{enumerate}
+\item\label{chimera1} Chimera is angry.
+\item\label{chimera2} Chimera is not angry.
+\end{enumerate}
+It is tempting just to define a name to mean `chimera.' The symbolization key would look like this:
+\begin{ekey}
+\item[\text{domain}] creatures on Earth
+\item[\atom{A}{x}] \gap{x} is angry.
+\item[c] chimera
+\end{ekey}
+We could then symbolize \cref*{chimera1} as $\atom{A}{c}$ and \cref*{chimera2} as $\enot \atom{A}{c}$.
+
+Problems will arise when we ask whether these sentences are true or false.
+
+One option is to say that \cref*{chimera1} is not true, because there is no chimera. If \cref*{chimera1} is false because it talks about a non-existent thing, then \cref*{chimera2} is false for the same reason. Yet this would mean that $\atom{A}{c}$ and $\enot \atom{A}{c}$ would both be false. Given the truth conditions for negation, this cannot be the case.
+
+Since we cannot say that they are both false, what should we do? Another option is to say that \cref*{chimera1} is \emph{meaningless} because it talks about a non-existent thing. So $\atom{A}{c}$ would be a meaningful expression in FOL for some interpretations but not for others. Yet this would make our formal language hostage to particular interpretations. Since we are interested in logical form, we want to consider the logical force of a sentence like $\atom{A}{c}$ apart from any particular interpretation. If $\atom{A}{c}$ were sometimes meaningful and sometimes meaningless, we could not do that.
+
+This is the \emph{problem of non-referring terms}, and we will return to it later (see \cref{subsec.defdesc}). The important point for now is that each name of FOL \emph{must} refer to something in the domain, although the domain can contain any things we like. If we want to symbolize arguments about mythological creatures, then we must define a domain that includes them. This option is important if we want to consider the logic of stories. We can symbolize a sentence like `Sherlock Holmes lived at 221B Baker Street' by including fictional characters like Sherlock Holmes in our domain.
+
+\chapter{Sentences with one quantifier}
+\label{s:MoreMonadic}
+
+We now have all of the pieces of FOL. Symbolizing more complicated sentences is just a matter of knowing how to combine predicates, names, quantifiers, and connectives. There is a knack to this, and there is no substitute for practice.
+
+%\section{Dealing with syncategorematic adjectives}
+%When we encounter a sentence like 
+%	\begin{enumerate}
+%		\item\label{syn1} Herbie is a white car
+%	\end{enumerate}
+%We can paraphrase this as `Herbie is white and Herbie is a car'. We can then use a symbolization key like:
+%	\begin{ekey}
+%		\item[\atom{W}{x}] \gap{x} is white
+%		\item[\atom{C}{x}] \gap{x} is a car
+%		\item[h] Herbie
+%	\end{ekey}
+%This allows us to symbolize \cref*{syn1} as `$\atom{W}{h} \eand \atom{C}{h}$'. But now consider:
+%	\begin{enumerate}
+%		\item\label{syn2} Damon Stoudamire is a short basketball player.
+%		\item\label{syn3} Damon Stoudamire is a man.
+%		\item\label{syn4} Damon Stoudamire is a short man.
+%	\end{enumerate}
+%Following the case of Herbie, we might try to use a symbolization key like:
+%	\begin{ekey}
+%		\item[\atom{S}{x}] \gap{x} is short
+%		\item[\atom{B}{x}] \gap{x} is a basketball player
+%		\item[\atom{M}{x}] \gap{x} is a man
+%		\item[d] Damon Stoudamire
+%	\end{ekey}
+%Then we would symbolize \cref*{syn2} with `$\atom{S}{d} \eand \atom{B}{d}$', \cref*{syn3} with `$\atom{M}{d}$' and \cref*{syn4} with `$\atom{S}{d} \eand \atom{M}{d}$', but that would be a terrible mistake! This now suggests that \cref{syn2,syn3} together \emph{entail} \cref*{syn4}, but they do not. Standing at  5'10'', Damon Stoudamire is one of the shortest professional basketball players of all time, but he is nevertheless an averagely-tall man. The point is that \cref*{syn2} says that Damon is short \emph{qua} basketball player, even though he is of average height \emph{qua} man. So you will need to symbolize `\blank\ is a short basketball player' and `\blank\ is a short man' using completely different predicates.
+
+%Similar examples abound. All politicians are people, but some good politicians are (arguably) bad people. Someone might be an incompetent statesman, but a competent individual. And so it goes. The moral is: when you see two adjectives in a row, you need to ask yourself carefully whether they can be treated as a conjunction or not.
+
+
+\section{Common quantifier phrases}
+Consider these sentences:
+	\begin{enumerate}
+		\item\label{quan1} Every coin in my pocket is a quarter.
+		\item\label{quan2} Some coin on the table is a dime.
+		\item\label{quan3} Not all the coins on the table are dimes.
+		\item\label{quan4} None of the coins in my pocket are dimes.
+	\end{enumerate}
+In providing a symbolization key, we need to specify a domain. Since we are talking about coins in my pocket and on the table, the domain must at least contain all of those coins. Since we are not talking about anything besides coins, we let the domain be all coins. Since we are not talking about any specific coins, we do not need to deal with any names. So here is our key:
+	\begin{ekey}
+		\item[\text{domain}] all coins
+		\item[\atom{P}{x}] \gap{x} is in my pocket
+		\item[\atom{T}{x}] \gap{x} is on the table
+		\item[\atom{Q}{x}] \gap{x} is a quarter
+		\item[\atom{D}{x}] \gap{x} is a dime
+	\end{ekey}
+\Cref*{quan1} is most naturally symbolized using a universal quantifier. The universal quantifier says something about everything in the domain, not just about the coins in my pocket. \Cref{quan1} can be paraphrased as `for any coin, \emph{if} that coin is in my pocket \emph{then} it is a quarter'. So we can symbolize it as `$\forall x(\atom{P}{x} \eif \atom{Q}{x})$'.
+
+Since \cref*{quan1} is about coins that are both in my pocket \emph{and} that are quarters, it might be tempting to symbolize it using a conjunction. However, the sentence `$\forall x(\atom{P}{x} \eand \atom{Q}{x})$' would symbolize the sentence `every coin is both a quarter and in my pocket'. This obviously means something very different than \cref*{quan1}. And so we see:
+	\factoidbox{
+		A sentence can be symbolized as $\forall x (\atom{\metav{F}}{x} \eif \atom{\metav{G}}{x})$ if it can be paraphrased in English as `every $F$ is $G$'.
+	}
+\Cref*{quan2} is most naturally symbolized using an existential quantifier. It can be paraphrased as `there is some coin which is both on the table and which is a dime'. So we can symbolize it as `$\exists x(\atom{T}{x} \eand \atom{D}{x})$'.
+
+Notice that we needed to use a conditional with the universal quantifier, but we used a conjunction with the existential quantifier. Suppose we had instead written `$\exists x(\atom{T}{x} \eif \atom{D}{x})$'. That would mean that there is some object in the domain of which `$(\atom{T}{x} \eif \atom{D}{x})$' is true. Recall that, in TFL, $\metav{A} \eif \metav{B}$ is logically equivalent (in TFL) to $\enot\metav{A} \eor \metav{B}$. This equivalence will also hold in FOL. So `$\exists x(\atom{T}{x} \eif \atom{D}{x})$' is true if there is some object in the domain, such that `$(\enot \atom{T}{x} \eor \atom{D}{x})$' is true of that object. That is, `$\exists x (\atom{T}{x} \eif \atom{D}{x})$' is true if some coin is \emph{either} not on the table \emph{or} is a dime. Of course there is a coin that is not on the table: there are coins in  lots of other places. So it is \emph{very easy} for `$\exists x(\atom{T}{x} \eif \atom{D}{x})$' to be true. A conditional will usually be the natural connective to use with a universal quantifier, but a conditional within the scope of an existential quantifier tends to say something very weak indeed. As a general rule of thumb, do not put conditionals in the scope of existential quantifiers unless you are sure that you need one.
+	\factoidbox{
+		A sentence can be symbolized as $\exists x (\atom{\metav{F}}{x} \eand \atom{\metav{G}}{x})$ if it can be paraphrased in English as `some $F$ is~$G$'.
+	}		
+\Cref{quan3} can be paraphrased as, `It is not the case that every coin on the table is a dime'. So we can symbolize it by `$\enot \forall x(\atom{T}{x} \eif \atom{D}{x})$'. You might look at \cref*{quan3} and paraphrase it instead as, `Some coin on the table is not a dime'. You would then symbolize it by `$\exists x(\atom{T}{x} \eand \enot \atom{D}{x})$'. Although it is probably not immediately obvious yet, these two sentences are logically equivalent. (This is due to the logical equivalence between $\enot\forall x\,\metav{A}$ and $\exists x\,\enot\metav{A}$, mentioned in \cref{s:FOLBuildingBlocks}, along with the equivalence between $\enot(\metav{A}\eif\metav{B})$ and $\metav{A}\eand\enot\metav{B}$.)
+
+\Cref{quan4} can be paraphrased as, `It is not the case that there is some dime in my pocket'. This can be symbolized by `$\enot\exists x(\atom{P}{x} \eand \atom{D}{x})$'. It might also be paraphrased as, `Everything in my pocket is a non-dime', and then could be symbolized by `$\forall x(\atom{P}{x} \eif \enot \atom{D}{x})$'. Again the two symbolizations are logically equivalent; both are correct symbolizations of \cref*{quan4}.
+
+\factoidbox{
+	A sentence that can be paraphrased as `no $F$ is $G$' can be symbolized as $\enot\exists x (\atom{\metav{F}}{x} \eand \atom{\metav{G}}{x})$ and also as $\forall x (\atom{\metav{F}}{x} \eif \enot\atom{\metav{G}}{x})$.
+}
+
+Finally, consider `only', as in:
+\begin{enumerate}
+	\item\label{quan5} Only dimes are on the table.
+\end{enumerate}
+How should we symbolize this?  A good strategy is to consider when the sentence would be false.  If we are saying that only dimes are on the table, we are excluding all the cases where something on the table is a non-dime.  So we can symbolize the sentence the same way we would symbolize `No non-dimes are on the table.' Remembering the lesson we just learned, and symbolizing `$x$ is a non-dime' as `$\enot \atom{D}{x}$', the possible symbolizations are: `$\enot\exists x(\atom{T}{x} \eand \enot \atom{D}{x})$', or alternatively: `$\forall x(\atom{T}{x} \eif \enot\enot \atom{D}{x})$'. Since double negations cancel out, the second is just as good as `$\forall x(\atom{T}{x} \eif \atom{D}{x})$'. In other words, `Only dimes are on the table' and `Everything on the table is a dime' are symbolized the same way.
+
+\factoidbox{
+	A sentence that can be paraphrased as `only $F$s are $G$s' can be symbolized as $\enot\exists x (\atom{\metav{G}}{x} \eand \enot\atom{\metav{F}}{x})$ and also as $\forall x (\atom{\metav{G}}{x} \eif \atom{\metav{F}}{x})$.
+}
+
+\section{Empty predicates}
+
+In \cref{s:FOLBuildingBlocks}, we emphasized that a name must pick out exactly one object in the domain. However, a predicate need not apply to anything in the domain. A predicate that applies to nothing in the domain is called an \define{empty predicate}. This is worth exploring.
+
+\newglossaryentry{empty predicate}{
+  name = {empty predicate},
+  description = {A \gls{predicate} that applies to no object in the \gls{domain}}
+}
+
+Suppose we want to symbolize these two sentences:
+	\begin{enumerate}
+		\item\label{monkey1} Every monkey knows sign language.
+		\item\label{monkey2} Some monkey knows sign language.
+	\end{enumerate}
+It is possible to write the symbolization key for these sentences in this way:
+	\begin{ekey}
+		\item[\text{domain}] animals
+		\item[\atom{M}{x}] \gap{x} is a monkey.
+		\item[\atom{S}{x}] \gap{x} knows sign language.
+	\end{ekey}
+\Cref*{monkey1} can now be symbolized by `$\forall x(\atom{M}{x} \eif
+\atom{S}{x})$'. \Cref*{monkey2} can be symbolized as `$\exists
+x(\atom{M}{x} \eand \atom{S}{x})$'.
+
+It is tempting to say that \cref*{monkey1} \emph{entails} \cref*{monkey2}. That is, we might think that it is impossible that every monkey knows sign language unless some monkey knows sign language. But this would be a mistake. It is possible for the sentence `$\forall x(\atom{M}{x} \eif \atom{S}{x})$' to be true even though the sentence `$\exists x(\atom{M}{x} \eand \atom{S}{x})$' is false.
+
+How can this be? The answer comes from considering whether these sentences would be true or false \emph{if there were no monkeys}. If there were no monkeys at all (in the domain), then `$\forall x(\atom{M}{x} \eif \atom{S}{x})$' would be \emph{vacuously} true: take any monkey you like---it knows sign language! But if there were no monkeys at all (in the domain), then `$\exists x(\atom{M}{x} \eand \atom{S}{x})$' would be false.
+
+Another example will help to bring this home. Suppose we extend the above symbolization key, by adding:
+	\begin{ekey}
+		\item[\atom{R}{x}] \gap{x} is a refrigerator
+	\end{ekey}
+Now consider the sentence `$\forall x(\atom{R}{x} \eif \atom{M}{x})$'. This symbolizes `every refrigerator is a monkey'. This sentence is true, given our symbolization key, which is counterintuitive, since we (presumably) do not want to say that there are a whole bunch of refrigerator monkeys. It is important to remember, though, that `$\forall x(\atom{R}{x} \eif \atom{M}{x})$' is true \ifeff{} any member of the domain that is a refrigerator is a monkey. Since the domain is \emph{animals}, there are no refrigerators in the domain. Again, then, the sentence is \emph{vacuously} true.
+
+If you were actually dealing with the sentence `All refrigerators are monkeys', then you would most likely want to include kitchen appliances in the domain. Then the predicate `$R$' would not be empty and the sentence `$\forall x(\atom{R}{x} \eif \atom{M}{x})$' would be false.
+	\factoidbox{
+		When $\metav{F}$ is an empty predicate, any sentence $\forall x (\atom{\metav{F}}{x} \eif \ldots)$ is vacuously true.
+	}
+
+
+\section{Picking a domain}
+The appropriate symbolization of an English language sentence in FOL will depend on the symbolization key. Choosing a key can be difficult. Suppose we want to symbolize the English sentence:
+	\begin{enumerate}
+		\item\label{pickdomainrose} Every rose has a thorn.
+	\end{enumerate}
+We might offer this symbolization key:
+	\begin{ekey}
+		\item[\atom{R}{x}] \gap{x} is a rose
+		\item[\atom{T}{x}] \gap{x} has a thorn
+	\end{ekey}
+It is tempting to say that \cref*{pickdomainrose} should be symbolized as `$\forall x(\atom{R}{x} \eif \atom{T}{x})$', but we have not yet chosen a domain. If the domain contains all roses, this would be a good symbolization. Yet if the domain is merely \emph{things on my kitchen table}, then `$\forall x(\atom{R}{x} \eif \atom{T}{x})$' would only come close to covering the fact that every rose \emph{on my kitchen table} has a thorn. If there are no roses on my kitchen table, the sentence would be trivially true. This is not what we want. To symbolize \cref*{pickdomainrose} adequately, we need to include all the roses in the domain, but now we have two options.
+
+First, we can restrict the domain to include all roses but \emph{only} roses. Then \cref*{pickdomainrose} can, if we like, be symbolized with `$\forall x\,\atom{T}{x}$'. This is true \ifeff{} everything in the domain has a thorn; since the domain is just the roses, this is true \ifeff{} every rose has a thorn. By restricting the domain, we have been able to symbolize our English sentence with a very short sentence of FOL. So this approach can save us trouble, if every sentence that we want to deal with is about roses.
+
+Second, we can let the domain contain things besides roses: rhododendrons, rats, rifles,  whatevers; and we will certainly need to include a more expansive domain if we simultaneously want to symbolize sentences like:
+	\begin{enumerate}
+		\item\label{pickdomaincowboy} Every cowboy sings a sad, sad song.
+	\end{enumerate}
+Our domain must now include both all the roses (so that we can symbolize \cref*{pickdomainrose}) and all the cowboys (so that we can symbolize \cref*{pickdomaincowboy}). So we might offer the following symbolization key:
+	\begin{ekey}
+		\item[\text{domain}] people and plants
+		\item[\atom{C}{x}] \gap{x} is a cowboy
+		\item[\atom{S}{x}] \gap{x} sings a sad, sad song
+		\item[\atom{R}{x}] \gap{x} is a rose
+		\item[\atom{T}{x}] \gap{x} has a thorn
+	\end{ekey}
+Now we will have to symbolize \cref*{pickdomainrose} with `$\forall x (\atom{R}{x} \eif \atom{T}{x})$', since `$\forall x\, \atom{T}{x}$' would symbolize the sentence `every person or plant has a thorn'. Similarly, we will have to symbolize \cref*{pickdomaincowboy} with `$\forall x (\atom{C}{x} \eif \atom{S}{x})$'.
+
+In general, the universal quantifier can be used to symbolize the English expression `everyone' if the domain only contains people. If there are people and other things in the domain, then `everyone' must be treated as `every person'.
+
+
+\section{The utility of paraphrase}
+When symbolizing English sentences in FOL, it is important to understand the structure of the sentences you want to symbolize. What matters is the final symbolization in FOL, and sometimes you will be able to move from an English language sentence directly to a sentence of FOL. Other times, it helps to paraphrase the sentence one or more times. Each successive paraphrase should move from the original sentence closer to something that you can easily symbolize directly in FOL.
+
+For the next several examples, we will use this symbolization key:
+	\begin{ekey}
+		\item[\text{domain}] people
+		\item[\atom{B}{x}] \gap{x} is a bassist
+		\item[\atom{R}{x}] \gap{x} is a rock star
+		\item[k] Kim Deal
+	\end{ekey}
+Now consider these sentences:
+	\begin{enumerate}
+		\item\label{pronoun1} If Kim Deal is a bassist, then she is a rock star.
+		\item\label{pronoun2} If a person is a bassist, then she is a rock star.
+	\end{enumerate}
+The same words appear as the consequent in \cref*{pronoun1,pronoun2} (`$\ldots$ she is a rock star'), but they mean very different things. To make this clear, it often helps to paraphrase the original sentences, removing pronouns.
+
+\Cref*{pronoun1} can be paraphrased as, `If Kim Deal is a bassist, then \emph{Kim Deal} is a rockstar'. This can obviously be symbolized as `$\atom{B}{k} \eif \atom{R}{k}$'.
+
+\Cref*{pronoun2} must be paraphrased differently: `If a person is a bassist, then \emph{that person} is a rock star'. This sentence is not about any particular person, so we need a variable. As an intermediate step, we can paraphrase this as, `For any person x, if x is a bassist, then x is a rockstar'. Now this can be symbolized as `$\forall x (\atom{B}{x} \eif \atom{R}{x})$'. This is the same sentence we would have used to symbolize `Everyone who is a bassist is a rock star'. On reflection, that is surely true \ifeff{} \cref*{pronoun2} is true, as we would hope.
+
+Consider these further sentences:
+	\begin{enumerate}
+		\item\label{anyone1} If anyone is a bassist, then Kim Deal is a rock star.
+		\item\label{anyone2} If anyone is a bassist, then she is a rock star.
+	\end{enumerate}
+The same words appear as the antecedent in \cref*{anyone1,anyone2}  (`If anyone is a bassist$\ldots$'), but it can be tricky to work out how to symbolize these two uses. Again, paraphrase will come to our aid.
+
+\Cref*{anyone1} can be paraphrased, `If there is at least one bassist, then Kim Deal is a rock star'. It is now clear that this is a conditional whose antecedent is a quantified expression; so we can symbolize the entire sentence with a conditional as the main logical operator: `$\exists x \atom{B}{x} \eif \atom{R}{k}$'.
+
+\Cref*{anyone2} can be paraphrased, `For all people $x$, if $x$ is a bassist, then $x$ is a rock star'. Or, in more natural English, it can be paraphrased by `All bassists are rock stars'. It is best symbolized as `$\forall x(\atom{B}{x} \eif \atom{R}{x})$', just like \cref*{pronoun2}.
+
+The moral is that the English words `any' and `anyone' should typically be symbolized using quantifiers, and if you are having a hard time determining whether to use an existential or a universal quantifier, try paraphrasing the sentence with an English sentence that uses words \emph{besides} `any' or `anyone'.
+
+
+
+\section{Quantifiers and scope}
+Continuing the example, suppose we want to symbolize these sentences:
+	\begin{enumerate}
+		\item\label{qscope1} If everyone is a bassist, then Lars is a bassist.
+		\item\label{qscope2} Everyone is such that, if they are a bassist, then Lars is a bassist.
+	\end{enumerate}
+To symbolize these sentences, we will have to add a new name to the symbolization key, namely:
+	\begin{ekey}
+		\item[l] Lars
+	\end{ekey}
+\Cref*{qscope1} is a conditional, whose antecedent is `everyone is a bassist', so we will symbolize it with `$\forall x\, \atom{B}{x} \eif \atom{B}{l}$'. This sentence is \emph{necessarily} true: if \emph{everyone} is indeed a bassist, then take anyone you like---for example Lars---and he will be a bassist.
+
+\Cref*{qscope2}, by contrast, might best be paraphrased by `every
+person $x$ is such that, if $x$ is a bassist, then Lars is a bassist'.
+This is symbolized by `$\forall x (\atom{B}{x} \eif \atom{B}{l})$'.
+This sentence can well be false. For instance, Kim Deal is a bassist.
+So `$\atom{B}{k}$' is true. Suppose that Lars is not a bassist (say,
+he's a drummer instead), so `$\atom{B}{l}$' is false. Accordingly,
+`$\atom{B}{k} \eif \atom{B}{l}$' will be false, so `$\forall x
+(\atom{B}{x} \eif \atom{B}{l})$' will be false as well. This example
+shows something else: `$\forall x (\atom{B}{x} \eif \atom{B}{l})$' is
+false exactly when $\exists x\,\atom{B}{x} \eif \atom{B}{l}$ is false;
+they are equivalent. Recalling the lesson about how to symbolize `any'
+in \cref{anyone1} from the previous section, we can conclude that
+\cref*{qscope2} is just a convoluted way of saying ``Lars is a bassist,
+if anyone is''.
+
+In short, `$\forall x \atom{B}{x} \eif \atom{B}{l}$' and `$\forall x (\atom{B}{x} \eif \atom{B}{l})$' are very different sentences. We can explain the difference in terms of the \emph{scope} of the quantifier. The scope of quantification is very much like the scope of negation, which we considered when discussing TFL, and it will help to explain it in this way.
+
+In the sentence `$\enot \atom{B}{k} \eif \atom{B}{l}$', the scope of `$\enot$' is just the antecedent of the conditional. We are saying something like: if `$\atom{B}{k}$' is false, then `$\atom{B}{l}$' is true. Similarly, in the sentence `$\forall x \atom{B}{x} \eif \atom{B}{l}$', the scope of `$\forall x$' is just the antecedent of the conditional. We are saying something like: if `$\atom{B}{x}$' is true of \emph{everything}, then `$\atom{B}{l}$' is also true.
+
+In the sentence `$\enot(\atom{B}{k} \eif \atom{B}{l})$', the scope of `$\enot$' is the entire sentence. We are saying something like: `$(\atom{B}{k} \eif \atom{B}{l})$' is false. Similarly, in the sentence `$\forall x (\atom{B}{x} \eif \atom{B}{l})$', the scope of `$\forall x$' is the entire sentence. We are saying something like: `$(\atom{B}{x} \eif \atom{B}{l})$' is true of \emph{everything}.
+
+The moral of the story is simple. When you are using conditionals, be very careful to make sure that you have sorted out the scope correctly.
+
+\section{Ambiguous predicates}
+
+Suppose we just want to symbolize this sentence:
+\begin{enumerate}
+\item\label{surgeon1} Adina is a skilled surgeon.
+\end{enumerate}
+Let the domain be people, let $\atom{K}{x}$ mean `$x$ is a skilled surgeon', and let $a$ mean Adina. \Cref{surgeon1} is simply $\atom{K}{a}$.
+
+
+Suppose instead that we want to symbolize this argument:
+\begin{earg}
+\item The hospital will only hire a skilled surgeon. 
+\item All surgeons are greedy. 
+\item Billy is a surgeon, but is not skilled. 
+\item[\texttherefore] Billy is greedy, but the hospital will not hire him.
+\end{earg}
+We need to distinguish being a \emph{skilled surgeon} from merely being a \emph{surgeon}. So we define this symbolization key:
+\begin{ekey}
+\item[\text{domain}] people
+\item[\atom{G}{x}] \gap{x} is greedy
+\item[\atom{H}{x}] The hospital will hire \gap{x}
+\item[\atom{R}{x}] \gap{x} is a surgeon
+\item[\atom{K}{x}] \gap{x} is skilled
+\item[b] Billy
+\end{ekey}
+
+Now the argument can be symbolized in this way:
+\begin{earg}
+\label{surgeon2}
+\item[] $\forall x\bigl[\enot (\atom{R}{x} \eand \atom{K}{x}) \eif \enot \atom{H}{x}\bigr]$
+\item[] $\forall x(\atom{R}{x} \eif \atom{G}{x})$
+\item[] $\atom{R}{b} \eand \enot \atom{K}{b}$
+\item[\texttherefore] $\atom{G}{b} \eand \enot \atom{H}{b}$
+\end{earg}
+
+Next suppose that we want to symbolize this argument:
+\begin{earg}
+\label{surgeon3}
+\item Carol is a skilled surgeon and a tennis player. 
+\item[\texttherefore] Carol is a skilled tennis player.
+\end{earg}
+If we start with the symbolization key we used for the previous
+argument, we could add a predicate (let $\atom{T}{x}$ mean `$x$ is a
+tennis player') and a name (let `$c$' be a name for Carol). Then the
+argument becomes:
+\begin{earg}
+\item[] $(\atom{R}{c} \eand \atom{K}{c}) \eand \atom{T}{c}$
+\item[\texttherefore] $\atom{T}{c} \eand \atom{K}{c}$
+\end{earg}
+This symbolization is a disaster! It takes what in English is a terrible argument and symbolizes it as a valid argument in FOL. The problem is that there is a difference between being \emph{skilled as a surgeon} and \emph{skilled as a tennis player}. Symbolizing this argument correctly requires two separate predicates, one for each type of skill. If we let $\atom{K_1}{x}$ mean `$x$ is skilled as a surgeon' and $\atom{K_2}{x}$ mean `$x$ is skilled as a tennis player,' then we can symbolize the argument in this way:
+\begin{earg}
+\label{surgeon3correct}
+\item[] $(\atom{R}{c} \eand \atom{K_1}{c}) \eand \atom{T}{c}$
+\item[\texttherefore] $\atom{T}{c} \eand \atom{K_2}{c}$
+\end{earg}
+Like the English language argument it symbolizes, this is invalid. %\nix{Notice that there is no logical connection between $\atom{K_1}{c}$ and $\atom{R}{c}$. As symbols of FOL, they might be any one-place predicates. In English there is a connection between being a \emph{surgeon} and being a \emph{skilled surgeon}: Every skilled surgeon is a surgeon. In order to capture this connection, we symbolize `Carol is a skilled surgeon' as $\atom{R}{c} \eand K_1c$. This means: `Carol is a surgeon and is skilled as a surgeon.'}
+
+The moral of these examples is that you need to be careful of symbolizing predicates in an ambiguous way. Similar problems can arise with predicates like \emph{good}, \emph{bad}, \emph{big}, and \emph{small}. Just as skilled surgeons and skilled tennis players have different skills, big dogs, big mice, and big problems are big in different ways.
+
+Is it enough to have a predicate that means `$x$ is a skilled surgeon', rather than two predicates `$x$ is skilled' and `$x$ is a surgeon'? Sometimes. As \cref{surgeon1} shows, sometimes we do not need to distinguish between skilled surgeons and other surgeons.
+
+Must we always distinguish between different ways of being skilled, good, bad, or big? No. As the argument about Billy shows, sometimes we only need to talk about one kind of skill. If you are symbolizing an argument that is just about dogs, it is fine to define a predicate that means `$x$ is big.' If the domain includes dogs and mice, however, it is probably best to make the predicate mean `$x$ is big for a dog.'
+
+\practiceproblems
+\problempart
+\phantomsection\label{pr.BarbaraEtc}
+Here are the syllogistic figures identified by Aristotle and his successors, along with their medieval names:
+\begin{compactlist}
+	\item \textbf{Barbara.} All G are F. All H are G. So:  All H are F.
+	\item \textbf{Celarent.} No G are F. All H are G. So: No H are F.
+	\item \textbf{Ferio.} No G are F. Some H is G. So: Some H is not F.
+	\item \textbf{Darii.} All G are F. Some H is G. So: Some H is F.
+	\item \textbf{Camestres.} All F are G. No H are G. So: No H are F.
+	\item \textbf{Cesare.} No F are G. All H are G. So: No H are F.
+	\item \textbf{Baroko.} All F are G. Some H is not G. So: Some H is not~F.
+	\item \textbf{Festino.} No F are G. Some H are G. So: Some H is not~F.
+	\item \textbf{Datisi.} All G are F. Some G is H. So: Some H is F.
+	\item \textbf{Disamis.} Some G is F. All G are H. So: Some H is F.
+	\item \textbf{Ferison.} No G are F. Some G is H. So: Some H is not F.
+	\item \textbf{Bokardo.} Some G is not F. All G are H. So:  Some H is not~F.
+	\item \textbf{Camenes.} All F are G. No G are H. So: No H is F.
+	\item \textbf{Dimaris.} Some F is G. All G are H. So: Some H is F.
+	\item \textbf{Fresison.} No F are G. Some G is H. So: Some H is not~F.
+\end{compactlist}
+Symbolize each figure in FOL.
+
+\
+
+\problempart
+\label{pr.FOLvegetarians}
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] people
+\item[\atom{K}{x}] \gap{x} knows the combination to the safe
+\item[\atom{S}{x}] \gap{x} is a spy
+\item[\atom{V}{x}] \gap{x} is a vegetarian
+%\item[\atom{T}{x,y}] \gap{x} trusts \gap{y}.
+\item[h] Hofthor
+\item[i] Ingmar
+\end{ekey}
+symbolize the following sentences in FOL:
+\begin{compactlist}
+\item Neither Hofthor nor Ingmar is a vegetarian.
+\item No spy knows the combination to the safe.
+\item No one knows the combination to the safe unless Ingmar does.
+\item Hofthor is a spy, but no vegetarian is a spy.
+\end{compactlist}
+\solutions
+\problempart\label{pr.FOLalligators}
+Using this symbolization key:
+\begin{ekey}
+\item[\text{domain}] all animals
+\item[\atom{A}{x}] \gap{x} is an alligator
+\item[\atom{M}{x}] \gap{x} is a monkey
+\item[\atom{R}{x}] \gap{x} is a reptile
+\item[\atom{Z}{x}] \gap{x} lives at the zoo
+\item[a] Amos
+\item[b] Bouncer
+\item[c] Cleo
+\end{ekey}
+symbolize each of the following sentences in FOL:
+\begin{compactlist}
+\item Amos, Bouncer, and Cleo all live at the zoo.
+\item Bouncer is a reptile, but not an alligator.
+%\item If Cleo loves Bouncer, then Bouncer is a monkey.
+%\item If both Bouncer and Cleo are alligators, then Amos loves them both.
+\item Some reptile lives at the zoo.
+\item Every alligator is a reptile.
+\item Any animal that lives at the zoo is either a monkey or an alligator.
+\item There are reptiles that are not alligators.
+%\item Cleo loves a reptile.
+%\item Bouncer loves all the monkeys that live at the zoo.
+%\item All the monkeys that Amos loves love him back.
+\item If any animal is an reptile, then Amos is.
+\item If any animal is an alligator, then it is a reptile.
+%\item Every monkey that Cleo loves is also loved by Amos.
+%\item There is a monkey that loves Bouncer, but sadly Bouncer does not reciprocate this love.
+\end{compactlist}
+
+\problempart
+\label{pr.FOLarguments}
+For each argument, write a symbolization key and symbolize the argument in FOL.
+\begin{compactlist}
+\item Willard is a logician. All logicians wear funny hats. So Willard wears a funny hat.
+\item Nothing on my desk escapes my attention. There is a computer on my desk. As such, there is a computer that does not escape my attention.
+\item All my dreams are black and white. Old TV shows are in black and white. Therefore, some of my dreams are old TV shows.
+\item Neither Holmes nor Watson has been to Australia. A person could have seen a kangaroo only if they had been to Australia or to a zoo. Although Watson has not seen a kangaroo, Holmes has. Therefore, Holmes has been to a zoo.
+\item No one expects the Spanish Inquisition. No one knows the troubles I've seen. Therefore, anyone who expects the Spanish Inquisition knows the troubles I've seen.
+\item All babies are illogical. Nobody who is illogical can manage a crocodile. Berthold is a baby. Therefore, Berthold is unable to manage a crocodile.
+\end{compactlist}
+
+%\problempart
+%label{pr.QLarguments}
+%For each argument, write a symbolization key and symbolize the argument into FOL.
+%\begin{compactlist}
+%\item Nothing on my desk escapes my attention. There is a computer on my desk. As such, there is a computer that does not escape my attention.
+%\item All my dreams are black and white. Old TV shows are in black and white. Therefore, some of my dreams are old TV shows.
+%\item Neither Holmes nor Watson has been to Australia. A person could see a kangaroo only if they had been to Australia or to a zoo. Although Watson has not seen a kangaroo, Holmes has. Therefore, Holmes has been to a zoo.
+%\item No one expects the Spanish Inquisition. No one knows the troubles I've seen. Therefore, anyone who expects the Spanish Inquisition knows the troubles I've seen.
+%\item An antelope is bigger than a bread box. I am thinking of something that is no bigger than a bread box, and it is either an antelope or a cantaloupe. As such, I am thinking of a cantaloupe.
+%\item All babies are illogical. Nobody who is illogical can manage a crocodile. Berthold is a baby. Therefore, Berthold is unable to manage a crocodile.
+%\end{compactlist}
+
+
+\chapter{Multiple generality}\label{s:MultipleGenerality}
+So far, we have only considered sentences that require one-place predicates and one quantifier. The full power of FOL really comes out when we start to use many-place predicates and multiple quantifiers. For this insight, we largely have \foreignlanguage{german}{Gottlob Frege} (1879) to thank, but also C.~S.~Peirce.
+
+
+\section{Many-placed predicates}
+All of the predicates that we have considered so far concern properties that objects might have. Those predicates have one gap in them, and to make a sentence, we simply need to slot in one term. They are \define{one-place} predicates.
+
+However, other predicates concern the \emph{relation} between two things. Here are some examples of relational predicates in English:
+	\begin{itemize}
+		\item \blank\ loves \blank
+		\item \blank\ is to the left of \blank
+		\item \blank\ is in debt to \blank
+	\end{itemize}
+These are \define{two-place} predicates. They need to be filled in with two terms in order to make a sentence. Conversely, if we start with an English sentence containing many singular terms, we can remove two singular terms, to obtain different two-place predicates. Consider the sentence `Vinnie borrowed the family car from Nunzio'. By deleting two singular terms, we can obtain any of three different two-place predicates
+	\begin{itemize}
+		\item Vinnie borrowed \blank\ from \blank
+		\item \blank\ borrowed the family car from \blank
+		\item \blank\ borrowed \blank\ from Nunzio
+	\end{itemize}
+and by removing all three singular terms, we  obtain a \define{three-place} predicate:
+	\begin{itemize}
+		\item \blank\ borrowed \blank\ from \blank
+	\end{itemize}
+Indeed, there is no in principle upper limit on the number of places that our predicates may contain.
+
+\section{Mind the gap(s)!}
+
+We have used the same symbol, `\blank', to indicate a gap formed by deleting a term from a sentence. However, as \foreignlanguage{german}{Frege} emphasized, these are \emph{different} gaps. To obtain a sentence, we can fill them in with the same term, but we can equally fill them in with different terms, and in various different orders. The following are three perfectly good sentences, obtained by filling in the gaps in `\blank\ loves \blank{}' in different ways; but they all have distinctively different meanings:
+\begin{enumerate}
+	\item\label{terms3} Karl loves Imre.
+	\item\label{terms3b} Imre loves Karl.
+	\item\label{terms3a} Karl loves Karl.
+\end{enumerate}
+The point is that we need to keep track of the gaps in predicates, so that we can keep track of how we are filling them in. To keep track of the gaps, we assign them variables. Suppose we want to symbolize the preceding sentences. Then I might start with the following symbolization key: 
+	\begin{ekey}
+		\item[\text{domain}] people
+		\item[i] Imre
+		\item[k] Karl
+		\item[\atom{L}{x,y}] \gap{x} loves \gap{y}
+	\end{ekey}
+ \Cref*{terms3} will be symbolized by `$\atom{L}{k,i}$', \cref*{terms3b} will be symbolized by `$\atom{L}{i,k}$', and \cref*{terms3a} will be symbolized by `$\atom{L}{k,k}$'. Here are a few more sentences that we can symbolize with the same key:
+\begin{enumerate}
+	\item\label{terms4} Imre loves himself.
+	\item\label{terms5} Karl loves Imre, but not vice versa.
+	\item\label{terms6} Karl is loved by Imre.
+\end{enumerate}
+\Cref*{terms4} can be paraphrased as `Imre loves Imre', and so
+symbolized by `$\atom{L}{i,i}$'. \Cref*{terms5} is a conjunction. We
+can paraphrase it as `Karl loves Imre, and Imre does not love Karl',
+and so symbolize it as `$\atom{L}{k,i} \eand \enot \atom{L}{i,k}$'.
+\Cref*{terms6} can be paraphrased by `Imre loves Karl', and so
+symbolized as `$\atom{L}{i,k}$'. In this last case, of course, we have
+lost the difference in \emph{tone} between the active and passive
+voice; but we have at least preserved the truth conditions.
+
+But the relationship between `Imre loves Karl' and `Karl is loved by Imre' highlights something important. To see what, suppose we add another entry to our symbolization key:
+\begin{ekey}
+	\item[\atom{M}{x,y}] \gap{y} loves \gap{x}
+\end{ekey}
+The entry for `$M$' uses exactly the same English word---`loves'---as the entry for `$L$'. \emph{But the gaps have been swapped around!} (Just look closely at the subscripts.) And this \emph{matters}.
+
+To explain: when we see a sentence like `$\atom{L}{k,i}$', we are
+being told to take the \emph{first} name (i.e., `$k$') and associate
+its value (i.e., Karl) with the gap labelled `$x$', then take the
+\emph{second} name (i.e.,~`$i$') and associate its value (i.e., Imre)
+with the gap labelled `$y$', and so come up with: \emph{Karl loves
+Imre}. The sentence `$\atom{M}{i,k}$' also tells us to take the
+\emph{first} name (i.e., `$i$') and plug its value into the gap
+labelled `$x$', and take the \emph{second} name (i.e., `$k$') and plug
+its value into the gap labelled `$y$', and so also come up with:
+\emph{Karl loves Imre}.
+
+So, `$\atom{L}{i,k}$' and `$\atom{M}{k,i}$' both symbolize `Imre loves Karl', whereas `$\atom{L}{k,i}$' and `$\atom{M}{i,k}$' both symbolize `Karl loves Imre'. Since love can be unrequited, these are different claims.
+
+One last example might be helpful. Suppose we add this to our symbolisation key: 
+\begin{ekey}
+	\item[\atom{P}{x,y}] \gap{x} prefers \gap{x} to \gap{y}
+\end{ekey}
+Now the sentence `$\atom{P}{i,k}$' symbolizes `Imre prefers Imre to Karl', and `$\atom{P}{k,i}$' symbolizes `Karl prefers Karl to Imre'.  And note that we could have achieved the same effect, if we had instead specified:
+\begin{ekey}
+	\item[\atom{P}{x,y}] \gap{x} prefers themselves to \gap{y}
+\end{ekey}
+In any case, the overall moral of this is simple. \emph{When dealing with predicates with more than one place, pay careful attention to the order of the gaps!} 
+
+
+\section{The order of quantifiers}\label{ss:OrderQuant}
+Consider the sentence `everyone loves someone'. This is potentially ambiguous. It might mean either of the following:
+	\begin{enumerate}
+		\item\label{lovecycle} For every person x, there is some person that x loves.
+		\item\label{loveconverge} There is some particular person whom every person loves.
+	\end{enumerate}
+\Cref*{lovecycle} can be symbolized by `$\forall x \exists y\, \atom{L}{x,y}$'. Suppose that our domain of discourse is restricted to Imre, Juan and Karl. Suppose also that Karl loves Imre but not Juan, that Imre loves Juan but not Karl, and that Juan loves Karl but not Imre. Then \cref*{lovecycle} is true.
+
+\Cref*{loveconverge} is symbolized by `$\exists y \forall x\,
+\atom{L}{x,y}$'. \Cref{loveconverge} is \emph{not} true in the
+situation just described, since no single person is loved by everyone.
+All three of Juan, Imre and Karl would have to converge on (at least)
+one object of love.
+
+The point of the example is to illustrate that the order of the quantifiers matters a great deal. Indeed, to switch them around is called a \emph{quantifier shift fallacy}. Here is an example, which comes up in various forms throughout the philosophical literature:
+	\begin{earg}
+		\item[] For every person, there is some truth they cannot know. \hfill ($\forall \exists$)
+		\item[\texttherefore] There is some particular truth that no person can know. \hfill ($\exists \forall$)
+	\end{earg}
+This argument form is obviously invalid. It's just as bad as:\footnote{Thanks to Rob Trueman for the example.}
+	\begin{earg}
+		\item[] Every dog has its day. \hfill ($\forall \exists$)
+		\item[\texttherefore] There is a day for all the dogs. \hfill ($\exists \forall$)
+	\end{earg}
+
+The order of quantifiers is also important in definitions in mathematics.  For instance, there is a big difference between pointwise and uniform continuity of functions:
+\begin{itemize}
+\item A function $f$ is \emph{pointwise continuous} if
+\[
+\forall \epsilon\forall x\exists \delta\forall y(\left|x - y\right| < \delta \to \left|f(x) - f(y)\right| < \epsilon)
+\]
+\item A function $f$ is \emph{uniformly continuous} if
+\[
+\forall \epsilon\exists \delta\forall x\forall y(\left|x - y\right| < \delta \to \left|f(x) - f(y)\right| < \epsilon)
+\]
+\end{itemize}
+
+The moral is simple: \emph{take great care with the order of your quantifiers!}
+
+
+\section{Stepping-stones to symbolization}
+As we are starting to see, symbolization in FOL can become a bit tricky. So, when symbolizing a complex sentence, you should lay down several stepping-stones. As usual, the idea is best illustrated by example. Consider this symbolisation key: 
+\begin{ekey}
+\item[\text{domain}] people and dogs
+\item[\atom{D}{x}] \gap{x} is a dog
+\item[\atom{F}{x,y}] \gap{x} is a friend of \gap{y}
+\item[\atom{O}{x,y}] \gap{x} owns \gap{y}
+\item[g] Geraldo
+\end{ekey}
+Now let's try to symbolize these sentences:
+\begin{enumerate}
+\item\label{dog2} Geraldo is a dog owner.
+\item\label{dog3} Someone is a dog owner.
+\item\label{dog4} All of Geraldo's friends are dog owners.
+\item\label{dog5} Every dog owner is a friend of a dog owner.
+\item\label{dog6} Every dog owner's friend owns a dog of a friend.
+\end{enumerate}
+\Cref*{dog2} can be paraphrased as, `There is a dog that Geraldo owns'. This can be symbolized by `$\exists x(\atom{D}{x} \eand \atom{O}{g,x})$'.
+
+\Cref*{dog3} can be paraphrased as, `There is some $y$ such that $y$ is a dog owner'. Dealing with part of this, we might write `$\exists y(y\text{ is a dog owner})$'. Now the fragment we have left as `$y$ is a dog owner' is much like \cref*{dog2}, except that it is not specifically about Geraldo. So we can symbolize \cref*{dog3} by:
+$$\exists y \exists x(\atom{D}{x} \eand \atom{O}{y,x})$$
+We should pause to clarify something here. In working out how to
+symbolize the last sentence, we wrote down `$\exists y(y\text{ is a
+dog owner})$'. To be very clear: this is \emph{neither} an FOL
+sentence \emph{nor} an English sentence: it uses bits of FOL
+(`$\exists$', `$y$') and bits of English (`dog owner'). It is really
+\emph{just a stepping-stone} on the way to symbolizing the entire
+English sentence with a sentence of FOL. You should regard it as a bit of
+rough-working-out, on a par with the doodles that you might
+absent-mindedly draw in the margin of this book, whilst you are
+concentrating fiercely on some problem.  
+
+\Cref*{dog4} can be paraphrased as, `Every $x$ who is a friend of Geraldo is a dog owner'. Using our stepping-stone tactic, we might write 
+$$\forall x \bigl[\atom{F}{x,g} \eif x \text{ is a dog owner}\bigr]$$
+Now the fragment that we have left to deal with, `$x$ is a dog owner', is structurally just like \cref*{dog2}. However, it would be a mistake for us simply to write 
+$$\forall x \bigl[\atom{F}{x,g} \eif \exists x(\atom{D}{x} \eand \atom{O}{x,x})\bigr]$$
+for we would here have a \emph{clash of variables}. The scope of the universal quantifier, `$\forall x$', is the entire conditional, so the `$x$' in `$\atom{D}{x}$' should be governed by that, but `$\atom{D}{x}$' also falls under the scope of the existential quantifier `$\exists x$', so the `$x$' in `$\atom{D}{x}$' should be governed by that. Now confusion reigns: which `$x$' are we talking about? Suddenly the sentence becomes ambiguous (if it is even meaningful at all), and logicians hate ambiguity. The broad moral is that a single variable cannot serve two quantifier-masters simultaneously.
+
+To continue our symbolization, then, we must choose some different variable for our existential quantifier. What we want is something like:
+$$\forall x\bigl[\atom{F}{x,g} \eif\exists z(\atom{D}{z} \eand \atom{O}{x,z})\bigr]$$
+This adequately symbolizes \cref*{dog4}.
+
+\Cref{dog5} can be paraphrased as `For any $x$ that is a dog owner, there is a dog owner who $x$ is a friend of'. Using our stepping-stone tactic, this becomes 
+$$\forall x\bigl[\mbox{$x$ is a dog owner}\eif\exists y(\mbox{$y$ is a dog owner}\eand \atom{F}{x,y})\bigr]$$
+Completing the symbolization, we end up with
+$$\forall x\bigl[\exists z(\atom{D}{z} \eand \atom{O}{x,z})\eif\exists y\bigl(\exists z(\atom{D}{z} \eand \atom{O}{y,z})\eand \atom{F}{x,y}\bigr)\bigr]$$
+Note that we have used the same letter, `$z$', in both the antecedent and the consequent of the conditional, but that these are governed by two different quantifiers. This is ok: there is no clash here, because it is clear which quantifier that variable falls under. We might graphically represent the scope of the quantifiers thus:
+$$\overbrace{\forall x\bigl[\overbrace{\exists z(\atom{D}{z} \eand \atom{O}{x,z})}^{\text{scope of 1st `}\exists z\text{'}}\eif \overbrace{\exists y(\overbrace{\exists z(\atom{D}{z} \eand \atom{O}{y,z})}^{\text{scope of 2nd `}\exists z\text{'}}\eand \atom{F}{x,y})\bigr]}^{\text{scope of `}\exists y\text{'}}}^{\text{scope of `}\forall x\text{'}}$$
+This shows that no variable is being forced to serve two masters simultaneously.
+
+\Cref{dog6} is the trickiest yet. First we paraphrase it as
+`For any $x$ that is a friend of a dog owner, $x$ owns a dog which is
+also owned by a friend of~$x$'. Using our stepping-stone tactic, this
+becomes:
+\ifHTMLtarget
+\[\forall x\bigl[x\text{ is a friend of a dog owner}\eif 
+x\text{ owns a dog which is owned by a friend of }x\bigr]\]
+\else
+\begin{multline*}
+\forall x\bigl[x\text{ is a friend of a dog owner}\eif {}\\
+x\text{ owns a dog which is owned by a friend of }x\bigr]
+\end{multline*}
+\fi
+Breaking this down a bit more:
+\ifHTMLtarget
+\[\forall x\bigl[\exists y(\atom{F}{x,y} \eand y\text{ is a dog owner})\eif
+\exists y((\atom{D}{y} \eand \atom{O}{x,y}) \eand y\text{ is owned by
+a friend of }x)\bigr]\]
+\else
+\begin{multline*}
+	\forall x\bigl[\exists y(\atom{F}{x,y} \eand y\text{ is a dog owner})\eif {}\\
+\exists y((\atom{D}{y} \eand \atom{O}{x,y}) \eand y\text{ is owned by a friend of }x)\bigr]
+\end{multline*}
+\fi
+And a bit more: 
+\ifHTMLtarget
+\[\forall x\bigl[\exists y(\atom{F}{x,y} \eand \exists z(\atom{D}{z} \eand \atom{O}{y,z})) \eif 
+\exists y((\atom{D}{y} \eand \atom{O}{x,y}) \eand \exists z(\atom{F}{z,x} \eand \atom{O}{z,y}))\bigr]\]
+\else
+\begin{multline*}
+\forall x\bigl[\exists y(\atom{F}{x,y} \eand \exists z(\atom{D}{z} \eand \atom{O}{y,z})) \eif {}\\
+\exists y((\atom{D}{y} \eand \atom{O}{x,y}) \eand \exists z(\atom{F}{z,x} \eand \atom{O}{z,y}))\bigr]
+\end{multline*}
+\fi
+And we are done!
+
+There is one subtle issue we should briefly address. We paraphrased
+\cref{dog3} as `There is some $y$ such that $y$ is a dog owner'.
+Now our domain includes people and dogs, and `someone' includes
+people, but (at least arguably) does not include dogs.  To be more
+correct, we should have paraphrased \cref*{dog3} as `There is
+some $y$ such that $y$ is a person and a dog owner'. A more accurate
+symbolization of `Someone is a dog owner' would require that we add a
+predicate for `\blank{} is a person' to our symbolization key:
+\begin{ekey}
+	\item[\atom{P}{x}] \gap{x} is a person
+\end{ekey}
+Then we can give a better symbolization of \cref{dog3}:
+$$\exists y (\atom{P}{y} \eand \exists x(\atom{D}{x} \eand
+\atom{O}{y,x}))$$
+`Everyone' and `no one' have to be treated similarly: `Everyone
+is a friend of Geraldo' and `No one is a friend of Geraldo' would be
+symbolized, respectively, as
+\begin{align*}
+	& \forall x(\atom{P}{x} \eif \atom{F}{x,g})\\
+	& \forall x(\atom{P}{x} \eif \enot\atom{F}{x,g}).
+\end{align*}
+Only `someone', `everyone', and `no one' require this treatment. In
+particular, we do not need to explicitly state in the symbolization of
+\cref{dog2} that Geraldo is a person. Neither do we have to
+ensure in \cref{dog4} that Geraldo's friend~$x$ is a person.
+Although it may be true that only people can own dogs or be friends
+with Geraldo, it is not part of what the sentences \emph{say}, and so
+does not need to be taken into account when we symbolize
+them.\footnote{You might object: but the sentences also don't say that
+dogs aren't people. E.g., if we're talking about the fictional world
+of Mickey Mouse, Goofy should be included in `everyone', but Pluto
+should not be.  That's why we picked the predicate `\blank{} is a
+person' and not `\blank{} is a human': in that domain, Goofy would
+fall under both `\blank{} is a person' and `\blank{} is a dog', but
+Pluto would only fall under `\blank{} is a dog'.}
+
+\section{Supressed quantifiers}\label{ss:SuppQuant}
+
+Logic can often help to get clear on the meanings of English claims,
+especially where the quantifiers are left implicit or their order is
+ambiguous or unclear. The clarity of expression and thinking afforded
+by FOL can give you a significant advantage in argument, as can be
+seen in the following takedown by British political philosopher Mary
+Astell (1666--1731) of her contemporary, the theologian William
+Nicholls. In Discourse IV: The Duty of Wives to their Husbands of his
+\textit{The Duty of Inferiors towards their Superiors, in Five
+  Practical Discourses} (London 1701), Nicholls argued that women are
+naturally inferior to men. In the preface to the 3rd edition of her
+treatise \textit{Some Reflections upon Marriage, Occasion'd by the Duke
+  and Duchess of Mazarine's Case; which is also considered,} Astell
+responded as follows:
+\begin{quotation}
+'Tis true, thro' Want of Learning, and of that Superior Genius which
+Men as Men lay claim to, she [Astell] was ignorant of the
+\textit{Natural Inferiority} of our Sex, which our Masters lay down as
+a Self-Evident and Fundamental Truth. She saw nothing in the Reason of
+Things, to make this either a Principle or a Conclusion, but much to
+the contrary; it being Sedition at least, if not Treason to assert it
+in this Reign.
+
+For if by the Natural Superiority of their Sex, they mean that
+\textit{every} Man is by Nature superior to \textit{every} Woman,
+which is the obvious meaning, and that which must be stuck to if they
+would speak Sense, it wou'd be a Sin in \textit{any} Woman to have
+Dominion over \textit{any} Man, and the greatest Queen ought not to
+command but to obey her Footman, because no Municipal Laws can
+supersede or change the Law of Nature; so that if the Dominion of the
+Men be such, the \textit{Salique Law,}\footnote{The Salique law was
+  the common law of France which prohibited the crown be passed on to
+  female heirs.} as unjust as \textit{English Men} have ever thought
+it, ought to take place over all the Earth, and the most glorious
+Reigns in the \textit{English, Danish, Castilian}, and other Annals,
+were wicked Violations of the Law of Nature!
+
+If they mean that \textit{some} Men are superior to \textit{some}
+Women this is no great Discovery; had they turn'd the Tables they
+might have seen that \textit{some} Women are Superior to \textit{some}
+Men. Or had they been pleased to remember their Oaths of Allegiance
+and Supremacy, they might have known that \textit{One} Woman is
+superior to \textit{All} the Men in these Nations, or else they have
+sworn to very little purpose.\footnote{In 1706, England was ruled by
+  Queen Anne.} And it must not be suppos'd, that their Reason and
+Religion wou'd suffer them to take Oaths, contrary to the Laws of
+Nature and Reason of things.\footnote{Mary Astell, \textit{Reflections
+    upon Marriage}, 1706 Preface, iii--iv, and Mary Astell,
+  \textit{Political Writings}, Patricia Springborg (ed.), Cambridge
+  University Press, 1996, pp.~9--10.}
+\end{quotation}
+We can symbolize the different interpretations Astell offers of
+Nicholls' claim that men are superior to women:
+He either meant that every man is superior to every woman, i.e.,
+\[
+\forall x(\atom{M}{x} \eif \forall y(\atom{W}{y} \eif \atom{S}{x,y}))
+\]
+or that some men are superior to some women,
+\[
+\exists x(\atom{M}{x} \eand \exists y(\atom{W}{y} \eand \atom{S}{x,y})).
+\]
+The latter is true, but so is
+\[
+\exists y(\atom{W}{y} \eand \exists x(\atom{M}{x} \eand \atom{S}{y,x}))
+\]
+(some women are superior to some men), so that would be ``no great
+discovery.''  In fact, since the Queen is superior to all her
+subjects, it's even true that some woman is superior to every man,
+i.e.,
+\[
+\exists y(\atom{W}{y} \land \forall x(\atom{M}{x} \eif \atom{S}{y,x})).
+\]
+But this is incompatible with the ``obvious meaning'' of Nicholls'
+claim, i.e., the first reading. So what Nicholls claims amounts to
+treason against the Queen!
+
+\practiceproblems
+\solutions
+\problempart
+Using this symbolization key:
+\begin{ekey}
+\item[\text{domain}] all animals
+\item[\atom{A}{x}] \gap{x} is an alligator
+\item[\atom{M}{x}] \gap{x} is a monkey
+\item[\atom{R}{x}] \gap{x} is a reptile
+\item[\atom{Z}{x}] \gap{x} lives at the zoo
+\item[\atom{L}{x,y}] \gap{x} loves \gap{y}
+\item[a] Amos
+\item[b] Bouncer
+\item[c] Cleo
+\end{ekey}
+symbolize each of the following sentences in FOL:
+\begin{compactlist}
+%\item Amos, Bouncer, and Cleo all live at the zoo.
+%\item Bouncer is a reptile, but not an alligator.
+\item If Cleo loves Bouncer, then Bouncer is a monkey.
+\item If both Bouncer and Cleo are alligators, then Amos loves them both.
+%\item Some reptile lives at the zoo.
+%\item Every alligator is a reptile.
+%\item Any animal that lives at the zoo is either a monkey or an alligator.
+%\item There are reptiles which are not alligators.
+\item Cleo loves a reptile.
+\item Bouncer loves all the monkeys that live at the zoo.
+\item All the monkeys that Amos loves love him back.
+%\item If any animal is an reptile, then Amos is.
+%\item If any animal is an alligator, then it is a reptile.
+\item Every monkey that Cleo loves is also loved by Amos.
+\item There is a monkey that loves Bouncer, but sadly Bouncer does not reciprocate this love.
+\end{compactlist}
+
+\problempart 
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] all animals
+\item[\atom{D}{x}] \gap{x} is a dog
+\item[\atom{S}{x}] \gap{x} likes samurai movies
+\item[\atom{L}{x,y}] \gap{x} is larger than \gap{y}
+\item[r] Rave
+\item[h] Shane
+\item[d] Daisy
+\end{ekey}
+symbolize the following sentences in FOL:
+\begin{compactlist}
+\item Rave is a dog who likes samurai movies.
+\item Rave, Shane, and Daisy are all dogs.
+\item Shane is larger than Rave, and Daisy is larger than Shane.
+\item All dogs like samurai movies.
+\item Only dogs like samurai movies.
+\item There is a dog that is larger than Shane.
+\item If there is a dog larger than Daisy, then there is a dog larger than Shane.
+\item No animal that likes samurai movies is larger than Shane.
+\item No dog is larger than Daisy.
+\item Any animal that dislikes samurai movies is larger than Rave.
+\item There is an animal that is between Rave and Shane in size.
+\item There is no dog that is between Rave and Shane in size.
+\item No dog is larger than itself.
+\item Every dog is larger than some dog.
+\item There is an animal that is smaller than every dog.
+\item If there is an animal that is larger than any dog, then that animal does not like samurai movies.
+\end{compactlist}
+
+\problempart
+\label{pr.QLcandies}
+Using the symbolization key given, symbolize each English-language sentence into FOL.
+\begin{ekey}
+\item[\text{domain}] candies
+\item[\atom{C}{x}] \gap{x} has chocolate in it
+\item[\atom{M}{x}] \gap{x} has marzipan in it
+\item[\atom{S}{x}] \gap{x} has sugar in it
+\item[\atom{T}{x}] Boris has tried \gap{x}
+\item[\atom{B}{x,y}] \gap{x} is better than \gap{y}
+\end{ekey}
+\begin{compactlist}
+\item Boris has never tried any candy.
+\item Marzipan is always made with sugar.
+\item Some candy is sugar-free.
+\item The very best candy is chocolate.
+\item No candy is better than itself.
+\item Boris has never tried sugar-free chocolate.
+\item Boris has tried marzipan and chocolate, but never together.
+%\item Boris has tried nothing that is better than sugar-free marzipan.
+\item Any candy with chocolate is better than any candy without it.
+\item Any candy with chocolate and marzipan is better than any candy that lacks both.
+\end{compactlist}
+
+\problempart
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] people and dishes at a potluck
+\item[\atom{R}{x}] \gap{x} has run out
+\item[\atom{T}{x}] \gap{x} is on the table
+\item[\atom{F}{x}] \gap{x} is food
+\item[\atom{P}{x}] \gap{x} is a person
+\item[\atom{L}{x,y}] \gap{x} likes \gap{y}
+\item[e] Eli
+\item[f] Francesca
+\item[g] the guacamole
+\end{ekey}
+symbolize the following English sentences in FOL:
+\begin{compactlist}
+\item All the food is on the table.
+\item If the guacamole has not run out, then it is on the table.
+\item Everyone likes the guacamole.
+\item If anyone likes the guacamole, then Eli does.
+\item Francesca only likes the dishes that have run out.
+\item Francesca likes no one, and no one likes Francesca.
+\item Eli likes anyone who likes the guacamole.
+\item Eli likes anyone who likes the people that he likes.
+\item If there is a person on the table already, then all of the food must have run out.
+\end{compactlist}
+
+
+\solutions
+\problempart
+\label{pr.FOLballet}
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] people
+\item[\atom{D}{x}] \gap{x} dances ballet
+\item[\atom{F}{x}] \gap{x} is female
+\item[\atom{M}{x}] \gap{x} is male
+\item[\atom{C}{x,y}] \gap{x} is a child of \gap{y}
+\item[\atom{S}{x,y}] \gap{x} is a sibling of \gap{y}
+\item[e] Elmer
+\item[j] Jane
+\item[p] Patrick
+\end{ekey}
+symbolize the following sentences in FOL:
+\begin{compactlist}
+\item All of Patrick's children are ballet dancers.
+\item Jane is Patrick's daughter.
+\item Patrick has a daughter.
+\item Jane is an only child.
+\item All of Patrick's sons dance ballet.
+\item Patrick has no sons.
+\item Jane is Elmer's niece.
+\item Patrick is Elmer's brother.
+\item Patrick's brothers have no children.
+\item Jane is an aunt.
+\item Everyone who dances ballet has a brother who also dances ballet.
+\item Every woman who dances ballet is the child of someone who dances ballet.
+\end{compactlist}
+
+
+\chapter{Identity}
+\label{sec.identity}
+
+Consider this sentence:
+\begin{enumerate}
+\item\label{else1} Pavel owes money to everyone.
+\end{enumerate}
+Let the domain be people; this will allow us to symbolize `everyone' with a universal quantifier. Offering the symbolization key:
+	\begin{ekey}
+		\item[\atom{O}{x,y}] \gap{x} owes money to \gap{y}
+		\item[p] Pavel
+	\end{ekey}
+we can symbolize \cref*{else1} by `$\forall x\, \atom{O}{p,x}$'. But this has a (perhaps) odd consequence. It requires that Pavel owes money to every member of the domain (whatever the domain may be). The domain certainly includes Pavel. So this entails that Pavel owes money to himself. And maybe we did not want to say that. Maybe we meant to leave it open if Pavel owes money to himself, something we could have expressed more precisely by using either one of the following:
+	\begin{enumerate}
+		\item\label{else1b} Pavel owes money to everyone \emph{else}.
+		\item\label{else1c} Pavel owes money to everyone \emph{other than} Pavel.
+	\end{enumerate}
+But we do not have any way for dealing with the italicized words yet. The solution is to add another symbol to FOL.
+
+\section{Adding identity}
+
+The symbol `$=$' will be a two-place predicate. Since it will have a special meaning, we shall write it a bit differently: we put it \emph{between} two terms, rather than out front. (This should also be familiar; consider a mathematical equation like $\frac{1}{2} = 0.5$.) And the special meaning for `$=$' is given by the fact that we \emph{always} adopt the following symbolization key: 
+	\begin{ekey}
+		\item[{x=y}] \gap{x} is identical to \gap{y}
+	\end{ekey}
+This does not mean \emph{merely} that the terms to the left and right
+of `$=$' refer to objects that are indistinguishable, or that all of
+the same things are true of them. Rather, it means that the terms to
+the left and right of `$=$' refer to \emph{one and the same object}.
+
+To put this to use, suppose we want to symbolize this sentence:
+\begin{enumerate}
+\item\label{else2} Pavel is Mister Chekov.
+\end{enumerate}
+Let us add to our symbolization key:
+	\begin{ekey}
+		\item[c] Mister Chekov
+	\end{ekey}
+Now \cref*{else2} can be symbolized as `$p=c$'. This tells us that the names `$p$' and `$c$' both name the same thing.
+
+We can also now deal with \cref{else1b,else1c}. Both of these sentences can be  paraphrased as `Everyone who is not Pavel is owed money by Pavel'. Paraphrasing some more, we get: `For all~$x$, if $x$ is not Pavel, then $x$ is owed money by Pavel'. Now that we are armed with our new identity symbol, we can symbolize this as `$\forall x (\enot\, {x = p} \eif \atom{O}{p,x})$'.
+
+This last sentence contains the formula `$\enot\, {x = p}$'. That might look a bit strange, because the symbol that comes immediately after the `$\enot$' is a variable, rather than a predicate, but this is not a problem. We are simply negating the entire formula~`$x = p$'.
+
+\section{`Only' and `except'}
+
+In addition to sentences that use the word `else', and `other than', identity is helpful when symbolizing some sentences that contain the words `only', and~`except'. Consider:
+\begin{enumerate}
+\item\label{only1} Only Pavel owes money to Hikaru.
+\end{enumerate}
+Let `$h$' name Hikaru. Plausibly, \cref*{only1} is true if, and only if, both of the following conditions hold:
+\begin{enumerate}
+	\item\label{only2} Pavel owes money to Hikaru.
+	\item\label{else3} No one who is not Pavel owes money to Hikaru.
+\end{enumerate}
+\Cref*{else3} can be symbolized by any one of:
+\begin{align*}
+	& \enot\exists x(\enot\, {x = p} \eand \atom{O}{x,h}),\\
+	& \forall x(\enot\, {x = p} \eif \enot\atom{O}{x,h}),\\
+	& \forall x(\atom{O}{x,h} \eif x = p).
+\end{align*}
+Thus, we can symbolize \cref*{only1} as the conjunction of one of the above with the symbolization of~\cref*{only2}, `$\atom{O}{p,h}$', or more compactly using `$\eiff$' as `$\forall x(\atom{O}{x,h} \eiff x = p)$'.
+
+\begin{enumerate}
+	\item\label{except} Everyone except Pavel owes money to Hikaru.
+	\end{enumerate}
+\Cref*{except} can be treated similarly, although now of course Pavel does \emph{not} owe Hikaru money. We can paraphrase it as `Everyone who is not Pavel owes Hikaru money, and Pavel does not'. Consequently, it can be symbolized as `$\forall x(\enot\, {x = p} \eif \atom{O}{x,h}) \eand \enot \atom{O}{p,h}$', or more concisely, `$\forall x(\enot\, {x = p} \eiff \atom{O}{x,h})$'. Other locutions akin to `except' such as `but' or `besides' (as used in `no one but Pavel' or `someone besides Hikaru') can be treated in similar ways.
+
+The above treatment of so-called ``exceptives'' is not uncontentious. Some linguists think that \cref*{except} does not entail that Pavel doesn't owe Hikaru money, and so the symbolization should just be `$\forall x(\enot\, {x = p} \eif \atom{O}{x,h})$'.  There are also uses of `except' that clearly do not have that entailment, especially in mathematical writing.  For instance, you may read in a calculus textbook that ``the function~$f$ is defined everywhere except possibly at~$a$''.  That means only that for every point~$x$ other than~$a$, $f$~is defined at~$x$. It is not required that $f$ is undefined at~$a$; it's left open whether $f$ is or is not defined at~$a$.
+
+\section{There are at least\ldots}
+We can also use identity to say how many things there are of a particular kind. For example, consider these sentences:
+\begin{enumerate}
+\item\label{atleast1} There is at least one apple.
+\item\label{atleast2} There are at least two apples.
+\item\label{atleast3} There are at least three apples.
+\end{enumerate}
+We will use the symbolization key:
+	\begin{ekey}
+		\item[\atom{A}{x}] \gap{x} is an apple
+	\end{ekey}
+\Cref*{atleast1} does not require identity. It can be adequately symbolized by `$\exists x\, \atom{A}{x}$': There is an apple; perhaps many, but at least one.
+
+It might be tempting to also symbolize \cref*{atleast2} without
+identity, namely as `$\exists x \exists y(\atom{A}{x} \eand
+\atom{A}{y})$'. Roughly, this says that there is some apple $x$ in the
+domain and some apple $y$ in the domain. Since nothing precludes these
+from being one and the same apple, this would be true even if there
+were only one apple. In order to make sure that we are dealing with
+\emph{different} apples, we need the identity predicate.
+\Cref*{atleast2} needs to say that the two apples that exist are not
+identical, so it can be symbolized by `$\exists x \exists
+y((\atom{A}{x} \eand \atom{A}{y}) \eand \enot\, {x = y})$'.
+
+\Cref*{atleast3} requires talking about three different apples. Now we need three existential quantifiers, and we need to make sure that each will pick out something different: 
+\[
+	\exists x \exists y\exists z[((\atom{A}{x} \eand \atom{A}{y}) \eand \atom{A}{z}) \eand ((\enot\, {x = y} \eand \enot\, {y = z}) \eand \enot\, {x = z})].
+\]
+Note that it is \emph{not} enough to use `$\enot\, {x = y} \eand \enot\, {y = z}$' to symbolize `$x$, $y$, and~$z$ are all different.' For that would be true if $x$ and $y$ were different, but $x = z$. In general, to say that $x_1$, \dots, $x_n$ are all different, we must have a conjunction of $\enot\, {x_i = x_j}$ for every different pair $i$ and~$j$.
+
+\section{There are at most\ldots}
+Now consider these sentences:
+\begin{enumerate}
+	\item\label{atmost1} There is at most one apple.
+	\item\label{atmost2} There are at most two apples.
+\end{enumerate}
+\Cref*{atmost1} can be paraphrased as, `It is not the case that there
+are at least \emph{two} apples'. This is just the negation of
+\cref{atleast2}: 
+\[
+	\enot \exists x \exists y[(\atom{A}{x} \eand \atom{A}{y}) \eand \enot\, {x = y}]
+\]
+But \cref*{atmost1} can also be approached in another way. It means
+that if you pick out an object and it's an apple, and then you pick
+out an object and it's also an apple, you must have picked out the
+same object both times. With this in mind, \cref*{atmost1} can also be
+symbolized by:
+\[
+	\forall x\forall y\bigl[(\atom{A}{x} \eand \atom{A}{y}) \eif x=y\bigr]
+\]
+The two sentences will turn out to be logically equivalent.
+
+Similarly, \cref*{atmost2} can be approached in two equivalent ways.
+It can be paraphrased as, `It is not the case that there are
+\emph{three} or more distinct apples', so we can offer:
+\[
+	\enot \exists x \exists y\exists z\bigl[((\atom{A}{x} \eand \atom{A}{y}) \eand \atom{A}{z}) \eand ((\enot\, {x = y} \eand \enot\, {x = z}) \eand \enot\, {y = z})\bigr]
+\]
+Alternatively we can read it as saying that if you pick out an apple,
+and an apple, and an apple, then you will have picked out (at least)
+one of these objects more than once. Thus:
+\[
+	\forall x\forall y\forall z\bigl[((\atom{A}{x} \eand \atom{A}{y}) \eand \atom{A}{z}) \eif ((x=y \eor x=z) \eor y=z)\bigr]
+\]
+
+
+\section{There are exactly\ldots}\label{sec:exactlyn}
+
+We can now consider statements of exact numerical quantity, like:
+\begin{enumerate}
+\item\label{exactly1} There is exactly one apple.
+\item\label{exactly2} There are exactly two apples.
+\item\label{exactly3} There are exactly three apples.
+\end{enumerate}
+\Cref*{exactly1} can be paraphrased as, `There is \emph{at least} one
+apple and there is \emph{at most} one apple'. This is just the
+conjunction of \cref{atleast1} and \cref{atmost1}. So we can offer:
+\[
+	\exists x \atom{A}{x} \eand \forall x\forall y\bigl[(\atom{A}{x} \eand \atom{A}{y}) \eif x=y\bigr]
+\]
+But it is perhaps more straightforward to paraphrase \cref*{exactly1}
+as, `There is a thing $x$ which is an apple, and everything which is
+an apple is just $x$ itself'. Thought of in this way, we offer: 
+\[
+	\exists x\bigl[\atom{A}{x} \eand \forall y(\atom{A}{y} \eif x= y)\bigr]
+\]
+Similarly, \cref*{exactly2} may be paraphrased as, `There are \emph{at
+least} two apples, and there are \emph{at most} two apples'. Thus we
+could offer
+\ifHTMLtarget
+\[\exists x \exists y((\atom{A}{x} \eand \atom{A}{y}) \eand \enot\, {x = y}) \eand 
+\forall x\forall y\forall z\bigl[((\atom{A}{x} \eand \atom{A}{y})
+\eand \atom{A}{z}) \eif ((x=y \eor x=z) \eor y=z)\bigr]
+\]
+\else
+\begin{multline*}
+  \exists x \exists y((\atom{A}{x} \eand \atom{A}{y}) \eand \enot\, {x = y}) \eand {}\\
+  \forall x\forall y\forall z\bigl[((\atom{A}{x} \eand \atom{A}{y}) \eand \atom{A}{z}) \eif ((x=y \eor x=z) \eor y=z)\bigr]
+\end{multline*}
+\fi
+More efficiently, though, we can paraphrase it as `There are at least two different apples, and every apple is one of those two apples'. Then we offer:
+$$\exists x\exists y\bigl[((\atom{A}{x} \eand \atom{A}{y}) \eand \enot\, {x = y}) \eand \forall z(\atom{A}{z} \eif ( x= z \eor y = z))\bigr]$$
+Finally, consider these sentences:
+\begin{enumerate}
+\item\label{exactly2things} There are exactly two things.
+\item\label{exactly2objects} There are exactly two objects.
+\end{enumerate}
+It might be tempting to add a predicate to our symbolization key, to symbolize the English predicate `\blank\ is a thing' or `\blank\ is an object', but this is unnecessary. Words like `thing' and `object' do not sort wheat from chaff: they apply trivially to everything, which is to say, they apply trivially to every thing. So we can symbolize either sentence with either of the following:
+\begin{align*}
+	& \exists x \exists y\,\enot\, {x = y} \eand  \enot \exists x \exists y \exists z ((\enot\, {x = y} \eand \enot\, {y = z}) \eand \enot\, {x = z}) \\
+	& \exists x \exists y \bigl[\enot\, {x = y} \eand \forall z(x=z \eor y = z)\bigr]
+\end{align*}
+
+\practiceproblems
+
+%\solutions
+%\problempart
+%\label{pr.FOLcandies}
+%Using the following symbolization key:
+%\begin{ekey}
+%\item[\text{domain}] candies
+%\item[\atom{C}{x}] \gap{x} has chocolate in it.
+%\item[\atom{M}{x}] \gap{x} has marzipan in it.
+%\item[\atom{S}{x}] \gap{x} has sugar in it.
+%\item[\atom{T}{x}] Boris has tried \gap{x}.
+%\item[\atom{B}{x,y}] \gap{x} is better than \gap{y}.
+%\end{ekey}
+%symbolize the following English sentences in FOL:
+%\begin{compactlist}
+%\item Boris has never tried any candy.
+%\item Marzipan is always made with sugar.
+%\item Some candy is sugar-free.
+%\item The very best candy is chocolate.
+%\item No candy is better than itself.
+%\item Boris has never tried sugar-free chocolate.
+%\item Boris has tried marzipan and chocolate, but never together.
+%%\item Boris has tried nothing that is better than sugar-free marzipan.
+%\item Any candy with chocolate is better than any candy without it.
+%\item Any candy with chocolate and marzipan is better than any candy that lacks both.
+%\end{compactlist}
+
+\problempart 
+Consider the sentence,
+\begin{enumerate}
+	\item\label{except2} Every officer except Pavel owes money to Hikaru.
+\end{enumerate}
+Symbolize this sentence, using `$\atom{F}{x}$' for `\gap{x} is an officer'.  Are you confident that your symbolization is true if, and only if, \cref*{except2} is true?  What happens if every officer owes money to Hikaru, Pavel does not, but Pavel isn't an officer?
+
+\problempart 
+Explain why:
+	\begin{compactlist}
+		\item `$\exists x \forall y(\atom{A}{y} \eiff x= y)$' is a good
+		symbolization of `there is exactly one apple'.
+		\item `$\exists x \exists y \bigl[\enot\, {x = y} \eand \forall
+		z(\atom{A}{z} \eiff (x= z \eor y = z))\bigr]$' is a good
+		symbolization of `there are exactly two apples'.
+	\end{compactlist}
+
+
+\chapter{Sentences of FOL}\label{s:FOLSentences}
+We know how to represent English sentences in FOL. The time has finally come to define the notion of a \emph{sentence} of FOL.
+
+\section{Expressions}
+There are six kinds of symbols in FOL:
+
+\begin{compactlist}
+\item \textbf{Predicates:} $A$, $B$, $C$, \dots, $Z$, or 
+with subscripts, as needed: $A_1$, $B_1$, $Z_1$, $A_2$, $A_{25}$,
+$J_{375}$, \dots
+
+The identity symbol `$=$' counts as a special predicate.
+\item \textbf{Names:} $a$, $b$, $c$, \dots, $r$, or
+with subscripts, as needed: $a_1$, $b_{224}$, $h_7$, $m_{32}$, \dots
+\item \textbf{Variables:} $s$, $t$, $u$, $v$, $w$, $x$, $y$, $z$, or
+with subscripts, as needed: $x_1$, $y_1$, $z_1$, $x_2$, \dots
+\item \textbf{Connectives:}  $\enot$, $\eand$, $\eor$, $\eif$, $\eiff$
+\item \textbf{Brackets:} ( , )
+\item \textbf{Quantifiers:}  $\forall$, $\exists$
+\end{compactlist}
+We define an \define{expression of FOL} as any string of symbols of FOL. Take any of the symbols of FOL and write them down, in any order, and you have an expression.
+
+\section{Terms and formulas}
+\label{s:TermsFormulas}
+
+In \cref{s:TFLSentences}, we went straight from the statement of the vocabulary of TFL to the definition of a sentence of TFL. In FOL, we will have to go via an intermediary stage: via the notion of a \define{formula}. The intuitive idea is that a formula is any sentence, or anything which can be turned into a sentence by adding quantifiers out front. But this intuitive idea will take some time to unpack.
+
+We start by defining the notion of a term.
+	\factoidbox{
+		A \define{term} is any name or any variable. }
+So, here are some terms:
+	$$a, b, x, x_1, x_2, y, y_{254}, z$$
+Next we need to define atomic formulas.
+	\factoidbox{
+		\begin{factoidnumber}
+		\item Any sentence letter is an atomic formula.
+		\item If $\metav{R}$ is an $n$-place predicate and $\metav{t}_1, \metav{t}_2, \ldots, \metav{t}_n$ are terms, then $\atom{\metav{R}}{\metav{t}_1, \metav{t}_2, \ldots, \metav{t}_n}$ is an atomic formula.
+		\item If $\metav{t}_1$ and $\metav{t}_2$ are terms, then $\metav{t}_1 = \metav{t}_2$ is an atomic formula.
+		\item Nothing else is an atomic formula.
+		\end{factoidnumber}
+	}
+Note that we consider sentence letters also formulas of FOL, so every
+sentence of TFL is also a formula of FOL. In \cref{ch.NDFOL}, we will
+again also allow the contradiction~`$\ered$' as an atomic formula.
+
+\newglossaryentry{term}{
+  name = term,
+  description = {Either a \gls{name} or a \gls{variable}}
+}
+
+\newglossaryentry{formula}{
+  name = formula,
+  description = {An expression of FOL built according to the inductive rules in \cref{s:TermsFormulas}}
+}
+
+
+The use of script letters here follows the conventions laid down in \cref{s:UseMention}. So, `$\metav{R}$' is not itself a predicate of FOL. Rather, it is a symbol of our metalanguage (augmented English) that we use to talk about any predicate of FOL. Similarly, `$\metav{t}_1$' is not a term of FOL, but a symbol of the metalanguage that we can use to talk about any term of FOL. So, where `$F$' is a one-place predicate, `$G$' is a three-place predicate, and `$S$' is a six-place predicate, here are some atomic formulas:
+	\begin{center}
+		\begin{tabular}{l@{\qquad\qquad}l}
+		$D$ & $\atom{F}{a}$\\
+		$x = a$ & $\atom{G}{x,a,y}$\\
+		$a = b$ & $\atom{G}{a,a,a}$\\
+		$\atom{F}{x}$ & $\atom{S}{x_1, x_2, a, b, y, x_1}$
+	\end{tabular}
+\end{center}
+Once we know what atomic formulas are, we can offer recursion clauses to define arbitrary formulas. The first few clauses are exactly analogous to those in the definition of `sentence of TFL'.
+	\factoidbox{
+	\begin{factoidnumber}
+		\item Every atomic formula is a formula.
+		\item If \metav{A} is a formula, then $\enot\metav{A}$ is a formula.
+		\item If \metav{A} and \metav{B} are formulas, then $(\metav{A}\eand\metav{B})$ is a formula.
+		\item If \metav{A} and \metav{B} are formulas, then $(\metav{A}\eor\metav{B})$ is a formula.
+		\item If \metav{A} and \metav{B} are formulas, then $(\metav{A}\eif\metav{B})$ is a formula.
+		\item If \metav{A} and \metav{B} are formulas, then $(\metav{A}\eiff\metav{B})$ is a formula.
+		\item\label{formForall} If \metav{A} is a formula and \metav{x} is a variable,
+		% \metav{A} contains at least one occurrence of \metav{x}, and \metav{A} contains neither $\forall \metav{x}$ nor $\exists \metav{x}$, 
+		then $\forall\metav{x}\,\metav{A}$ is a formula.
+		\item\label{formExists} If \metav{A} is a formula and \metav{x} is a variable, 
+		%\metav{A} contains at least one occurrence of \metav{x}, and \metav{A} contains neither $\forall \metav{x}$ nor $\exists \metav{x}$, 
+		then $\exists\metav{x}\,\metav{A}$ is a formula.
+		\item Nothing else is a formula.
+	\end{factoidnumber}
+	}
+So, assuming again that `$F$' is a one-place predicate, `$G$' is a three-place predicate and `$S$' is a six place-predicate, here are some formulas you can build this way:
+	\begin{align*}
+		& \atom{F}{x}\\
+		& \atom{G}{a,y,z}\\
+		& \atom{S}{y,z,y,a,y,x}\\
+		(\atom{G}{a,y,z} \eif \,& \atom{S}{y,z,y,a,y,x})\\
+		\forall z (\atom{G}{a,y,z} \eif \,& \atom{S}{y,z,y,a,y,x})\\
+		\atom{F}{x} \eand \forall z (\atom{G}{a,y,z} \eif \,& \atom{S}{y,z,y,a,y,x})\\
+		\exists y (\atom{F}{x} \eand \forall z (\atom{G}{a,y,z} \eif \,& \atom{S}{y,z,y,a,y,x}))\\
+		\forall x \exists y (\atom{F}{x} \eand \forall z (\atom{G}{a,y,z} \eif \,& \atom{S}{y,z,y,a,y,x}))
+	\end{align*}
+%However, this is \emph{not} a formula:
+%	\begin{center}
+%		$\forall x \exists x\, \atom{G}{x,x,x}$
+%	\end{center}
+%Certainly `$\atom{G}{x,x,x}$' is a formula, and `$\exists x\, \atom{G}{x,x,x}$' is therefore also a formula. But we cannot form a new formula by putting `$\forall x$' at the front. This violates the constraints on clause 7 of our inductive definition: `$\exists x\, \atom{G}{x,x,x}$' contains at least one occurrence of `$x$', but it already contains `$\exists x$'.
+
+%These constraints have the effect of ensuring that variables only serve one master at any one time (see \cref{s:MultipleGenerality}). In fact, w
+We can now give a formal definition of scope, which incorporates the definition of the scope of a quantifier. Here we follow the case of TFL, though we note that a logical operator can be either a connective or a quantifier:
+	\factoidbox{
+		\begin{factoiditems}
+		\item The \define{main logical operator} in a formula is the
+		operator that was introduced most recently, when that formula was
+		constructed using the recursion rules.
+		\item The \define{scope} of a logical operator in a formula is the
+	subformula for which that operator is the main logical operator. 
+\end{factoiditems}}
+So we can graphically illustrate the scope of the quantifiers in the
+preceding example thus:
+$$\overbrace{\forall x \overbrace{\exists y (\atom{F}{x} \eiff
+\overbrace{\forall z (\atom{G}{a,y,z} \eif
+\atom{S}{y,z,y,a,y,x})}^{\text{scope of `}\forall
+z\text{'}}}^{\text{scope of `}\exists y\text{'}})}^{\text{scope of
+`$\forall x$'}}$$
+
+\newglossaryentry{main logical operator}{
+  name = main logical operator,
+  description = {The operator used last in the construction of a \gls{sentence of TFL} or a \gls{formula} of FOL}
+}
+
+\newglossaryentry{scope}{
+  name = scope,
+  description = {The subformula of a \gls{sentence of TFL} or a \gls{formula} of FOL for which the \gls{main logical operator} is the operator}
+}
+
+\section{Sentences and free variables}\label{s:FreeVars}
+
+Recall that we are largely concerned in logic with assertoric
+sentences: sentences that can be either true or false. Many formulas
+are not sentences. Consider the following symbolization key:
+	\begin{ekey}
+		\item[\text{domain}] people
+		\item[\atom{L}{x,y}] \gap{x} loves \gap{y}
+		\item[b] Boris
+	\end{ekey}
+Consider the atomic formula `$\atom{L}{z,z}$'. All atomic formulas are
+formulas, so `$\atom{L}{z,z}$' is a formula, but can it be true or
+false? You might think that it will be true just in case the person
+named by `$z$' loves themself, in the same way that `$\atom{L}{b,b}$'
+is true just in case Boris (the person named by `$b$') loves himself.
+\emph{However, `$z$' is a variable, and does not name anyone or any
+thing.}
+
+Of course, if we put an existential quantifier out front, obtaining
+`$\exists z\,\atom{L}{z,z}$', then this would be true \ifeff{} someone
+loves themselves. Equally, if we wrote `$\forall z\, \atom{L}{z,z}$',
+this would be true \ifeff{} everyone loves themselves. The point is
+that we need a quantifier to tell us how to deal with a variable.
+
+Let's make this idea precise.
+	\factoidbox{
+		An occurrence of a variable \metav{x} is \define{bound} \ifeff{} it falls within the scope of either $\forall\metav{x}$ or~$\exists\metav{x}$. An occurrence of a variable which is not bound is \define{free}.}
+
+\newglossaryentry{bound variable}{
+  name = bound variable,
+  description = {An occurrence of a variable in a \gls{formula} which is in the scope of a quantifier followed by the same variable}
+}
+
+\newglossaryentry{free variable}{
+  name = free variable,
+  description = {An occurrence of a variable in a \gls{formula} which is not a \gls{bound variable}}
+}
+
+For example, consider the formula
+	$$(\forall x(\atom{E}{x} \eor \atom{D}{y}) \eif \exists z(\atom{E}{x} \eif \atom{L}{z,x}))$$
+The scope of the universal quantifier `$\forall x$' is `$\forall x (\atom{E}{x} \eor \atom{D}{y})$', so the first `$x$' is bound by the universal quantifier. However, the second and third occurrence of `$x$' are free. Equally, the `$y$' is free. The scope of the existential quantifier `$\exists z$' is `$\exists z(\atom{E}{x} \eif \atom{L}{z,x})$', so `$z$' is bound.
+
+Formulas that do not have free variables, i.e., every variable is
+bound, are called \define{sentences}. Only sentences can be true or false.
+\factoidbox{	
+		A \define{sentence} of FOL is any formula of FOL that contains no free variables.
+	}
+
+\newglossaryentry{sentence of FOL}{
+	name = sentence (of FOL),
+	text = sentence of FOL,
+	plural = sentences of FOL,
+	description = {A \gls{formula} of FOL which has no \glspl{free variable}}
+}
+
+Note that in the formation rules given in \cref{s:TermsFormulas},
+specifically in the clauses for $\forall$ and~$\exists$, we did not
+require that the variable~$\metav{x}$ in $\forall\metav{x}\,
+\metav{A}$ and $\exists\metav{x}\,\metav{A}$ does not \emph{already}
+occur as a bound variable in~$\metav{A}$. So we allow, for instance,
+`$\exists x(\forall x\,\atom{F}{x} \eif \atom{G}{x})$' as a sentence. We
+won't be meeting such special cases often, since we can always rename
+bound variables to obtain an equivalent sentence that avoids such
+weirdness; in this case, e.g., `$\exists x(\forall y\,\atom{F}{y} \eif
+\atom{G}{x})$'. But since it is allowed to happen, we should clarify
+which quantifiers bind which variables: An occurrence of a bound
+variable is always bound by the quantifier with the same matching
+variable that is closest to it. By ``closest'' we mean: it is the main
+logical operator of the smallest subformula into the scope of which
+the occurrence of the variable falls. So in our previous example,
+`$\forall x$' binds the occurrence of~$x$ in `$\atom{F}{x}$', since it is
+the main logical operator of `$\forall x\,\atom{F}{x}$'. The `$\forall x$'
+does not bind the `$x$' in~`$\atom{G}{x}$', however. The `$\exists x$' does
+not bind the `$x$' in `$\atom{F}{x}$', but it does bind the `$x$'
+in~`$\atom{G}{x}$'.
+
+The rules also do not require that the bound variable~$\metav{x}$
+\emph{actually occurs} free in $\metav{A}$ (or even at all). So our
+rules also allow `$\exists x\,\atom{F}{a}$' and `$\exists x\forall
+x\,\atom{G}{x}$' as formulas. In each case, the `$\exists x$' does not
+bind~`$x$', because `$x$' does not occur free in `$\atom{F}{a}$' or in
+`$\forall x\,\atom{G}{x}$'. In the former case, `$x$' does not occur at
+all; in the latter, it is already bound by~`$\forall x$'. This is called
+\define{vacuous quantification}. It rarely appears in practice, and
+isn't harmful. The two sentences are equivalent to the sentences
+without the `$\exists x$', i.e., to `$\atom{F}{a}$' and~`$\forall
+x\,\atom{G}{x}$'.
+
+\section{Bracketing conventions}
+
+We will adopt the same notational conventions governing brackets that we did for TFL (see \cref{s:TFLSentences,s:MoreBracketingConventions}.) First, we may omit the outermost brackets of a formula.  Second, we may use square brackets, `[' and `]', in place of brackets to increase the readability of formulas.
+
+Sentences of FOL used in our examples can become quite cumbersome, and so we also introduce a convention to deal with conjunctions and disjunctions of more than two sentences. We stipulate that $A_1 \land A_2 \land \dots \land A_n$ and $A_1 \lor A_2 \lor \dots \lor A_n$ are to be interpreted as, respectively:
+\begin{earg}
+	\item[] $(\dots(A_1 \land A_2) \land \dots \land A_n)$
+	\item[] $(\dots(A_1 \lor A_2) \lor \dots \lor A_n)$
+\end{earg}
+In practice, this just means that you are allowed to leave out parentheses in long conjunctions and disjunctions. But remember that (unless they are the outermost parentheses of the sentence) you must still enclose the entire conjunction or disjunction in parentheses. Also, you cannot mix conjunctions and disjunctions with each other or with other connectives. So the following are still not allowed, and would be ambiguous if they were:
+\begin{earg}
+	\item[] $A \lor B \land C \land D$
+	\item[] $B \lor C \eif D$
+\end{earg}
+
+\section{Superscripts on predicates}
+Above, we said that an $n$-place predicate followed by $n$ terms is an atomic formula. But there is a small issue with this definition: the symbols we use for predicates do not, themselves, indicate how many places the predicate has. Indeed, in some places in this book, we have used the letter `$G$' as a one-place predicate; in other places we have used it as a three-place predicate. So, unless we state explicitly whether we want to use `$G$' as a one-place predicate or as a three place predicate, it is \emph{indeterminate} whether `$\atom{G}{a}$' is an atomic formula or not.
+
+There is an easy way to avoid this, which many books adopt. Instead of saying that our predicates are just capital letters (with numerical subscripts as necessary), we could say that they are capital letters \emph{with numerical superscripts} (and with numerical subscripts as necessary). The purpose of the superscript would be to say explicitly how many places the predicate has. On this approach, `$G^1$' would be a one-place predicate, and `$G^3$' would be an (entirely different) three places predicate. They would need to have different entries in any symbolisation key. And `$\atom{G^1}{a}$' would be an atomic formula, whereas `$\atom{G^3}{a}$' would not; likewise `$\atom{G^3}{a,b,c}$' would be an atomic formula, and `$\atom{G^1}{a,b,c}$' would not.
+
+So, we \emph{could} add superscripts to all our predicates. This would have the advantage of making certain things completely explicit. However, it would have the disadvantage of making our formulas much harder to read; the superscripts would distract the eye. So, we will not bother to make this change. Our predicates will remain \emph{without} superscripts.  (And, in practice, any book which includes superscripts almost immediately stops including them!)
+
+However, this leaves open a possibility of ambiguity. So, when any ambiguity could arise---in practice, very rarely---you should say, explicitly, how many places your predicate(s) have.
+
+\practiceproblems
+\problempart
+\label{pr.freeFOL}
+Identify which variables are bound and which are free.
+\begin{compactlist}
+\item $\exists x\, \atom{L}{x,y} \eand \forall y\, \atom{L}{y,x}$
+\item $\forall x\, \atom{A}{x} \eand \atom{B}{x}$
+\item $\forall x (\atom{A}{x} \eand \atom{B}{x}) \eand \forall y(\atom{C}{x} \eand \atom{D}{y})$
+\item $\forall x\exists y[\atom{R}{x,y} \eif (\atom{J}{z} \eand \atom{K}{x})] \eor \atom{R}{y,x}$
+\item $\forall x_1(\atom{M}{x_2} \eiff \atom{L}{x_2,x_1}) \eand \exists x_2\,\atom{L}{x_3,x_2}$
+\end{compactlist}
+
+
+\chapter{Definite descriptions}\label{subsec.defdesc}
+Consider sentences like:
+	\begin{enumerate}
+		\item\label{traitor1} Nick is the traitor.
+		\item\label{traitor2} The traitor went to Cambridge.
+		\item\label{traitor3} The traitor is the deputy.
+	\end{enumerate}
+These are definite descriptions: they are meant to pick out a \emph{unique} object. They should be contrasted with \emph{indefinite} descriptions, such as `Nick  is \emph{a} traitor'. They should equally be contrasted with \emph{generics}, such as `\emph{The} whale is a mammal' (when it's inappropriate to ask \emph{which} whale). The question we face is: How should we deal with definite descriptions in FOL?
+
+
+\section{Treating definite descriptions as terms}
+One option would be to introduce new names whenever we come across a definite description. This is probably not a great idea. We know that \emph{the} traitor---whoever it is---is indeed \emph{a} traitor. We want to preserve that information in our symbolization.
+
+A second option would be to use a \emph{new} definite description operator, such as `$\maththe$'. The idea would be to symbolize `the $F$' as `$\maththe x\,\atom{F}{x}$'  (think `the $x$ such that $\atom{F}{x}$'); or to symbolize `the $G$' as `$\maththe x\,\atom{G}{x}$', etc. Expressions of the form $\maththe \metav{x}\, \atom{\metav{A}}{\metav{x}}$ would then behave like names. If we were to follow this path, we could use the following symbolization key:
+	\begin{ekey}
+		\item[\text{domain}] people
+		\item[\atom{T}{x}] \gap{x} is a traitor
+		\item[\atom{D}{x}] \gap{x} is a deputy
+		\item[\atom{C}{x}] \gap{x} went to Cambridge
+		\item[n] Nick
+	\end{ekey}
+Then, we could symbolize \cref{traitor1} with `$n = \maththe x\, \atom{T}{x}$', \cref{traitor2} with `$\atom{C}{\maththe x\,\atom{T}{x}}$', and \cref{traitor3} with `$\maththe x\, \atom{T}{x} = \maththe x\, \atom{D}{x}$'.
+
+However, it would be nice if we didn't have to add a new symbol to FOL. And we might be able to make do without one.
+
+\section{Russell's analysis}
+Bertrand Russell offered an analysis of definite descriptions. Very
+briefly put, he observed that, when we say `the $F$' in the context of
+a definite description, our aim is to pick out the \emph{one and only}
+thing that is $F$ (in the appropriate context). Thus Russell analyzed
+the notion of a definite description as follows:\footnote{Bertrand
+Russell, ``On denoting'',  \emph{Mind}~14 (1905), pp.\ 479--93; also
+Russell, \textit{Introduction to Mathematical Philosophy}, 1919,
+London: Allen and Unwin, ch.~16.}
+	\factoidbox{
+		The $F$ is $G$ \textbf{\ifeff} 
+		\begin{itemize}
+			\item there is at least one $F$, \emph{and}
+			\item there is at most one $F$, \emph{and}
+			\item every $F$ is $G$.
+\end{itemize}}
+Note a very important feature of this analysis: \emph{`the' does not appear on the right-side of the equivalence.} Russell is aiming to provide an understanding of definite descriptions in terms that do not presuppose them.
+
+Now, one might worry that we can say `the table is brown' without implying that there is one and only one table in the universe. But this is not (yet) a fantastic counterexample to Russell's analysis. The domain of discourse is likely to be restricted by context (e.g., to salient objects in my vicinity).
+
+If we accept Russell's analysis of definite descriptions, then we can symbolize sentences of the form `the $F$ is $G$' using our strategy for numerical quantification in FOL. After all, we can deal with the three conjuncts on the right-hand side of Russell's analysis as follows:
+	$$\exists x \atom{F}{x} \eand \forall x \forall y ((\atom{F}{x} \eand \atom{F}{y}) \eif x = y) \eand \forall x (\atom{F}{x} \eif \atom{G}{x})$$
+In fact, we could express the same point rather more crisply, by recognizing that the first two conjuncts just amount to the claim that there is \emph{exactly} one $F$, and that the last conjunct tells us that that object is~$G$. So, equivalently, we could offer:
+	$$\exists x \bigl[(\atom{F}{x} \eand \forall y (\atom{F}{y} \eif x = y)) \eand \atom{G}{x}\bigr]$$
+Using these sorts of techniques, we can now symbolize \crefrange{traitor1}{traitor3} without using any new-fangled fancy operator, such as `$\maththe$'.
+
+\Cref*{traitor1} is exactly like the examples we have just considered. So we would symbolize it by 
+\begin{align*}
+\exists x \bigl[\atom{T}{x} \eand \forall y(\atom{T}{y} \eif x = y) & \eand x = n\bigr].
+\intertext{\Cref*{traitor2} poses no problems either:} 
+\exists x \bigl[\atom{T}{x} \eand \forall y(\atom{T}{y} \eif x = y) & \eand \atom{C}{x}\bigr].
+\end{align*}
+\Cref*{traitor3} is a little trickier, because it links two definite
+descriptions. But, deploying  Russell's analysis, it can be
+paraphrased by `there is exactly one traitor, $x$, and there is
+exactly one deputy, $y$, and $x = y$'. So we can symbolize it by:
+\ifHTMLtarget
+\[
+	\exists x \exists y \bigl(\bigl[\atom{T}{x} \eand 
+	\forall z(\atom{T}{z} \eif x = z)\bigr] \eand 
+	\bigl[\atom{D}{y} \eand 
+	\forall z(\atom{D}{z} \eif y = z)\bigr] \eand x = y\bigr)
+\]
+\else
+\begin{multline*}
+	\exists x \exists y \bigl(\bigl[\atom{T}{x} \eand 
+	\forall z(\atom{T}{z} \eif x = z)\bigr] \eand {}\\
+	\bigl[\atom{D}{y} \eand 
+	\forall z(\atom{D}{z} \eif y = z)\bigr] \eand x = y\bigr)
+\end{multline*}
+\fi
+Note that the formula `$x = y$' must fall within the scope of both quantifiers!
+
+\section{Empty definite descriptions}
+
+One of the nice features of Russell's analysis is that it allows us to handle \emph{empty} definite descriptions neatly.
+
+France has no king at present. Now, if we were to introduce a name, `$k$', to name the present King of France, then everything would go wrong: remember from \cref{s:FOLBuildingBlocks} that a name must always pick out  some object in the domain, and whatever we choose as our domain, it will contain no present kings of France.
+
+Russell's analysis neatly avoids this problem. Russell tells us to treat definite descriptions using predicates and quantifiers, instead of names. Since predicates can be empty (see \cref{s:MoreMonadic}), this means that no difficulty now arises when the definite description is empty.
+
+Indeed, Russell's analysis helpfully highlights two ways to go wrong
+in a claim involving a definite description. To adapt an example from
+Stephen Neale\footnote{Stephen Neale, \textit{Descriptions},
+MIT Press, 1990.} suppose Alex claims:
+	\begin{enumerate}
+		\item\label{kingdate} I am dating the present king of France.
+	\end{enumerate}
+Using the following symbolization key:
+	\begin{ekey}
+		\item[a] Alex
+		\item[\atom{K}{x}] \gap{x} is a present king of France
+		\item[\atom{D}{x,y}] \gap{x} is dating \gap{y}
+	\end{ekey}
+	(Note that the symbolization key speaks of \emph{a} present King of France, not \emph{the} present King of France; i.e., it employs an indefinite, rather than a definite, description.) \Cref{kingdate} would be symbolized by `$\exists x \bigl[(\atom{K}{x} \eand \forall y(\atom{K}{y} \eif  x = y)) \eand \atom{D}{a,x}\bigr]$'. Now, this can be false in (at least) two ways, corresponding to these two different sentences:
+	\begin{enumerate}
+		\item\label{outernegation} There is no one who is both the present King of France and such that he and Alex are dating.
+		\item\label{innernegation} There is a unique present King of France, but Alex is not dating him.
+	\end{enumerate}
+\Cref*{outernegation} might be paraphrased by `It is not the case that: the present King of France and Alex are dating'. It will then be symbolized by `$\enot \exists x\bigl[(\atom{K}{x} \eand \forall y(\atom{K}{y} \eif  x = y)) \eand \atom{D}{a,x} \bigr]$'. We might call this \emph{outer} negation, since the negation governs the entire sentence. Note that the sentence is true if there is no present King of France.
+
+\Cref*{innernegation} can be symbolized by `$\exists x \bigl[(\atom{K}{x} \eand \forall y(\atom{K}{y} \eif x = y)) \eand \enot \atom{D}{a,x}\bigr]$'. We might call this \emph{inner} negation, since the negation occurs within the scope of the definite description. Note that its truth requires that there is a present King of France, albeit one who is not dating Alex.
+\Cref*{innernegation} entails \cref*{outernegation} (as do their
+symbolizations), but not vice versa.
+
+\section{Possessives, `both', `neither'}
+
+We can use Russell's analysis of definite descriptions also to deal with singular possessive constructions in English.  For instance, `Smith's murderer' means something like `the person who murdered Smith', i.e., it is a disguised definite description.  On Russell's analysis, the sentence
+\begin{enumerate}
+	\item\label{smithsmurder} Smith's murderer is insane.
+\end{enumerate}
+can be false in one of three ways. It can be false because the one person who murdered Smith is not, in fact, insane. But it can also be false if the definite description is empty, namely if either no-one murdered Smith (e.g., if Smith met with an unfortunate accident) or if more than one person murdered Smith.
+
+To symbolize sentences containing singular possessives such as `Smith's murderer' you should paraphrase them using an explicit definite description, e.g., `The person who murdered Smith is insane' and then symbolize it according to Russell's analysis. In our case, we would use the symbolization key:
+\begin{ekey}
+	\item[$Domain$] people
+	\item[\atom{I}{x}] \gap{x} is insane 
+	\item[\atom{M}{x,y}] \gap{x} murdered \gap{y}
+	\item[m] Smith 
+\end{ekey}
+Our symbolization then reads, `$\exists x\bigl[\atom{M}{x,m} \eand \forall y(\atom{M}{y,m} \eif x=y) \eand \atom{I}{x}\bigr]$'.
+
+Two other determiners that we can extend Russell's analysis to are
+`both' and `neither'.  To say `both $F$s are~$G$' is to say that there
+are exactly two $F$s, and each of them is~$G$. To say that `neither
+$F$ is~$G$', is to also say that there are exactly two~$F$s, and
+neither of them is~$G$. In FOL, the symbolizations would read,
+respectively,
+\ifHTMLtarget
+\begin{align*}
+	& \exists x\exists y\bigl[\atom{F}{x} \eand \atom{F}{y} \eand \enot\, {x=y} \eand 
+	\forall z(\atom{F}{z} \eif (x = z \lor y = z)) \eand \atom{G}{x} \eand \atom{G}{y}\bigr]\\
+	& \exists x\exists y\bigl[\atom{F}{x} \eand \atom{F}{y} \eand \enot\, {x=y} \eand 
+	\forall z(\atom{F}{z} \eif (x = z \lor y = z)) \eand \enot \atom{G}{x} \eand \enot \atom{G}{y}\bigr]
+\end{align*}
+\else
+\begin{align*}
+	& \exists x\exists y\bigl[\atom{F}{x} \eand \atom{F}{y} \eand \enot\, {x=y} \eand {}\\
+	& \qquad \forall z(\atom{F}{z} \eif (x = z \lor y = z)) \eand \atom{G}{x} \eand \atom{G}{y}\bigr]\\
+	& \exists x\exists y\bigl[\atom{F}{x} \eand \atom{F}{y} \eand \enot\, {x=y} \eand  {}\\
+	& \qquad\forall z(\atom{F}{z} \eif (x = z \lor y = z)) \eand \enot \atom{G}{x} \eand \enot \atom{G}{y}\bigr]
+\end{align*}
+\fi
+Compare these symbolizations with the symbolizations of `exactly two $F$s are $G$s' from \cref{sec:exactlyn}, i.e., of `there are exactly two things that are both $F$ and~$G$':
+\ifHTMLtarget
+	\[ 
+		\exists x\exists y\bigl[(\atom{F}{x} \eand \atom{G}{x}) \eand (\atom{F}{y} \eand \atom{G}{y}) \eand \enot\, {x=y} \eand 
+		\forall z((\atom{F}{z} \eand \atom{G}{z}) \eif (x = z \lor y = z))\bigr]
+	\]
+\else
+\begin{align*}
+	& \exists x\exists y\bigl[(\atom{F}{x} \eand \atom{G}{x}) \eand (\atom{F}{y} \eand \atom{G}{y}) \eand \enot\, {x=y} \eand {}\\
+	& \qquad\forall z((\atom{F}{z} \eand \atom{G}{z}) \eif (x = z \lor y = z))\bigr]
+\end{align*}
+\fi
+The difference between the symbolization of this and that of `both $F$s are~$G$s' lies in the antecedent of the conditional. For `exactly two $F$s are~$G$s', we only require that there are no $F$s \emph{that are also}~$G$s other than $x$ and~$y$, whereas for `both $F$s are~$G$s', there cannot be any $F$s, whether they are~$G$s or not, other than $x$ and~$y$. In other words, `both $F$s are~$G$s' implies that exactly two~$F$s are~$G$s. However, `exactly two $F$s are~$G$s' does not imply that both $F$s are~$G$s (there might be a third~$F$ which isn't a~$G$).
+
+\section{The adequacy of Russell's analysis}
+How good is Russell's analysis of definite descriptions? This question has generated a substantial philosophical literature, but we will restrict ourselves to two observations.
+
+One worry focusses on Russell's treatment of empty definite
+descriptions. If there are no $F$s, then on Russell's analysis, both
+`the $F$ is $G$' and  `the $F$ is non-$G$' are false. P.~F.\ Strawson
+suggested that such sentences should not be regarded as false,
+exactly, but involve \emph{presupposition failure}, and so need to be
+treated as \emph{neither} true \emph{nor} false.\footnote{P.~F.\
+Strawson, ``On referring'', \textit{Mind}~59 (1950), pp.\ 320--34.}
+
+If we agree with Strawson here, we will need to revise our logic. For, in our logic, there are only two truth values (True and False), and every sentence is assigned exactly one of these truth values.
+
+But there is room to disagree with Strawson. Strawson is appealing to some linguistic intuitions, but it is not clear that they are very robust. For example: isn't it just \emph{false}, not `gappy', that Tim is dating the present King of France?
+
+Keith Donnellan raised a second sort of worry, which (very roughly)
+can be brought out by thinking about a case of mistaken
+identity.\footnote{Keith Donnellan, ``Reference and definite
+descriptions'', \textit{Philosophical Review}~77 (1966), pp.\ 281--304.} Two
+men stand in the corner: a very tall man drinking what looks like a
+gin martini; and a very short man drinking what looks like a pint of
+water. Seeing them, Malika says:
+	\begin{enumerate}
+		\item\label{gindrinker} The gin-drinker is very tall!
+	\end{enumerate}
+Russell's analysis will have us render Malika's sentence as:
+	\begin{compactlist}
+		\item[\ref*{gindrinker}$'$.] There is exactly one gin-drinker [in the corner], and whoever is a gin-drinker [in the corner] is very tall.
+	\end{compactlist}
+Now suppose that the very tall man is actually drinking \emph{water} from a martini glass; whereas the very short man is drinking a pint of (neat) gin. By Russell's analysis, Malika has said something false, but don't we want to say that Malika has said something \emph{true}? 
+
+Again, one might wonder how clear our intuitions are on this case. We can all agree that Malika intended to pick out a particular man, and say something true of him (that he was tall). On Russell's analysis, she actually picked out a different man (the short one), and consequently said something false of him. But  maybe advocates of Russell's analysis only need to explain \emph{why} Malika's intentions were frustrated, and so why she said something false. This is easy enough to do:  Malika said something false because she had false beliefs about the men's drinks; if Malika's beliefs about the drinks had been true,  then she would have said something true.\footnote{Interested parties should read Saul Kripke, ``Speaker reference and semantic reference'', in: French et al.\ (eds.), \textit{Contemporary Perspectives in the Philosophy of Language}, University of Minnesota Press, 1977, pp.\ 6--27.}
+
+To say much more here would lead us into deep philosophical waters. That would be no bad thing, but for now it would distract us from the immediate purpose of learning formal logic. So, for now, we will stick with Russell's analysis of definite descriptions, when it comes to putting things into FOL. It is certainly the best that we can offer, without significantly revising our logic, and it is quite defensible as an analysis.
+
+\practiceproblems
+
+\problempart
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] people
+\item[\atom{K}{x}] \gap{x} knows the combination to the safe
+\item[\atom{S}{x}] \gap{x} is a spy
+\item[\atom{V}{x}] \gap{x} is a vegetarian
+\item[\atom{T}{x,y}] \gap{x} trusts \gap{y}
+\item[h] Hofthor
+\item[i] Ingmar
+\end{ekey}
+symbolize the following sentences in FOL:
+\begin{compactlist}
+\item Hofthor trusts a vegetarian.
+\item Everyone who trusts Ingmar trusts a vegetarian.
+\item Everyone who trusts Ingmar trusts someone who trusts a vegetarian.
+\item Only Ingmar knows the combination to the safe.
+\item Ingmar trusts Hofthor, but no one else.
+\item The person who knows the combination to the safe is a vegetarian.
+\item The person who knows the combination to the safe is not a spy.
+\end{compactlist}
+
+
+\solutions
+\problempart
+\label{pr.FOLcards}
+Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] cards in a standard deck
+\item[\atom{B}{x}] \gap{x} is black
+\item[\atom{C}{x}] \gap{x} is a club
+\item[\atom{D}{x}] \gap{x} is a deuce
+\item[\atom{J}{x}] \gap{x} is a jack
+\item[\atom{M}{x}] \gap{x} is a man with an axe
+\item[\atom{O}{x}] \gap{x} is one-eyed
+\item[\atom{W}{x}] \gap{x} is wild
+\end{ekey}
+symbolize each sentence in FOL:
+\begin{compactlist}
+\item All clubs are black cards.
+\item There are no wild cards.
+\item There are at least two clubs.
+\item There is more than one one-eyed jack.
+\item There are at most two one-eyed jacks.
+\item There are two black jacks.
+\item There are four deuces.
+\item The deuce of clubs is a black card.
+\item One-eyed jacks and the man with the axe are wild.
+\item If the deuce of clubs is wild, then there is exactly one wild card.
+\item The man with the axe is not a jack.
+\item The deuce of clubs is not the man with the axe.
+\end{compactlist}
+
+\
+
+\problempart Using the following symbolization key:
+\begin{ekey}
+\item[\text{domain}] animals in the world
+\item[\atom{B}{x}] \gap{x} is in Farmer Brown's field
+\item[\atom{H}{x}] \gap{x} is a horse
+\item[\atom{P}{x}] \gap{x} is a Pegasus
+\item[\atom{W}{x}] \gap{x} has wings
+\end{ekey}
+symbolize the following sentences in FOL:
+\begin{compactlist}
+\item There are at least three horses in the world.
+\item There are at least three animals in the world.
+\item There is more than one horse in Farmer Brown's field.
+\item There are three horses in Farmer Brown's field.
+\item There is a single winged creature in Farmer Brown's field; any other creatures in the field must be wingless.
+\item The Pegasus is a winged horse.
+\item The animal in Farmer Brown's field is not a horse.
+\item The horse in Farmer Brown's field does not have wings.
+\end{compactlist}
+
+\problempart
+In this chapter, we symbolized `Nick is the traitor' by `$\exists x (\atom{T}{x} \eand \forall y(\atom{T}{y} \eif x = y) \eand x = n)$'. Explain why these would be equally good symbolisations:
+	\begin{itemize}
+		\item $\atom{T}{n} \eand \forall y(\atom{T}{y} \eif n = y)$
+		\item $\forall y(\atom{T}{y} \eiff y = n)$
+	\end{itemize}
+
+
+\chapter{Ambiguity}\label{s:ambiguityFOL}
+
+In \cref{s:AmbiguityTFL} we discussed the fact that sentences of English can be ambiguous, and pointed out that sentences of TFL are not. One important application of this fact is that the structural ambiguity of English sentences can often, and usefully, be straightened out using different symbolizations.  One common source of ambiguity is \emph{scope ambiguity}, where the English sentence does not make it clear which logical word is supposed to be in the scope of which other. Multiple interpretations are possible.  In FOL, every connective and quantifier has a well-determined scope, and so whether or not one of them occurs in the scope of another in a given sentence of FOL is always determined.
+
+For instance, consider the English idiom,
+\begin{enumerate}
+	\item\label{glitters}
+	Everything that glitters is not gold.
+\end{enumerate}
+If we think of this sentence as of the form `every $F$ is not~$G$' where $\atom{F}{x}$ symbolizes `\gap{x} glitters' and $\atom{G}{x}$ is `\gap{x} is gold', we would symbolize it as:
+\[\forall x(\atom{F}{x} \eif \enot \atom{G}{x})\]
+In other words, we symbolize it the same way as we would `Nothing that glitters is gold'. But the idiom does not mean that! It means that one should not assume that just because something glitters, it is gold; not everything that appears valuable is in fact valuable.  To capture the actual meaning of the idiom, we would have to symbolize it instead as we would `Not everything that glitters is gold', i.e., in the following way:
+\[\enot\forall x(\atom{F}{x} \eif \atom{G}{x})\]
+Compare this with the previous symbolization: again we see that the difference in the two meanings of the ambiguous sentence lies in whether the `\enot' is in the scope of the `$\forall$' (in the first symbolization) or `$\forall$' is in the scope of `\enot' (in the second).
+
+Of course we can alternatively symbolize the two readings using existential quantifiers as well:
+\begin{align*}
+	& \enot\exists x(\atom{F}{x} \eand \atom{G}{x}) \\
+	& \exists x(\atom{F}{x} \eand \enot \atom{G}{x})
+\end{align*}
+
+In \cref{s:MoreMonadic} we discussed how to symbolize sentences involving `only'. Consider the sentence:
+\begin{enumerate}
+	\item\label{onlyamb} Only young cats are playful.
+\end{enumerate} 
+According to our schema, we would symbolize it this way:
+\[
+	\forall x(\atom{P}{x} \eif (\atom{Y}{x} \eand \atom{C}{x}))
+\]
+The meaning of this sentence of FOL is something like, `If an animal is playful, it is a young cat'. (Assuming that the domain is animals, of course.) This is probably not what's intended in uttering \cref*{onlyamb}, however. It's more likely that we want to say that old cats are not playful. In other words, what we mean to say is that if something is a cat and playful, it must be young. This would be symbolized as:
+\[
+	\forall x((\atom{C}{x} \eand \atom{P}{x}) \eif \atom{Y}{x})
+\]
+There is even a third reading! Suppose we're talking about young animals and their characteristics. And suppose you wanted to say that of all the young animals, only the cats are playful. You could symbolize this reading as:
+\[
+	\forall x((\atom{Y}{x} \eand \atom{P}{x}) \eif \atom{C}{x})
+\]
+Each of the last two readings can be made salient in English by placing the stress appropriately. For instance, to suggest the last reading, you would say `Only young \emph{cats} are playful', and to get the other reading you would say `Only \emph{young} cats are playful'.  The very first reading can be indicate by stressing both `young' and `cats': `Only \emph{young cats} are playful' (but not old cats, or dogs of any age).
+
+In \cref{ss:OrderQuant,ss:SuppQuant} we discussed the importance of the order of quantifiers.  This is relevant here because, in English, the order of quantifiers is sometimes not completely determined.  When both universal (`all') and existential (`some', `a') quantifiers are  involved, this can result in scope ambiguities. Consider:
+\begin{enumerate}
+	\item\label{everya} Everyone went to see a movie.
+\end{enumerate}
+This sentence is ambiguous.  In one interpretation, it means that there is a single movie that everyone went to see. In the  other, it means that everyone went to see some movie or other, but not necessarily the same one. The two readings can be symbolized, respectively, by 
+\begin{align*}
+	& \exists x(\atom{M}{x} \eand \forall y(\atom{P}{y} \eif \atom{S}{y,x}))\\
+	& \forall y(\atom{P}{y} \eif \exists x(\atom{M}{x} \eand \atom{S}{y,x}))
+\end{align*}
+We assume here that the domain contains (at least) people and movies,
+and the following symbolization key:
+\begin{ekey}
+	\item[\atom{P}{y}] \gap{y}~is a person
+	\item[\atom{M}{x}] \gap{x}~is a movie
+	\item[\atom{S}{y,x}] \gap{y}~went to see~\gap{x}
+\end{ekey}
+In the first reading, we say that the existential quantifier has \emph{wide scope} (and its scope contains the universal quantifier, which has \emph{narrow scope}), and the other way round in the second.
+
+In \cref{subsec.defdesc}, we encountered another scope ambiguity, arising from definite descriptions interacting with negation.  Consider Russell's own example:
+\begin{enumerate}
+	\item\label{thenot} The King of France is not bald.
+\end{enumerate}
+If the definite description has wide scope, and we are interpreting the `not' as an `inner' negation (as we said before), \cref*{thenot} is interpreted to assert the existence of a single King of France, to whom we are ascribing non-baldness. In this reading, it is symbolized as `$\exists x\bigl[\atom{K}{x} \eand \forall y(\atom{K}{y} \eif x=y)) \eand \enot \atom{B}{x}\bigr]$'. In the other reading, the `not' denies the sentence `The King of France is bald', and we would symbolize it as: `$\enot\exists x\bigl[\atom{K}{x} \eand \forall y(\atom{K}{y} \eif x=y)) \eand \atom{B}{x}\bigr]$'. In the first case, we say that the definite description has wide scope and in the second that it has narrow scope.
+
+\practiceproblems
+\problempart
+Each of the following sentences is ambiguous. Provide a symbolization key for each, and symbolize all readings.
+\begin{compactlist}
+	\item No one likes a quitter.
+	\item CSI found only red hair at the scene.
+	\item Smith's murderer hasn't been arrested.
+\end{compactlist}
+
+\problempart
+Russell gave the following example in his paper `On Denoting':
+\begin{quote}
+	I have heard of a touchy owner of a yacht to whom a guest, on first seeing it, remarked, `I thought your yacht was larger than it is'; and the owner replied, `No, my yacht is not larger than it is'.
+\end{quote}
+Explain what's going on.

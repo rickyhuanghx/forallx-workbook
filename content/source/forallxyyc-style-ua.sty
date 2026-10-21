@@ -1,0 +1,205 @@
+%!TEX root = forallxyyc.tex
+
+% forallxyyc-style provides layout and style setup for forall x: YYC books
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{forallxyyc-style-ua}
+
+\ifdefined\bmlDescription\else
+  \newenvironment{bmlimage}{}{}
+  \newcommand{\bmlDescription}[1]{}
+\fi
+
+\RequirePackage{hyperref,ifthen,graphicx,xcolor}
+
+\usepackage[numbered]{bookmark} %TB: added for speedy navigation
+\usepackage[nonumberlist,toc,style=index]{glossaries}
+\makeglossaries
+%\usepackage{tabu}
+\usepackage[defaultlines=2,all]{nowidow}
+
+%RZ: typefaces 
+
+% %\ifdefined\directlua
+% \IfFileExists{forallxyyc-ua-mathml.html}{
+% \usepackage{helvet}
+% \usepackage[osf]{Baskervaldx} % oldstyle figures
+% \RequirePackage{amssymb} % ensure this is loaded before newtxmath
+% \usepackage[bigdelims,baskervaldx]{newtxmath} 
+% \usepackage[cal=boondoxo]{mathalfa}
+% }{
+% % load lua-unicode-math to make sure the derived HTML as well as the
+% % MathML, when generated, has the right unicode characters. Do this
+% % after all the fonts are loaded or else you get errors.
+% \usepackage{lua-unicode-math}
+% }
+% % \usepackage{lum-bonum}
+
+%\usepackage{fontspec}
+%\usepackage{unicode-math}
+%\setmainfont{Baskervaldx}
+%\setmathfont{TeX Gyre Pagella Math}
+%\setmathfont{STIXTwoMath-Regular.otf}
+% \setmathfont[range={up}]{Baskervaldx-Reg.otf}
+% \setmathfont[range={it}]{Baskervaldx-Ita.otf}
+% \setmathfont[range={bfup}]{Baskervaldx-Bol.otf}
+% \setmathfont[range={bfit}]{Baskervaldx-BolIta.otf}
+% \usepackage{helvet}
+% \usepackage[osf]{Baskervaldx} % oldstyle figures
+% \RequirePackage{amssymb} % ensure this is loaded before newtxmath
+% %\usepackage[bigdelims,baskervaldx]{newtxmath} 
+% \RequirePackage{latexsym}
+
+% \DeclareFontFamily{U}{BOONDOX-calo}{}
+% \DeclareFontShape{U}{BOONDOX-calo}{m}{n}{<-> s*[1] BOONDOX-r-calo}{}
+% \DeclareFontShape{U}{BOONDOX-calo}{b}{n}{<-> s*[1] BOONDOX-b-calo}{}
+% \AtBeginDocument{%
+%   \let\mathcal\relax
+%   \DeclareMathAlphabet{\mathcal}{U}{BOONDOX-calo}{m}{n}%
+%   \SetMathAlphabet{\mathcal}{bold}{U}{BOONDOX-calo}{b}{n}%
+% }
+
+
+
+% Trick luamml into not making every triangle used as a list bullet
+% into a formula
+\usepackage{newunicodechar}
+\newunicodechar{▻}{\MathCollectFalse\ensuremath{\smalltriangleright}\MathCollectTrue}
+
+%RZ: Make sure we have a copyright symbol
+
+\def\copyright{\textcircled{C}}
+
+%RZ: Include git revision info
+
+\usepackage{gitinfo2}
+
+% Steal \midsloppy from memoir
+
+\newcommand*{\midsloppy}{%
+  \tolerance 5000%
+  \hbadness 4000%
+  \emergencystretch 1.5em%
+  \hfuzz .1\p@
+  \vfuzz\hfuzz}
+
+% RZ: TOC widths
+
+\usepackage{tocloft}
+
+% changes from memoir: chapter -> chap, section -> sec
+\setlength{\cftpartnumwidth}{3em}
+\setlength{\cftchapnumwidth}{2.2em}
+\setlength{\cftsecnumwidth}{3.3em}
+\setlength{\cftbeforechapskip}{0pt}
+\setlength{\cftchapindent}{0pt}
+% \textrm -> \normalfont
+\renewcommand{\cftchapfont}{\normalfont}
+\renewcommand{\cftchappagefont}{\normalfont}
+
+% Chapter style
+
+\newlength{\barlength}
+\setlength{\barlength}{400pt}
+% \makechapterstyle{leadbeater}{%
+%   \setlength{\afterchapskip}{40pt}
+%   \setlength{\beforechapskip}{50pt}
+%     \setlength{\midchapskip}{0pt}
+%   \renewcommand*{\afterchapternum}{\par\nobreak\vskip 0pt}
+%   \renewcommand*{\chapnamefont}{\fontsize{14pt}{0pt}\selectfont\sffamily\bfseries}
+%   \renewcommand*{\chapnumfont}{\fontsize{14pt}{0pt}\selectfont\sffamily\bfseries}
+%   \renewcommand*{\chaptitlefont}{\normalfont\fontsize{48pt}{48pt}\selectfont\bfseries\itshape\color{leadbeater}}
+%   \renewcommand*{\printchaptername}{%
+%     \chapnamefont\MakeUppercase{\@chapapp}}
+%   \renewcommand*{\printchaptertitle}[1]{%
+%     \chaptitlefont ##1\\[-\baselineskip]%
+%     \hspace*{-20pt}%
+%     \smash{\color{leadbeater}\rule{7pt}{\barlength}}}
+% }
+
+% code to replace memoir's definitions of \part and \chapter
+% uses heading templates from latex-lab-sec-template.dtx; see
+% https://ctan.org/tex-archive/macros/latex-dev/required/latex-lab/latex-lab-sec-template.pdf
+
+% This code inserts spaces differently than memoir, so finding the
+% right values was a bit of trial and error
+
+\EditInstance{heading}{chapter}
+{
+  after-penalty-vspace = 36pt
+, after-vspace = 33pt
+, prefix-decls = \fontsize{14pt}{0pt}\selectfont\sffamily\bfseries
+, prefix-format = \MakeUppercase{#1}
+, number-decls = \fontsize{14pt}{0pt}\selectfont\sffamily\bfseries
+, title-decls = \normalfont\fontsize{48pt}{48pt}\selectfont\bfseries\itshape\color{leadbeater}
+, title-format = %\hspace*{-10pt}\smash{\rule{7pt}{\barlength}}\hspace*{3pt}
+#1
+}
+
+\EditInstance{headformat}{chapter}
+{
+, separator-b = \par\nobreak\vspace{14pt}
+}
+
+% \renewcommand*{\partnamefont}{\fontsize{24pt}{0pt}\selectfont\sffamily\bfseries}
+% \renewcommand*{\partnumfont}{\fontsize{24pt}{0pt}\selectfont\sffamily\bfseries}
+% \renewcommand*{\parttitlefont}{\normalfont\fontsize{48pt}{48pt}\selectfont\bfseries\itshape\color{leadbeater}}
+% \renewcommand*{\printpartname}{%
+%   \partnamefont PART}
+
+\EditInstance{heading}{part}
+{
+%  after-penalty-vspace = 30pt
+%, after-vspace = 40pt
+, prefix-decls = \fontsize{24pt}{0pt}\selectfont\sffamily\bfseries
+, prefix-format = \MakeUppercase{#1}
+, number-decls = \fontsize{24pt}{0pt}\selectfont\sffamily\bfseries
+, title-decls = \normalfont\fontsize{48pt}{48pt}\selectfont\bfseries\itshape\color{leadbeater}
+}
+
+% \newcommand{\trailingperiod}[1]{#1.}
+% %\setparaheadstyle{\normalsize\bfseries\trailingperiod}
+% \copypagestyle{leadbeater}{headings}
+
+% \chapterstyle{leadbeater}
+
+% \makeoddhead{leadbeater}{\small\sffamily\color{leadbeater}\rightmark}{}
+%     {\color{leadbeater}\sffamily\bfseries\thepage}
+
+% \makeevenhead{leadbeater}{\color{leadbeater}\sffamily\bfseries\thepage}{}
+%     {\small\sffamily\color{leadbeater}\leftmark}
+
+\usepackage{fancyhdr}
+\fancypagestyle{leadbeater}[fancydefault]{%
+  \fancyhead{}\fancyfoot{}\renewcommand{\headrulewidth}{0pt}
+  % \fancyhead[RO]{\small\sffamily\color{leadbeater}\rightmark}
+  % \fancyhead[LO]{\color{leadbeater}\sffamily\bfseries\thepage}
+  \fancyhead[R]{\color{leadbeater}\sffamily\bfseries\thepage}
+  \fancyhead[L]{\small\sffamily\color{leadbeater}\leftmark}
+}
+
+\usepackage[font={small,it}]{caption}
+
+% restart numbering of example sentences for every chapter
+% \renewcommand{\memendofchapterhook}{\restartlist{enumerate}}{}
+
+% \factoidbox{...} produces a highlighted paragraph of text
+
+\usepackage{tcolorbox}
+\newenvironment{factoidboxe}{%
+  \begin{tcolorbox}[%width=.9\textwidth,
+      %      leftright skip=.05\textwidth,
+      sharp corners=downhill,
+      beforeafter skip=.7em,
+      colframe={leadbeater},colback={vltleadbeater}]}{
+\end{tcolorbox}}
+\newcommand{\factoidbox}[1]{\begin{factoidboxe}#1\end{factoidboxe}}
+
+% TB: information originally in the main body; but it is style information, so I have included it here.
+\hypersetup{pdfinfo={Title={forall x: Calgary}, Author={P.D. Magnus, Tim Button, J. Rob Loftis, Rob Trueman, Aaron Thomas-Bolduc, Richard Zach}, Subject={An open access introductory textbook in formal logic}, Keywords={truth-functional logic, propositional logic, predicate logic, first-order logic, natural deduction, Fitch}}, %
+  % bookmarks={true}, %
+  bookmarksopen = true,
+	colorlinks={true}, %
+	allcolors={dkleadbeater},
+	pdfdisplaydoctitle={true}}
+\urlstyle{same}

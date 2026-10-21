@@ -1,0 +1,48 @@
+\frontmatter
+
+\ifHTMLtarget
+  \tableofcontents
+  \input{forallx-yyc-frontmatter}
+\else
+  \input{forallx-yyc-frontmatter}
+  \clearpage
+  \pagestyle{leadbeater}
+  \thispagestyle{plain}
+  \currentpdfbookmark{Table of Contents}{name}
+  \tableofcontents*
+\fi
+
+\input{forallx-yyc-preface}
+\mainmatter
+
+\input{forallx-yyc-what}
+\input{forallx-yyc-tfl}
+\input{forallx-yyc-truthtables}
+\input{forallx-yyc-prooftfl}
+\input{forallx-yyc-fol}
+\input{forallx-yyc-interpretations}
+\input{forallx-yyc-prooffol}
+\input{forallx-yyc-ml}
+\input{forallx-yyc-metatheory}
+
+\part*{Appendices}
+\addcontentsline{toc}{part}{Appendices}
+\addtocontents{toc}{\protect\mbox{}\protect\hrulefill\par}
+\appendix
+
+\input{forallx-yyc-notation} % RZ for some reason, with an \input here the TOC gets messed up
+\input{forallx-yyc-alternatives}
+\input{forallx-yyc-quickreference}
+
+%\backmatter
+
+\ifHTMLtarget
+\input{forallx-yyc-accessibility}
+\fi
+
+\ifHTMLtarget\else
+  \glsaddall
+  \addtocontents{toc}{\protect\mbox{}\protect\hrulefill\par}
+  \printglossaries
+  \input{forallx-yyc-backmatter}
+\fi

@@ -1,0 +1,202 @@
+%!TEX root = forallxyyc.tex
+
+\chapter{Notes on accessibility}
+
+Special attention has been paid to make this HTML version as
+accessible as possible, especially to readers using Assistive
+Technology (AT), such as screen readers like
+\href{https://www.nvaccess.org/download/}{NVDA}
+and
+\href{https://www.freedomscientific.com/products/software/jaws/}{JAWS}.
+Screen readers are software designed to enable users with low or no
+vision to access and navigate web pages like this book. Some sighted
+users also sometimes prefer text-to-speech (TTS) software to read web
+pages aloud. TTS software has fewer features than screen readers
+designed for non-sighted users and may not convert everything in this
+book to audio.
+
+If you are using the HTML version of this book with a screen reader or
+Braille terminal, or are helping a student who relies on such tools
+(e.g., as instructor or accessibility advisor), and you have feedback
+please \href{mailto:rzach@ucalgary.ca}{get in touch}!
+
+\paragraph{Navigation and styles} We have adopted the HTML style
+provided by \href{https://vlmantova.github.io/bookml/}{BookML},
+developed for the Leeds mathematics department by
+\href{https://eps.leeds.ac.uk/maths/staff/4058/dr-vincenzo-l-mantova}{Vincenzo
+Mantova}. It provides a collapsible navigation menu, buttons at the
+top of each page to select the font size, switch between serif and
+sans-serif font, and black-on-white, dark-on-sepia, or light-on-dark
+display options.
+
+The body of the page starts with an invisible link to skip to the
+beginning of the content, past the navigation sidebar and style
+buttons. The buttons are, in order: 
+\begin{itemize}
+  \item ``toggle sidebar'' to turn the navigation bar on or off;
+  \item ``font settings'' for font size, serif or sans serif font, and
+    light, sepia, or dark modes; 
+  \item ``download'' for links to download the PDF versions; and 
+  \item ``information about the toolbar'' for a popup that shows
+    keyboard shortcuts for navigation.
+\end{itemize}
+Those keyboard shortcuts are: left and right arrow for moving to the
+previous and the next page, and `s' to toggle the navigation sidebar.
+
+\paragraph{Symbols and formulas} 
+
+Logical symbols and formulas in this book are converted to
+\href{https://www.w3.org/Math/}{MathML} and displayed using
+\href{https://www.mathjax.org/}{MathJax}. MathJax provides additional
+\href{https://docs.mathjax.org/en/latest/basic/accessibility.html}{accessibility
+features} for formulas, which are found in the MathJax context menu.
+With a mouse, you can right click on any formula to activate it.
+Screen readers will announce that formulas can be activated (e.g.,
+NVDA says ``application clickable'' before every formula to indicate
+the presence of the MathJax menu.) If your screen reader does not read
+out formulas such as $\forall x(A(x) \land B(x))$ you may need to
+activate Speech Output in the Speech submenu of the MathJax
+Accessibility menu and reload the page.
+
+Here are some of the more common symbols. Different screen readers and
+TTS applications will pronouce them differently, and sometimes not at
+all. After each symbol, we provide the customary pronounciation used
+by logicians.
+\begin{itemize}
+  \item Uppercase and lowercase italic letters like $A$ (``upper A'')
+  and $x$ (``lower x'')
+  \item Uppercase and lowercase script letters like $\metav{A}$
+  (``script upper A'') and $\metav{x}$ (``script lower x'')
+  \item Logical connectives: $\enot$ (``not''), $\eor$ (``or''),
+  $\eand$ (``and''), $\eif$ (``only if''), $\eiff$ (``if and only if''), $\ered$ (``contradiction'')
+  \item Quantifiers: $\forall$ (``for all''), $\exists$ (``there exists'')
+  \item Metatheoretical symbols: $\therefore$ (``therefore''),
+  $\proves$ (``proves''), $\nproves$ (``does not prove''), $\entails$ (``entails''), $\nentails$ (``does not entail'')
+  \item Modal operators: $\ebox$ (``box''), $\ediamond$ (``diamond'')
+\end{itemize}
+
+Subscripts should be pronounced by screen readers, although
+they may not indicate that they are subscripts. The formula $A_2$ may
+be read out as ``upper A sub 2'' or just as ``A2''.
+
+The expressions `\blank{}' and `\ifeff' (`if' with two `f's) are used
+throughout the textbook. In the HTML version, `\blank{}' includes an
+invisible spelled-out word `blank' which screen readers should read
+out loud. The abbreviation `\ifeff' is short for `if and only if'. In
+the HTML version it is coded using an invisible zero-space word joiner
+character which should make screen readers pronounce `\ifeff' as
+`if-eff' or `aye-eff-eff'.
+
+\paragraph{Proofs} The natural deduction proofs in
+\cref{ch.NDTFL,ch.NDFOL,ch.ML} use vertical lines to indicate where
+subproofs start and end. Such vertical lines extend from the
+assumption line of the subproof to its last line and are displayed
+between the line numbers and the formulas in any given line. This
+makes proofs a special challenge for users with low vision or complete
+loss of vision.
+
+To make these proofs accessible in this HTML version, proofs are coded
+as tables. Each table line has four columns: the line number, a
+subproof level indicator, a formula, and a justification. The subproof
+level indicator is a number recording how many nested subproofs the
+current line is contained in. It is 0 if the line is not contained in
+a subproof, 1 if it is in a subproof, 2 if it is in a subproof nested
+within another subproof, and so on. When reading out a subproof level
+indicator, screen readers should also announce if a subproof has just
+been closed on the previous line, and when a new subproof starts. The
+table header rows and subproof level indicators are hidden so that
+proofs visually appear as in the printed text.
+
+Here is an example of such a proof:
+\begin{fitchproof}
+\hypo{wxyz}{(W \eor X) \eor (Y \eor Z)}\PR
+\hypo{xy}{X \eif Y}\PR
+\hypo{nz}{\enot Z}\PR
+\open
+	\hypo{wx}{W \eor X}\AS
+	\open
+		\hypo{w}{W}\AS
+		\have{wy1}{W \eor Y}\oi{w}
+	\close
+	\open
+		\hypo{x}{X}\AS
+		\have{y1}{Y}\ce{xy, x}
+		\have{wy2}{W \eor Y}\oi{y1}
+	\close
+	\have{wy3}{W \eor Y}\oe{wx, w-wy1, x-wy2}
+\close
+\open
+	\hypo{yz}{Y \eor Z}\AS
+	\have{y}{Y}\ds{yz, nz}
+	\have{wy}{W \eor Y}\oi{y}
+\close
+\have{wy4}{W \eor Y}\oe{wxyz, wx-wy3, yz-wy}
+\end{fitchproof}
+It has 14 lines, with 3 premises, 2 levels of subproof nesting, and
+two pairs of adjacent subproofs. For instance, the subproof beginning
+on line 5 ends at line 6, and line 7 starts another subproof. So the
+subproof levels of lines 6 and 7 is the same, but lines 6 and 7 are in
+different subproofs. If you cannot see the subproof lines, you have to
+pay special attention to how the subproof level numbers change
+\emph{and} when a formula is an assumption. A screen reader should
+read line 7 approximately as: ``7, close subproof, 2, open subproof,
+upper X, AS.'' The abbreviations `\PR' (for `Premise') and `\AS' (for
+`Assumption') are coded in the HTML version using the `\verb|abbr|'
+tag.
+
+Note that simple text-to-speech applications may not read out complex
+tables such as the ones containing proofs or truth tables at all.
+
+\paragraph{Diagrams}
+
+The text also contains a few diagrams. In the HTML version, these are
+provided with image descriptions, e.g.,
+\begin{center}
+\begin{tikzpicture}[alt={There are three shapes: the first shape is a grey
+circle labelled A, some empty space, the second shape is a white
+circle labelled C, and the fourth a white square labelled D.}]
+	\node[circle, grey_shape] (cat1) {A};
+	\node[right=10pt of cat1, diamond, phantom_shape] (cat2)  { } ;
+	\node[right=10pt of cat2, circle, white_shape] (cat3)  {C} ;
+	\node[right=10pt of cat3, white_shape] (cat4)  {D};
+\end{tikzpicture}
+\bmlDescription{There are three shapes: the first shape is a grey
+circle labelled A, some empty space, the second shape is a white
+circle labelled C, and the fourth a white square labelled D.}
+\end{center}
+The image description here should read: ``There are three shapes: the
+first shape is a grey circle labelled A, some empty space, the second
+shape is a white circle labelled C, and the fourth a white square
+labelled~D.''
+
+\paragraph{Table of symbols}
+
+What follows is a table of all the symbols used in the text, how they
+are most likely to be pronounced by screen readers, and what they are
+called in the text. In the rightmost column we provide a suggested way
+to enter them using ASCII characters, if inserting special symbols (in
+a homework assignment or email to your instructor, say) is not an
+option.
+
+\begin{tabular}{lllll}
+  \lxBeginTableHead{}Symbol\lxTableColumnHead{} & Pronounciation\lxTableColumnHead{} & Meaning\lxTableColumnHead{} & ASCII equivalent\lxTableColumnHead{}\\
+  \hline\lxEndTableHead
+  $\enot$ & not sign & logical not & \verb+~+ or \verb+-+\\
+  $\eor$ & or & logical or & \verb+\/+\\
+  $\eand$ & and & logical and & \verb+/\+ or \verb+&+\\
+  $\eif$ & right arrow & conditional & \verb+->+ or \verb+>+\\
+  $\eiff$ & left right arrow & biconditional & \verb+<->+ or \verb+<>+\\ 
+  $\ered$ & up tack & contradiction & \verb+_|_+ or \verb+!?+\\
+  $\forall$ & for all & universal quantifier & \verb|A| or \verb|@|\\
+  $\exists$ & there exists & existential quantifier & \verb|E| or \verb|3|\\
+  $\therefore$ & therefore & therefore & \verb|:.|\\
+  $\proves$ & right tack & proves & \verb+|-+\\
+  $\nproves$ & does not prove & does not prove & \verb+|/-+\\
+  $\entails$ & true & entails & \verb+|=+\\
+  $\nentails$ & not true & does not entail & \verb+|/=+\\
+  $\ebox$ & white square & necessary & \verb+[]+\\
+  $\ediamond$ & white diamond & possible & \verb+<>+
+\end{tabular}
+
+Subscripts can be represented by an underline, e.g., $A_2$ as
+\verb|A_2|.

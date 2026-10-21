@@ -1,0 +1,61 @@
+% forallxyyc-print
+% Driver file to produce version of forall x:YYC on quarto stock 
+% for printing in black and white via Amazon KDP or similar print-on-demand service.
+
+%\pdfminorversion=3
+
+\documentclass[openany,twoside,11pt]{memoir}
+
+% set stock & paper size to Quarto
+
+\setstocksize{24.589cm}{18.91cm}
+
+\settrimmedsize{\stockheight}{\stockwidth}{*}
+\settrims{0pt}{0pt}
+
+% set the size of the type block to golden ratio calculated width
+
+\settypeblocksize{*}{300pt}{1.62}
+
+% set spine and and edge margin
+
+\setlrmargins{*}{*}{1.3}
+\setulmargins{90pt}{*}{*}
+\setheaderspaces{*}{*}{1}
+
+\checkandfixthelayout
+
+% make output PDF/X compliant
+
+\RequirePackage[x-1a]{pdfx}
+
+% load forall x style and macro definitions
+
+\usepackage{forallxyyc-style}
+\usepackage{forallxyyc}
+
+\colorlet{leadbeater}{black}
+\colorlet{dkleadbeater}{black}
+\colorlet{ltleadbeater}{black!50}
+\colorlet{vltleadbeater}{black!3}
+
+\makeatletter
+\makepsmarks{leadbeater}{%
+\createmark{chapter}{both}{shownumber}{\@chapapp\ }{. \ }
+\createmark{section}{right}{shownumber}{}{. \ }
+\createplainmark{toc}{both}{\contentsname}
+\createplainmark{lof}{both}{\listfigurename}
+\createplainmark{lot}{both}{\listtablename}
+\createplainmark{bib}{both}{\bibname}
+\createplainmark{index}{both}{\indexname}
+\createplainmark{glossary}{both}{\glossaryname}
+}
+\makeatother
+
+\begin{document}
+
+\midsloppy
+
+\input{forallx-yyc-content}
+
+\end{document}
