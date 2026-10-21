@@ -1,0 +1,30 @@
+forall x: Calgary conversion report
+
+Counts:
+  block:define: 139
+  block:displaymath: 172
+  block:factoid: 126
+  block:figure: 32
+  block:fitch: 483
+  block:footnote: 34
+  block:list: 504
+  block:table: 175
+  block:truthtable: 161
+  chapters: 52
+  exercise-items: 708
+  exercise-parts: 132
+  items-with-solution: 509
+  parts-with-solution-file: 119
+  to_logic-leftover: 4
+
+Notes (unhandled or suspicious):
+  [4] to_logic leftover
+       \&
+       \supset
+       \bigwedge_x
+       \bigvee_x
+  [2] solution item count mismatch
+       ch12 part A: book 0 vs solutions 9
+       ch15 part B: book 6 vs solutions 4
+  [1] content before first item
+       ch36: Cmd newpage
