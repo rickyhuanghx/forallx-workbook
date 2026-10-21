@@ -1,0 +1,188 @@
+// Replays the book's own proofs and truth tables through the engine.
+// Run: npm test
+import fs from "node:fs";
+import path from "node:path";
+import { checkProof, type InputLine } from "../src/logic/nd";
+import { parseFormula, parseArgument } from "../src/logic/parser";
+import { toUnicode, displayTokens } from "../src/logic/print";
+import { truthTable, equivalent, isTFL } from "../src/logic/tfl";
+import { sampleEquivalent } from "../src/logic/fol";
+import { isSentence } from "../src/logic/ast";
+
+const BUILD = path.join(process.cwd(), "content", "build", "chapters");
+
+let pass = 0, fail = 0, skipped = 0;
+const failures: string[] = [];
+
+function walk(obj: any, fn: (n: any) => void) {
+  if (Array.isArray(obj)) obj.forEach((x) => walk(x, fn));
+  else if (obj && typeof obj === "object") { fn(obj); Object.values(obj).forEach((v) => walk(v, fn)); }
+}
+
+// ---------------------------------------------------------------- parser
+const parserCases: [string, string][] = [
+  ["A & B -> C", "(A ∧ B) → C"],
+  ["~(A v B)", "¬(A ∨ B)"],
+  ["(A -> B) -> (~B -> ~A)", "(A → B) → (¬B → ¬A)"],
+  ["@x(F(x) -> G(x))", "∀x(F(x) → G(x))"],
+  ["3x(F(x) & ~x=a)", "∃x(F(x) ∧ ¬x = a)"],
+  ["\\forall x\\,(\\lnot F(x) \\lor G(x,a))", "∀x(¬F(x) ∨ G(x,a))"],
+  ["[]A -> A", "□A → A"],
+  ["A_1 \\land A_{23}", "A₁ ∧ A₂₃"],
+  ["P1 <-> P2", "P₁ ↔ P₂"],
+];
+for (const [src, want] of parserCases) {
+  try {
+    const got = toUnicode(parseFormula(src));
+    if (got === want) pass++; else { fail++; failures.push(`parser: ${src} => ${got}, want ${want}`); }
+  } catch (e) { fail++; failures.push(`parser: ${src} threw ${(e as Error).message}`); }
+}
+try { parseFormula("A B"); fail++; failures.push("parser: 'A B' should fail"); } catch { pass++; }
+try { parseFormula("(A ∧ B ∨ C)"); fail++; failures.push("parser: mixing should fail"); } catch { pass++; }
+try { parseFormula("(A ∧ B) ∨ C", { strict: true }); pass++; } catch (e) { fail++; failures.push("strict parse failed: " + (e as Error).message); }
+try { parseFormula("A ∧ B ∨ C", { strict: true }); fail++; failures.push("strict: 'A ∧ B ∨ C' should fail"); } catch { pass++; }
+
+// ---------------------------------------------------------------- proofs
+const chapters = fs.readdirSync(BUILD).filter((f) => f.endsWith(".json")).sort();
+let proofsChecked = 0;
+for (const file of chapters) {
+  const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+  const proofs: any[] = [];
+  walk(ch.blocks, (n) => { if (n.type === "fitch") proofs.push(n); });
+  for (const part of ch.exercises) {
+    const instr = JSON.stringify(part.blocks[0] ?? "");
+    if (/incorrect|mistake|fallacious/i.test(instr)) continue;
+    walk(part, (n) => { if (n.type === "fitch") proofs.push(n); });
+  }
+  for (const p of proofs) {
+    const lines = p.lines as any[];
+    // filter: complete, concrete proofs only
+    const bad = lines.some((l) => /mathcal|vdots|ldots/.test(l.formula) || l.ellipsis || !/^\d+$/.test(l.num) ||
+      /naughty|incorrect|attempt|invoke/i.test(l.ruleText ?? ""));
+    const numsOk = lines.every((l, i) => +l.num === i + 1);
+    for (const l of lines) if (!l.ruleText && l.hypo) l.ruleText = l.depth === 0 ? "PR" : "AS";
+    const hasRules = lines.every((l) => l.ruleText);
+    if (bad || !numsOk || !hasRules || lines.length < 2) { skipped++; continue; }
+    if (lines[0].depth === 0 && lines[0].ruleText === "AS") { skipped++; continue; }
+    const input: InputLine[] = lines.map((l) => ({
+      formula: l.formula.replace(/\\Box\s*$/, "□").trim() === "\\Box" ? "□" : l.formula,
+      rule: l.ruleText, refs: l.refs ?? "", depth: l.depth,
+    }));
+    for (const l of input) if (l.formula.trim() === "\\Box") l.formula = "□";
+    const res = checkProof(input);
+    proofsChecked++;
+    if (res.complete || res.lines.every((r) => r.ok)) pass++;
+    else {
+      fail++;
+      const errs = res.lines.map((r, i) => (r.ok ? null : `  line ${i + 1}: ${input[i].formula} [${input[i].rule} ${input[i].refs}] -> ${r.error}`)).filter(Boolean);
+      failures.push(`proof in ${file}:\n${errs.join("\n")}`);
+    }
+  }
+}
+
+// ----------------------------------------------------------- truth tables
+let ttChecked = 0;
+for (const file of chapters) {
+  const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+  const tables: any[] = [];
+  walk(ch, (n) => { if (n.type === "table" && n.truthTable) tables.push(n); });
+  for (const t of tables) {
+    const cols = t.cols as any[];
+    const div = cols.findIndex((c, i) => i > 0 && c.borderLeft);
+    if (div < 1) continue;
+    const header = t.rows[0].cells.map((c: any) => cellText(c.children));
+    const letters = header.slice(0, div);
+    if (!letters.every((l: string) => /^[A-Z]\d*$/.test(l))) continue;
+    // only tables with exactly one formula after the divider (no further dividers)
+    if (cols.slice(div + 1).some((c) => c.borderLeft)) continue;
+    const formulaText = header.slice(div).join(" ");
+    let f;
+    try { f = parseFormula(formulaText); } catch { continue; }
+    if (!isTFL(f)) continue;
+    const toks = displayTokens(f);
+    const valueToks = toks.filter((x) => x.sub !== null);
+    const body = t.rows.slice(1);
+    const tt = truthTable(f, letters);
+    if (body.length !== tt.rows.length) { skipped++; continue; }
+    ttChecked++;
+    let ok = true;
+    const cellsAfter = (row: any) => row.cells.slice(div).map((c: any) => cellText(c.children));
+    const headerCells = header.slice(div);
+    // map each header cell to the display token(s) it covers, by position: book header cells correspond to symbols
+    if (headerCells.length !== toks.length) {
+      // header split differs from our tokenization (brackets glued differently); compare only the main column
+      for (let r = 0; r < body.length; r++) {
+        const vals = cellsAfter(body[r]);
+        const main = vals.find((v: string) => /^\*?[TF]\*?$/.test(v) && body[r].cells.slice(div)[vals.indexOf(v)].children.some((x: any) => x.type === "strong"));
+        if (main) {
+          const want = tt.rows[r].values[0] ? "T" : "F";
+          if (main.replace(/\*/g, "") !== want) ok = false;
+        }
+      }
+    } else {
+      for (let r = 0; r < body.length; r++) {
+        const vals = cellsAfter(body[r]);
+        for (let c = 0; c < toks.length; c++) {
+          const tok = toks[c];
+          if (tok.sub === null) continue;
+          const want = tt.rows[r].values[tok.sub] ? "T" : "F";
+          const got = (vals[c] ?? "").replace(/\*/g, "");
+          if (got && got !== want) ok = false;
+        }
+      }
+    }
+    void valueToks;
+    if (ok) pass++; else { fail++; failures.push(`truth table in ${file}: ${formulaText}`); }
+  }
+}
+
+function cellText(inl: any[]): string {
+  return inl.map((x) => x.type === "text" ? x.text : x.type === "math" ? x.latex : x.type === "strong" ? "*" + cellText(x.children) + "*" : "").join("").trim();
+}
+
+// ------------------------------------------------------- symbolization check
+// Every TFL symbolization solution should be truth-functionally equivalent to itself (sanity) and parse.
+let symb = 0;
+for (const file of chapters) {
+  const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+  for (const part of ch.exercises) {
+    if (part.kind !== "symbolize") continue;
+    for (const it of part.items) {
+      const sol = it.solution;
+      if (!sol) continue;
+      const maths: string[] = [];
+      walk(sol, (n) => { if (n.type === "math") maths.push(n.latex); });
+      if (!maths.length) continue;
+      try {
+        const f = parseFormula(maths[0]);
+        symb++;
+        if (part.logic === "tfl" && isTFL(f) && !equivalent(f, f)) throw new Error("self-equivalence");
+        if (part.logic === "fol" && isSentence(f)) sampleEquivalent(f, f, 50);
+        pass++;
+      } catch (e) {
+        fail++;
+        failures.push(`symbolization solution ${it.id}: ${maths[0]} -> ${(e as Error).message}`);
+      }
+    }
+  }
+}
+
+// --------------------------------------------------------- argument parsing
+let args = 0;
+for (const file of chapters) {
+  const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+  for (const part of ch.exercises) {
+    if (part.kind !== "proof") continue;
+    for (const it of part.items) {
+      for (const s of it.formulas) {
+        if (!/[∴⊢]/.test(s)) continue;
+        try { parseArgument(s); args++; pass++; } catch (e) { fail++; failures.push(`argument ${it.id}: ${s} -> ${(e as Error).message}`); }
+      }
+    }
+  }
+}
+
+console.log(`proofs checked: ${proofsChecked}, truth tables checked: ${ttChecked}, symbolization solutions: ${symb}, arguments: ${args}`);
+console.log(`pass ${pass}, fail ${fail}, skipped ${skipped}`);
+for (const f of failures.slice(0, 40)) console.log("FAIL", f);
+if (fail) process.exit(1);

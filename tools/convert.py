@@ -106,13 +106,27 @@ MATH_SIMPLE = {
 }
 
 
+MATH_FIXUPS = {
+    # upstream typos (stray brackets); keys are the raw math as written in the source
+    "(M \\eor \\enot M": "(M \\eor \\enot M)",
+    "A \\eor \\forall x\\,\\atom{B}{x}) \\therefore \\forall x(A \\eor \\atom{B}{x})":
+        "A \\eor \\forall x\\,\\atom{B}{x} \\therefore \\forall x(A \\eor \\atom{B}{x})",
+    "\\forall x(A \\eor \\atom{B}{x}) \\therefore A \\eor \\forall x\\,\\atom{B}{x})":
+        "\\forall x(A \\eor \\atom{B}{x}) \\therefore A \\eor \\forall x\\,\\atom{B}{x}",
+}
+# upstream label slips in proofs: (formula latex, refs as resolved) -> corrected refs
+FITCH_REF_FIXUPS = {
+    ("\\Box A \\rightarrow \\Box \\Box A", "1\u20136"): "1\u20134",
+}
+
+
 def convert_math(raw: str) -> str:
     """Turn book LaTeX math into KaTeX-friendly LaTeX."""
-    s = raw
+    s = MATH_FIXUPS.get(raw.strip(), raw)
     for k, v in MATH_SIMPLE.items():
         s = re.sub(r"\\" + k + r"(?![A-Za-z])", lambda m, v=v: v + (" " if v and v[-1].isalpha() else ""), s)
     for _ in range(4):
-        s = _replace_macro(s, "atom", 2, lambda a, b: f"{a}({b})")
+        s = _replace_macro(s, "atom", 2, lambda a, b: f" {a}({b})")
         if "\\atom" not in s:
             break
     s = _replace_macro(s, "metav", 1, lambda a: "\\mathcal{" + a + "}")
@@ -879,12 +893,13 @@ class Renderer:
                     ctr = 0
                 if opt2 is not None and opt2.strip():
                     ctr = int(opt2.strip())
-                num = render_num()
+                num = base if (opt is not None and base == "") else render_num()
                 ctr += 1
+                cur = {"num": num, "depth": depth, "hypo": name == "hypo",
+                       "formula": convert_math(formula), "rule": None, "refs": None,
+                       "labelsBefore": dict(labels)}
                 if lab:
                     labels[lab] = num
-                cur = {"num": num, "depth": depth, "hypo": name == "hypo",
-                       "formula": convert_math(formula), "rule": None, "refs": None}
                 if name == "ellipsesline":
                     cur["ellipsis"] = True
                 lines.append(cur)
@@ -911,8 +926,10 @@ class Renderer:
         # resolve refs
         for ln in lines:
             rr = ln.pop("refsRaw", None)
+            seen = ln.pop("labelsBefore", {})
             if rr is None:
                 continue
+            labels = {**labels, **seen}
             parts = re.split(r"(\s*[,;]\s*|\s*[-–]\s*|\s*\.\s*)", rr)
             out = []
             for pth in parts:
@@ -930,6 +947,7 @@ class Renderer:
                 else:
                     out.append(st)
             ln["refs"] = "".join(out).strip()
+            ln["refs"] = FITCH_REF_FIXUPS.get((ln["formula"], ln["refs"]), ln["refs"])
         return {"type": "fitch", "lines": lines}
 
     # -- tables

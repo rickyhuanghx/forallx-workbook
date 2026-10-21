@@ -14,7 +14,6 @@ Counts:
   exercise-items: 705
   exercise-parts: 132
   items-with-solution: 509
-  math-macro:lnotA: 1
   parts-with-solution-file: 119
   to_logic-leftover: 4
 
