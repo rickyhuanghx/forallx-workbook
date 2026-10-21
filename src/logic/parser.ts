@@ -65,7 +65,7 @@ export function tokenize(src: string): Tok[] {
       "→": "imp", ">": "imp",
       "⊥": "bot", "#": "bot",
       "∀": "forall", "@": "forall",
-      "∃": "exists", "3": "exists", "∃": "exists",
+      "∃": "exists", "3": "exists",
       "□": "box", "◻": "box", "■": "box",
       "◇": "dia", "◊": "dia", "♢": "dia", "⋄": "dia",
       "(": "lp", "[": "lp", ")": "rp", "]": "rp",

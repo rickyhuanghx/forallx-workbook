@@ -5,13 +5,13 @@ Counts:
   block:displaymath: 172
   block:factoid: 126
   block:figure: 32
-  block:fitch: 480
+  block:fitch: 483
   block:footnote: 34
-  block:list: 503
+  block:list: 504
   block:table: 175
   block:truthtable: 161
   chapters: 52
-  exercise-items: 705
+  exercise-items: 708
   exercise-parts: 132
   items-with-solution: 509
   parts-with-solution-file: 119

@@ -485,7 +485,9 @@ class Renderer:
             return {"type": "math", "latex": "\\mathcal{" + c.args[0].raw.strip() + "}"}
         if name == "atom":
             return {"type": "math", "latex": convert_math(f"\\atom{{{c.args[0].raw}}}{{{c.args[1].raw}}}")}
-        if name in ("ntuple", "model", "extension", "referent", "gap"):
+        if name == "ntuple":
+            return [{"type": "text", "text": "\u27e8"}] + self.arg_inlines(c, 0, ctx) + [{"type": "text", "text": "\u27e9"}]
+        if name in ("model", "extension", "referent", "gap"):
             return {"type": "math", "latex": convert_math(f"\\{name}{{{c.args[0].raw}}}")}
         if name == "blank":
             return {"type": "blank"}
@@ -1163,11 +1165,7 @@ def classify_part(chapter_num: int, part: dict) -> dict:
             break
     has_key = any(b["type"] == "list" and b["kind"] == "ekey" for b in part["blocks"])
     items = part.get("items", [])
-    firstmath = []
-    for it in items:
-        fm = first_math(it["children"])
-        firstmath.append(fm)
-    n_math = sum(1 for f in firstmath if f)
+    n_math = sum(1 for it in items if it.get("formulas"))
     kind = "free"
     logic = "tfl" if chapter_num <= 22 else ("fol" if chapter_num <= 41 else ("ml" if chapter_num <= 44 else "tfl"))
     if chapter_num >= 45:
@@ -1194,6 +1192,8 @@ def classify_part(chapter_num: int, part: dict) -> dict:
         kind = "symbolize"
     elif ("main connective" in instr or "main logical operator" in instr) and n_math:
         kind = "main-connective"
+    elif "citation" in instr and any(b["type"] == "fitch" for it in items for b in it["children"]):
+        kind = "cite"
     elif ("sentence of tfl" in instr or "sentences of tfl" in instr or "sentence of fol" in instr or "sentences of fol" in instr) and n_math and "which" in instr:
         kind = "is-sentence"
     return {"kind": kind, "sub": sub, "logic": logic, "hasKey": has_key}
@@ -1214,7 +1214,9 @@ def first_math(blocks):
 
 
 def item_formulas(blocks):
-    """All top-level math in an item's first paragraph(s), as logic strings."""
+    """All top-level math in an item's first paragraph(s), as logic strings.
+    An argument written as an earg list (premises, then a ∴ line) becomes one
+    'P1, P2 ∴ C' string."""
     out = []
     for b in blocks:
         if b["type"] == "para":
@@ -1223,6 +1225,21 @@ def item_formulas(blocks):
                     out.append(to_logic(x["latex"]))
         elif b["type"] == "displaymath":
             out.append(to_logic(b["latex"]))
+        elif b["type"] == "list" and b["kind"] == "earg":
+            prem, conc = [], None
+            for it in b["items"]:
+                maths = [to_logic(x["latex"]) for c in it["children"] if c["type"] == "para" for x in c["children"] if x["type"] == "math"]
+                if not maths:
+                    prem = None
+                    break
+                is_conc = it.get("label") and "∴" in plain(it["label"])
+                if is_conc:
+                    conc = maths[0]
+                else:
+                    prem.append(maths[0])
+            if prem is not None and conc is not None:
+                out.append(", ".join(prem) + " ∴ " + conc)
+            break
         elif b["type"] == "list":
             break
     return out
@@ -1288,6 +1305,28 @@ def convert_book():
                     it["formulas"] = item_formulas(it["children"])
                 part["id"] = f"{cid}.{part['letter']}"
                 part.update(classify_part(r.chap_num if not appendix else 0, part))
+                if part["kind"] == "free" and not part["items"]:
+                    instr = plain(part["blocks"][0]["children"]).lower() if part["blocks"] and part["blocks"][0]["type"] == "para" else ""
+                    if "citation" in instr:
+                        proofs = []
+                        rest = []
+                        for b in part["blocks"]:
+                            if b["type"] == "fitch":
+                                proofs.append(b)
+                            elif b["type"] == "columns":
+                                proofs.extend(x for x in b["children"] if x["type"] == "fitch")
+                                others = [x for x in b["children"] if x["type"] != "fitch"]
+                                if others:
+                                    rest.append({"type": "columns", "children": others})
+                            else:
+                                rest.append(b)
+                        if proofs:
+                            part["blocks"] = rest + [{"type": "list", "kind": "compactlist", "items": [{"children": [p]} for p in proofs]}]
+                            part["items"] = flatten_items(part["blocks"])
+                            for idx, it in enumerate(part["items"], 1):
+                                it["id"] = f"{cid}.{part['letter']}.{idx}"
+                                it["formulas"] = []
+                            part["kind"] = "cite"
             ch["exercises"] = parts
             chapters_out.append(ch)
             if appendix:
