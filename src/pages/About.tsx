@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { exportProgress, importProgress, resetProgress, useProgress } from "../state/progress";
+import { disableSync, enableSync, formatCode, getSyncCode, joinSync, pullAndMerge, useSyncStatus } from "../state/sync";
 
 export function About() {
   const [, update] = useProgress();
@@ -60,7 +61,13 @@ export function About() {
       <h2>Typing symbols</h2>
       <p>Use the symbol buttons, or type the ASCII forms the book itself suggests (appendix on accessibility): <code>~</code> or <code>-</code> for ¬, <code>/\</code> or <code>&amp;</code> for ∧, <code>\/</code> for ∨, <code>-&gt;</code> or <code>&gt;</code> for →, <code>&lt;-&gt;</code> for ↔, <code>_|_</code> or <code>!?</code> for ⊥, <code>Ax</code> or <code>@x</code> for ∀x, <code>Ex</code> or <code>3x</code> for ∃x, <code>:.</code> for ∴, <code>|-</code> for ⊢, <code>[]</code> for □ and <code>&lt;&gt;</code> for ◇ (in modal exercises; elsewhere <code>&lt;&gt;</code> is ↔). Also accepted: <code>v</code> for ∨, <code>#</code> for ⊥, <code>dia</code> for ◇. Subscripts: <code>A1</code> or <code>A_1</code>.</p>
       <h2>Your progress</h2>
-      <p>Progress lives in this browser only. Export it to move to another device, or to keep a backup.</p>
+      <p>
+        Everything you do here is saved in this browser as you go: exercises checked, answers written, proofs in progress, chapters read,
+        glossary cards. It survives closing the tab and new versions of the site, but not clearing the browser's site data, and it does
+        not follow you to another device on its own. Turn on sync for that.
+      </p>
+      <SyncPanel setNote={setNote} />
+      <p>You can also export a file as a backup, or import one.</p>
       <div className="row">
         <button type="button" className="btn" onClick={download}>Export progress</button>
         <button type="button" className="btn" onClick={() => fileRef.current?.click()}>Import progress</button>
@@ -68,6 +75,63 @@ export function About() {
         <button type="button" className="btn btn-danger" onClick={() => { if (armed) { resetProgress(); update(() => {}); setArmed(false); setNote("Progress reset."); } else { setArmed(true); setTimeout(() => setArmed(false), 4000); } }}>{armed ? "Click again to delete everything" : "Reset progress"}</button>
       </div>
       {note && <p className="muted" role="status">{note}</p>}
+    </div>
+  );
+}
+
+function SyncPanel({ setNote }: { setNote: (s: string) => void }) {
+  const [, update] = useProgress();
+  const status = useSyncStatus();
+  const [code, setCode] = useState<string | null>(() => getSyncCode());
+  const [joining, setJoining] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { setCode(getSyncCode()); }, [status.state]);
+
+  const when = status.at ? new Date(status.at).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" }) : null;
+  const line = status.state === "syncing" ? "Syncing..."
+    : status.state === "error" ? `Could not reach the server (${status.error ?? "offline"}). Your work is safe here; it will retry.`
+    : status.state === "synced" && when ? `Synced ${when}.`
+    : code ? "Sync is on." : "Sync is off.";
+
+  const copy = async () => {
+    if (!code) return;
+    try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* clipboard blocked */ }
+  };
+
+  if (!code) {
+    return (
+      <div className="sync-box">
+        <p className="sync-status">{line}</p>
+        <div className="row">
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={async () => { setBusy(true); const c = await enableSync(); setCode(c); update(() => {}); setBusy(false); setNote("Sync is on. Enter the code below on your other devices."); }}>Turn on sync</button>
+        </div>
+        <p className="muted">Already have a code from another device?</p>
+        <div className="sync-join">
+          <input value={joining} onChange={(e) => setJoining(e.target.value)} placeholder="Sync code" aria-label="Sync code from another device" spellCheck={false} autoCapitalize="off" />
+          <button type="button" className="btn" disabled={busy || !joining.trim()} onClick={async () => {
+            setBusy(true);
+            const r = await joinSync(joining);
+            setBusy(false);
+            if (r === "ok") { setCode(getSyncCode()); setJoining(""); update(() => {}); setNote("Joined. Progress from both devices has been merged."); }
+            else if (r === "notfound") setNote("No progress found for that code. Check it and try again.");
+            else setNote("Could not reach the server. Try again in a moment.");
+          }}>Join</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="sync-box">
+      <p className={"sync-status" + (status.state === "error" ? " is-error" : "")} role="status">{line}</p>
+      <p>Your sync code. Enter it on the About page of any other device to pick up where you left off:</p>
+      <p><span className="sync-code">{formatCode(code)}</span></p>
+      <div className="row">
+        <button type="button" className="btn" onClick={copy}>{copied ? "Copied" : "Copy code"}</button>
+        <button type="button" className="btn" disabled={busy || status.state === "syncing"} onClick={async () => { setBusy(true); await pullAndMerge(); update(() => {}); setBusy(false); }}>Sync now</button>
+        <button type="button" className="btn" onClick={() => { disableSync(); setCode(null); setNote("Sync is off. Progress stays in this browser; the server copy is kept until you use the code again."); }}>Turn off sync</button>
+      </div>
+      <p className="muted">Keep the code private: anyone who has it can read and change this progress.</p>
     </div>
   );
 }

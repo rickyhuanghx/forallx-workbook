@@ -1,4 +1,5 @@
-// Learner progress kept in localStorage (per browser). Nothing leaves the device.
+// Learner progress kept in localStorage (per browser). With a sync code (see sync.ts) a copy is
+// also kept on the server and merged across devices.
 import { useCallback, useEffect, useState } from "react";
 
 export interface ExerciseRecord {
@@ -18,6 +19,7 @@ export interface Progress {
   bookmarks: string[];
   flash: Record<string, { box: number; due: number }>;   // glossary key -> spaced repetition
   theme?: "light" | "dark" | "auto";
+  clearedAt?: number;                    // last "reset progress"; older records never come back from sync
 }
 
 const KEY = "forallx-progress-v1";
@@ -36,9 +38,20 @@ function load(): Progress {
 let state: Progress = load();
 const listeners = new Set<() => void>();
 
-function save() {
+let savedHook: (() => void) | null = null;
+/** Called after every local save that should reach the server (sync.ts registers itself here). */
+export function onProgressSaved(cb: () => void) { savedHook = cb; }
+
+function save(silent = false) {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage unavailable */ }
   listeners.forEach((l) => l());
+  if (!silent) savedHook?.();
+}
+
+/** Replace the whole state (used by sync after a merge). silent: do not push back to the server. */
+export function replaceProgress(p: Progress, opts: { silent?: boolean } = {}) {
+  state = { ...structuredClone(empty), ...p };
+  save(!!opts.silent);
 }
 
 export function getProgress(): Progress { return state; }
@@ -76,4 +89,4 @@ export function importProgress(json: string) {
   state = { ...structuredClone(empty), ...parsed };
   save();
 }
-export function resetProgress() { state = structuredClone(empty); save(); }
+export function resetProgress() { state = { ...structuredClone(empty), clearedAt: Date.now() }; save(); }

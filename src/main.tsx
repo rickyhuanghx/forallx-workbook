@@ -1,3 +1,4 @@
+import { startSync } from "./state/sync";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -12,6 +13,7 @@ import { Search } from "./pages/Search";
 import { Lab } from "./pages/Lab";
 import { Exercises } from "./pages/Exercises";
 
+startSync();
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>

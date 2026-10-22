@@ -481,3 +481,12 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 .shortcut-help dt { font-family: var(--serif); font-size: 16px; min-width: 2em; margin: 0; }
 .shortcut-help dd { margin: 0; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
 .free-palette { margin-top: 6px; max-width: 60ch; }
+
+/* progress sync */
+.sync-box { margin: 10px 0 14px; padding: 12px 14px; border: 1px solid var(--rule-soft); border-radius: var(--radius); background: var(--paper-2); }
+.sync-box .row { margin-top: 8px; }
+.sync-code { font-family: ui-monospace, Menlo, monospace; font-size: 17px; letter-spacing: 0.04em; padding: 6px 10px; border: 1px dashed var(--rule); border-radius: var(--radius); background: var(--paper); display: inline-block; user-select: all; }
+.sync-status { font-family: var(--sans); font-size: 13px; color: var(--ink-3); }
+.sync-status.is-error { color: var(--bad); }
+.sync-join { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sync-join input { flex: 1 1 220px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-family: ui-monospace, Menlo, monospace; min-width: 0; }

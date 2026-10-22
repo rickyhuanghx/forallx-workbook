@@ -9,6 +9,8 @@ import { truthTable, equivalent, isTFL } from "../src/logic/tfl";
 import { sampleEquivalent } from "../src/logic/fol";
 import { isSentence } from "../src/logic/ast";
 import { applyShortcuts } from "../src/logic/shortcuts";
+import { mergeProgress } from "../src/state/sync";
+import type { Progress } from "../src/state/progress";
 
 const BUILD = path.join(process.cwd(), "content", "build", "chapters");
 
@@ -224,6 +226,40 @@ for (const [input, logic, prose, want] of shortcutCases) {
 {
   const r = applyShortcuts("A -> B", 4, "tfl");
   if (r.text === "A → B" && r.caret === 3) pass++; else { fail++; failures.push(`shortcut caret: ${JSON.stringify(r)}`); }
+}
+
+
+// ---------------------------------------------------------------- progress merge
+{
+  const base = (): Progress => ({ read: {}, visited: {}, exercises: {}, notes: {}, bookmarks: [], flash: {} });
+  const L = base(), R = base();
+  L.exercises["a"] = { status: "attempted", answer: "old", updated: 100 };
+  R.exercises["a"] = { status: "correct", answer: "new", updated: 200 };
+  L.exercises["b"] = { status: "done", updated: 300 };
+  R.exercises["c"] = { status: "revealed", updated: 50 };
+  L.read["ch01"] = 10; R.read["ch01"] = 20; R.read["ch02"] = 5;
+  L.visited["ch01"] = 10; R.visited["ch03"] = 900; R.last = { chapter: "ch03" }; L.last = { chapter: "ch01" };
+  L.flash["x"] = { box: 1, due: 1000 }; R.flash["x"] = { box: 2, due: 2000 };
+  L.theme = "dark"; R.theme = "light";
+  const m = mergeProgress(L, R);
+  const checks: [string, boolean][] = [
+    ["newer exercise wins", m.exercises["a"].answer === "new" && m.exercises["a"].status === "correct"],
+    ["local-only kept", m.exercises["b"]?.status === "done"],
+    ["remote-only kept", m.exercises["c"]?.status === "revealed"],
+    ["read max", m.read["ch01"] === 20 && m.read["ch02"] === 5],
+    ["last from most recently visited side", m.last?.chapter === "ch03"],
+    ["flash later due wins", m.flash["x"].box === 2],
+    ["theme stays local", m.theme === "dark"],
+  ];
+  // a reset on one side removes older records from the other
+  const L2 = base(); L2.clearedAt = 250;
+  const m2 = mergeProgress(L2, R);
+  checks.push(["reset drops older remote records", !m2.exercises["a"] && !m2.exercises["c"] && m2.clearedAt === 250]);
+  const R3 = base(); R3.clearedAt = 250; R3.exercises["z"] = { status: "done", updated: 260 };
+  const m3 = mergeProgress(L, R3);
+  checks.push(["remote reset drops older local, keeps newer", !m3.exercises["a"] && m3.exercises["b"]?.status === "done" && m3.exercises["z"]?.status === "done"]);
+  checks.push(["merge is idempotent", JSON.stringify(mergeProgress(m, m)) === JSON.stringify(m)]);
+  for (const [name, ok] of checks) { if (ok) pass++; else { fail++; failures.push(`merge: ${name}`); } }
 }
 
 console.log(`proofs checked: ${proofsChecked}, truth tables checked: ${ttChecked}, symbolization solutions: ${symb}, arguments: ${args}`);
