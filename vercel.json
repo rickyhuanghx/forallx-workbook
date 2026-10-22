@@ -1,9 +1,11 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "forallx-platform.vercel.app" }], "destination": "https://forallxworkbook.com/$1", "permanent": true }
+  ],
   "rewrites": [{ "source": "/((?!content/|api/).*)", "destination": "/index.html" }],
   "headers": [
-    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/content/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }] }
   ]
 }

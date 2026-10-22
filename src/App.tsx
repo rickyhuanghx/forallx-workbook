@@ -23,6 +23,13 @@ export function App() {
     if (!loc.hash) window.scrollTo({ top: 0 });
   }, [loc.pathname]);
 
+  useEffect(() => {
+    // one canonical URL per route on the public domain
+    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) { link = document.createElement("link"); link.rel = "canonical"; document.head.appendChild(link); }
+    link.href = `https://forallxworkbook.com${loc.pathname === "/" ? "/" : loc.pathname.replace(/\/$/, "")}`;
+  }, [loc.pathname]);
+
   const cycleTheme = () => update((p) => { p.theme = theme === "auto" ? "dark" : theme === "dark" ? "light" : "auto"; });
 
   return (
