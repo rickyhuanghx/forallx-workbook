@@ -303,6 +303,7 @@ li.li-unlabelled { list-style: none; }
 
 /* Tables -------------------------------------------------------------- */
 .tbl-wrap { margin: 0.8em 0 1.2em; overflow-x: auto; }
+.tbl-wrap td, .tbl-wrap th { overflow-wrap: break-word; hyphens: auto; }   /* words in narrow columns hyphenate instead of splitting anywhere */
 .tbl-wrap figcaption { font-family: var(--sans); font-size: 0.9rem; color: var(--ink-2); margin-top: 8px; }
 .tbl-num { font-weight: 600; margin-right: 0.3em; }
 table.tt, table.tbl { border-collapse: collapse; margin: 0 auto; }
