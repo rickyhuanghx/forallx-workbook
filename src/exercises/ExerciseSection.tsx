@@ -59,7 +59,7 @@ function PartBody({ part, chapter }: { part: ExercisePart; chapter: Chapter }) {
       {part.solution && <Solution blocks={part.solution} chapterId={chapter.id} label="Show the book's discussion" />}
       {part.solutionFull && part.items.length === 0 && <Solution blocks={part.solutionFull} chapterId={chapter.id} />}
       {part.solutionFull && part.items.length > 0 && !part.items.some((it) => it.solution) && <Solution blocks={part.solutionFull} chapterId={chapter.id} />}
-      {part.items.length === 0 && <FreeResponse exerciseId={part.id} chapterId={chapter.id} />}
+      {part.items.length === 0 && <FreeResponse exerciseId={part.id} chapterId={chapter.id} logic={part.logic} />}
     </div>
   );
 }
@@ -94,7 +94,7 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
       return <IsSentence exerciseId={id} formulas={formulas} logic={part.logic} solution={sol} chapterId={chapter.id} two={part.sub === "two"} />;
     case "cite": {
       const fitch = item.children.find((b) => b.type === "fitch");
-      if (!fitch || fitch.type !== "fitch") return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} />;
+      if (!fitch || fitch.type !== "fitch") return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
       const given: EditLine[] = fitch.lines.map((l) => {
         const r = tryParse(l.formula);
         const formula = r.ok ? toUnicode(r.f) : l.formula;
@@ -107,7 +107,7 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
     }
     case "proof": {
       const specs = proofSpecs(formulas, instr);
-      if (!specs.length) return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} />;
+      if (!specs.length) return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
       return (
         <>
           {specs.map((s, i) => <ProofEditor key={i} exerciseId={specs.length > 1 ? `${id}.${i + 1}` : id} spec={s} logic={part.logic} solution={i === specs.length - 1 ? sol : undefined} chapterId={chapter.id} title={specs.length > 1 ? `Proof ${i + 1} of ${specs.length}` : undefined} />)}
@@ -115,7 +115,7 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
       );
     }
     default:
-      return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} />;
+      return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
   }
 }
 

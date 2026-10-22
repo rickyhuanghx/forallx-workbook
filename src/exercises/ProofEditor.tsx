@@ -6,7 +6,7 @@ import { tryParse } from "../logic/parser";
 import { toLatex } from "../logic/print";
 import { Math } from "../render/Math";
 import { recordExercise, useProgress } from "../state/progress";
-import { FormulaInput, SYMBOLS } from "./FormulaInput";
+import { FormulaInput, Palette } from "./FormulaInput";
 import { Solution, Verdict } from "./Solution";
 
 export interface ProofSpec {
@@ -137,10 +137,7 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
         })}
       </div>
       {!given && (
-        <div className="palette pe-palette" role="toolbar" aria-label="Symbols">
-          {SYMBOLS[logic].map((s) => <button type="button" key={s} tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => insertSymbol(s)} aria-label={`Insert ${s}`}>{s}</button>)}
-          <button type="button" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => insertSymbol("□")} aria-label="Insert □ marker" hidden={logic !== "ml"}>□</button>
-        </div>
+        <Palette logic={logic} className="pe-palette" onInsert={insertSymbol} />
       )}
       <div className="widget-actions">
         <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCheck(true)}>Check proof</button>

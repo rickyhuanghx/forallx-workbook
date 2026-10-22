@@ -8,6 +8,7 @@ import { toUnicode, displayTokens } from "../src/logic/print";
 import { truthTable, equivalent, isTFL } from "../src/logic/tfl";
 import { sampleEquivalent } from "../src/logic/fol";
 import { isSentence } from "../src/logic/ast";
+import { applyShortcuts } from "../src/logic/shortcuts";
 
 const BUILD = path.join(process.cwd(), "content", "build", "chapters");
 
@@ -180,6 +181,49 @@ for (const file of chapters) {
       }
     }
   }
+}
+
+
+// ---------------------------------------------------------------- typing shortcuts
+const shortcutCases: [string, "tfl" | "fol" | "ml", boolean, string][] = [
+  ["A ->", "tfl", false, "A →"],
+  ["A <->", "tfl", false, "A ↔"],
+  ["A <>", "tfl", false, "A ↔"],
+  ["A <>", "ml", false, "A ◇"],
+  ["[]", "ml", false, "□"],
+  ["[]", "tfl", false, "[]"],
+  ["A /\\", "tfl", false, "A ∧"],
+  ["A \\/", "tfl", false, "A ∨"],
+  ["A &", "tfl", false, "A ∧"],
+  ["~", "tfl", false, "¬"],
+  ["A v ", "tfl", false, "A ∨ "],
+  ["Av ", "tfl", false, "Av "],
+  ["_|_", "tfl", false, "⊥"],
+  ["A |-", "tfl", false, "A ⊢"],
+  ["A :.", "tfl", false, "A ∴"],
+  ["A -", "tfl", false, "A -"],
+  ["Ax", "fol", false, "∀x"],
+  ["(Ex", "fol", false, "(∃x"],
+  ["Ax", "tfl", false, "Ax"],
+  ["Bx", "fol", false, "Bx"],
+  ["@x", "fol", false, "∀x"],
+  ["3x", "fol", false, "∃x"],
+  ["A3", "fol", false, "A3"],
+  ["\\neg ", "tfl", false, "¬"],
+  ["\\forall(", "fol", false, "∀("],
+  ["\\foo ", "tfl", false, "\\foo "],
+  ["Smith & Jones", "fol", true, "Smith & Jones"],
+  ["so A ->", "fol", true, "so A →"],
+  ["Ax", "fol", true, "Ax"],
+];
+for (const [input, logic, prose, want] of shortcutCases) {
+  const got = applyShortcuts(input, input.length, logic, prose).text;
+  if (got === want) pass++; else { fail++; failures.push(`shortcut ${JSON.stringify(input)} (${logic}${prose ? ", prose" : ""}): got ${JSON.stringify(got)} want ${JSON.stringify(want)}`); }
+}
+// caret lands after the replacement, text after the caret is untouched
+{
+  const r = applyShortcuts("A -> B", 4, "tfl");
+  if (r.text === "A → B" && r.caret === 3) pass++; else { fail++; failures.push(`shortcut caret: ${JSON.stringify(r)}`); }
 }
 
 console.log(`proofs checked: ${proofsChecked}, truth tables checked: ${ttChecked}, symbolization solutions: ${symb}, arguments: ${args}`);
