@@ -1,5 +1,5 @@
 // DELETE /api/account -> removes the account record and its progress, clears the cookie.
-import { accountByUid, clearCookie, deleteAccount, json, uidFromRequest } from "../src/server/auth";
+import { accountByUid, clearCookie, deleteAccount, json, uidFromRequest } from "../src/server/auth.js";
 
 export async function DELETE(request: Request): Promise<Response> {
   const uid = uidFromRequest(request);

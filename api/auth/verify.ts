@@ -1,6 +1,6 @@
 // POST /api/auth/verify { token } -> { email } and sets the session cookie.
 // POST rather than GET so that link-prefetching mail clients cannot burn the one-time token.
-import { consumePending, findOrCreateAccount, json, secret, sessionCookie, signSession } from "../../src/server/auth";
+import { consumePending, findOrCreateAccount, json, secret, sessionCookie, signSession } from "../../src/server/auth.js";
 
 export async function POST(request: Request): Promise<Response> {
   let body: { token?: unknown };

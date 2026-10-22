@@ -1,5 +1,5 @@
 // POST /api/auth/request { email } -> { ok: true }. Emails a one-time sign-in link.
-import { appUrl, createPending, json, normalizeEmail, overLimit, sendMail, signInEmail } from "../../src/server/auth";
+import { appUrl, createPending, json, normalizeEmail, overLimit, sendMail, signInEmail } from "../../src/server/auth.js";
 
 export async function POST(request: Request): Promise<Response> {
   let body: { email?: unknown };

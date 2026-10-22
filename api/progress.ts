@@ -3,7 +3,7 @@
 // Otherwise a sync code (header x-sync-code on GET, body.code on PUT) names the blob; the code is a secret the learner holds.
 // GET  /api/progress -> { data, updated } or 404
 // PUT  /api/progress { data, code? } -> { updated }
-import { json, progressPathForCode, progressPathForUid, readJson, uidFromRequest, writeJson } from "../src/server/auth";
+import { json, progressPathForCode, progressPathForUid, readJson, uidFromRequest, writeJson } from "../src/server/auth.js";
 
 const CODE = /^[a-z0-9]{20,64}$/;
 const MAX_BYTES = 512 * 1024;
