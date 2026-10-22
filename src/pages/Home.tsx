@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useBook } from "../content/loader";
-import { useProgress } from "../state/progress";
+import { completedItems, useProgress } from "../state/progress";
+import { Meter } from "../render/Meter";
 import { Fitch } from "../render/Fitch";
 import type { FitchLine } from "../content/types";
 
@@ -20,10 +21,11 @@ export function Home() {
   const last = progress.last;
   const lastRef = last && book.chapters.find((c) => c.id === last.chapter);
   const done = (id: string) => !!progress.read[id];
-  const exDone = (id: string) => Object.entries(progress.exercises).filter(([k, v]) => k.startsWith(id + ".") && (v.status === "correct" || v.status === "done")).length;
+  const exDone = (id: string) => completedItems(progress, id);
   const totalRead = book.chapters.filter((c) => /^ch/.test(c.id) && done(c.id)).length;
   const totalChapters = book.chapters.filter((c) => /^ch/.test(c.id)).length;
-  const totalEx = Object.entries(progress.exercises).filter(([k, v]) => !k.startsWith("lab.") && (v.status === "correct" || v.status === "done")).length;
+  const totalEx = completedItems(progress);
+  const allEx = book.chapters.reduce((n, c) => n + c.exerciseCount, 0);
 
   return (
     <div className="home">
@@ -37,10 +39,16 @@ export function Home() {
               : <Link className="btn btn-primary" to="/read/ch01">Start with chapter 1</Link>}
             <Link className="btn" to="/read/preface">Preface</Link>
           </div>
-          <dl className="mast-stats" aria-label="Your progress">
-            <div><dt>Chapters read</dt><dd>{totalRead} of {totalChapters}</dd></div>
-            <div><dt>Exercises completed</dt><dd>{totalEx}</dd></div>
-          </dl>
+          <div className="mast-stats" aria-label="Your progress">
+            <div className="mast-stat">
+              <span className="mast-stat-k">Chapters read</span>
+              <Meter value={totalRead} max={totalChapters} label="Chapters read" />
+            </div>
+            <div className="mast-stat">
+              <span className="mast-stat-k">Exercises completed</span>
+              <Meter value={totalEx} max={allEx} label="Exercises completed" />
+            </div>
+          </div>
         </div>
         <div className="mast-proof" aria-hidden="true">
           <Fitch lines={MAST} />
@@ -62,8 +70,8 @@ export function Home() {
                       <span className="toc-num">{c.number}</span>
                       <span className="toc-title">{c.title}</span>
                       <span className="toc-meta">
-                        {done(c.id) && <span className="toc-read" title="Read">read</span>}
-                        {meta.exerciseCount > 0 && <span className="toc-ex" title="Exercises completed">{n}/{meta.exerciseCount}</span>}
+                        {done(c.id) && <span className="toc-read">Read</span>}
+                        {meta.exerciseCount > 0 && <Meter compact value={n} max={meta.exerciseCount} label={`Exercises completed in chapter ${c.number}`} />}
                       </span>
                     </Link>
                   </li>

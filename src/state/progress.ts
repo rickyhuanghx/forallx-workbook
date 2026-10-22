@@ -90,3 +90,12 @@ export function importProgress(json: string) {
   save();
 }
 export function resetProgress() { state = { ...structuredClone(empty), clearedAt: Date.now() }; save(); }
+
+/** True when an exercise record counts as finished (checked correct, or marked done by the learner). */
+export function isComplete(status?: ExerciseRecord["status"]): boolean { return status === "correct" || status === "done"; }
+
+/** Completed exercise items, counted at item depth only (chNN.A.3), so whole-part answers, sub-proofs and the Lab never inflate the count. */
+export function completedItems(p: Progress, chapterId?: string): number {
+  const re = chapterId ? new RegExp(`^${chapterId}\\.[A-Z]+\\.\\d+$`) : /^[a-z]+\d*\.[A-Z]+\.\d+$/;
+  return Object.entries(p.exercises).filter(([k, v]) => re.test(k) && isComplete(v.status)).length;
+}

@@ -146,10 +146,24 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
 .mast-colon { color: var(--accent); margin: 0 0.1em; }
 .mast-sub { font-size: 1.15rem; color: var(--ink-2); max-width: 46ch; margin: 0 0 24px; }
 .mast-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-.mast-stats { display: flex; gap: 32px; margin: 0; font-family: var(--sans); }
-.mast-stats div { display: flex; flex-direction: column-reverse; }
-.mast-stats dt { color: var(--ink-3); font-size: 13px; }
-.mast-stats dd { margin: 0; font-size: 22px; font-weight: 500; }
+.mast-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; margin: 0; font-family: var(--sans); max-width: 46ch; }
+.mast-stat { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mast-stat-k { color: var(--ink-3); font-size: 13px; }
+.mast-stat .meter { flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+.mast-stat .meter-num { font-size: 22px; font-weight: 500; color: var(--ink); line-height: 1.1; }
+.mast-stat .meter-track { width: 100%; height: 8px; }
+@media (max-width: 420px) { .mast-stats { grid-template-columns: 1fr; } }
+
+/* Progress meter: a filled track plus the count written beside it */
+.meter { display: inline-flex; align-items: center; gap: 8px; font-family: var(--sans); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+.meter-track { display: inline-block; position: relative; width: 120px; height: 6px; border-radius: 999px; background: var(--rule); overflow: hidden; flex: none; }
+.meter-fill { display: block; height: 100%; border-radius: inherit; background: var(--ok); transition: width 0.4s ease; }
+.meter.is-empty .meter-fill { width: 0; }
+.meter.is-full .meter-num { color: var(--ok); }
+.meter.is-full .meter-fill { background: var(--ok); }
+.meter-compact { font-size: 13px; }
+.meter-compact .meter-track { width: 56px; height: 5px; }
+@media (prefers-reduced-motion: reduce) { .meter-fill { transition: none; } }
 .mast-proof { justify-self: center; }
 .mast-proof .fitch { font-size: 1.35rem; }
 .mast-caption { font-family: var(--sans); color: var(--ink-3); font-size: 13px; text-align: center; margin: 12px 0 0; }
@@ -163,8 +177,11 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
 .toc-link { display: grid; grid-template-columns: 40px 1fr auto; align-items: baseline; gap: 10px; padding: 6px 8px 6px 0; color: var(--ink); border-top: 1px solid var(--rule-soft); }
 .toc-link:hover { text-decoration: none; background: var(--paper-2); }
 .toc-num { font-family: var(--sans); color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
-.toc-meta { font-family: var(--sans); font-size: 13px; color: var(--ink-3); display: flex; gap: 10px; }
-.toc-read { color: var(--ok); }
+.toc-meta { font-family: var(--sans); font-size: 13px; color: var(--ink-3); display: flex; gap: 12px; align-items: center; }
+.toc-read { color: var(--ok); font-weight: 500; }
+.toc-meta .meter-num { color: var(--ink-3); }
+.toc-meta .meter.is-full .meter-num { color: var(--ok); }
+@media (max-width: 480px) { .toc-meta .meter-track { width: 40px; } }
 .is-read .toc-title { color: var(--ink-2); }
 @media (min-width: 900px) { .toc { columns: 2; } }
 
@@ -335,7 +352,9 @@ table.tt strong { color: var(--accent-ink); }
 .expart-head { display: flex; align-items: baseline; gap: 12px; font-family: var(--sans); border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 12px; }
 .expart-letter { font-family: var(--serif); font-weight: 600; font-size: 1.3rem; }
 .expart-kind { color: var(--ink-3); font-size: 14px; }
-.expart-count { margin-left: auto; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+.expart-count { margin-left: auto; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; }
+.expart-count .meter-num { color: var(--ink-3); font-size: 14px; }
+.expart-count .meter.is-full .meter-num { color: var(--ok); }
 .exitems { list-style: none; padding: 0 !important; margin: 0.4em 0 0 !important; counter-reset: ex; }
 .exitem { counter-increment: ex; position: relative; padding: 14px 0 14px 2.2em; border-top: 1px solid var(--rule-soft); }
 .exitem::before { content: counter(ex) "."; position: absolute; left: 0; top: 14px; color: var(--ink-3); font-family: var(--sans); width: 1.8em; text-align: right; }
@@ -429,12 +448,16 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 
 /* Exercises overview page */
 .exlist { list-style: none; padding: 0; margin: 0; font-family: var(--sans); }
-.exlist-ch { padding: 14px 0; border-top: 1px solid var(--rule-soft); display: grid; grid-template-columns: 1fr auto; row-gap: 6px; }
+.exlist-ch { padding: 14px 0; border-top: 1px solid var(--rule-soft); display: grid; grid-template-columns: 1fr auto; row-gap: 6px; align-items: center; }
 .exlist-title { color: var(--ink); font-family: var(--serif); font-size: 1.1rem; display: flex; gap: 10px; }
-.exlist-count { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.exlist-ch > .meter { font-size: 14px; }
+.exlist-ch > .meter .meter-track { width: 140px; }
+@media (max-width: 600px) { .exlist-ch > .meter .meter-track { width: 72px; } }
 .exlist-parts { grid-column: 1 / -1; list-style: none; padding: 0 0 0 40px; margin: 0; display: grid; gap: 2px; font-size: 14px; }
 .exlist-parts li { display: flex; gap: 12px; justify-content: space-between; }
-.exlist-meta { color: var(--ink-3); }
+.exlist-meta { color: var(--ink-3); display: inline-flex; gap: 12px; align-items: center; }
+.exlist-meta .meter-num { color: var(--ink-3); }
+.exlist-meta .meter.is-full .meter-num { color: var(--ok); }
 
 /* Glossary page */
 .filter { width: 100%; max-width: 360px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); margin: 16px 0; font-family: var(--sans); }

@@ -1,7 +1,8 @@
 import type { Block, Chapter, ExercisePart, ListItem } from "../content/types";
 import { Blocks } from "../render/Blocks";
 import { Inlines, plainText } from "../render/Inline";
-import { useProgress } from "../state/progress";
+import { isComplete, useProgress } from "../state/progress";
+import { Meter } from "../render/Meter";
 import { FreeResponse } from "./FreeResponse";
 import { IsSentence, MainConnective } from "./MainConnective";
 import { ProofEditor, type EditLine, type ProofSpec } from "./ProofEditor";
@@ -27,7 +28,11 @@ export function ExerciseSection({ chapter }: { chapter: Chapter }) {
           <div className="expart-head">
             <span className="expart-letter">{part.letter}</span>
             <span className="expart-kind">{KIND_LABEL[part.kind]}{part.kind === "free" && part.hasSolutions ? ", with the book's solution" : ""}</span>
-            <span className="expart-count">{part.items.length ? `${part.items.filter((it) => status(it.id) === "correct" || status(it.id) === "done").length}/${part.items.length}` : (status(part.id) === "done" ? "done" : "")}</span>
+            <span className="expart-count">
+              {part.items.length
+                ? <Meter compact value={part.items.filter((it) => isComplete(status(it.id))).length} max={part.items.length} label={`Set ${part.letter} completed`} unit="done" />
+                : (status(part.id) === "done" ? <span className="meter is-full"><span className="meter-num">Done</span></span> : null)}
+            </span>
           </div>
           <PartBody part={part} chapter={chapter} />
         </div>
@@ -73,7 +78,7 @@ function ExerciseItem({ item, n, part, chapter, instr }: { item: ListItem; n: nu
     ? <p><Inlines nodes={shown[0].children} chapterId={chapter.id} /></p>
     : <Blocks blocks={shown} chapterId={chapter.id} />;
   return (
-    <li className={"exitem" + (st === "correct" || st === "done" ? " is-done" : st ? " is-tried" : "")} id={`ex-${part.letter}-${n}`}>
+    <li className={"exitem" + (isComplete(st) ? " is-done" : st ? " is-tried" : "")} id={`ex-${part.letter}-${n}`}>
       <div className="exitem-q">{body}</div>
       <Widget item={item} id={id} part={part} chapter={chapter} instr={instr} />
     </li>

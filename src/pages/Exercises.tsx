@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { loadChapter, useBook } from "../content/loader";
 import type { Chapter } from "../content/types";
-import { useProgress } from "../state/progress";
+import { isComplete, useProgress } from "../state/progress";
+import { Meter } from "../render/Meter";
 
 const KIND_LABEL: Record<string, string> = {
   symbolize: "Symbolization", truthtable: "Truth tables", proof: "Proofs", "main-connective": "Main connective",
@@ -32,19 +33,22 @@ export function Exercises() {
       <ol className="exlist">
         {chapters.filter((c) => c.exercises.length).map((ch) => {
           const items = ch.exercises.flatMap((p) => p.items);
-          const done = items.filter((it) => it.id && (status(it.id) === "correct" || status(it.id) === "done")).length;
+          const done = items.filter((it) => it.id && isComplete(status(it.id))).length;
           return (
             <li key={ch.id} className="exlist-ch">
               <Link to={`/read/${ch.id}#exercises`} className="exlist-title"><span className="toc-num">{ch.number}</span>{ch.title}</Link>
-              <span className="exlist-count">{done}/{items.length}</span>
+              <Meter value={done} max={items.length} label={`Exercises completed in chapter ${ch.number}`} unit="completed" />
               <ul className="exlist-parts">
                 {ch.exercises.map((p) => {
-                  const pd = p.items.filter((it) => it.id && (status(it.id) === "correct" || status(it.id) === "done")).length;
+                  const pd = p.items.filter((it) => it.id && isComplete(status(it.id))).length;
                   const checked = p.kind !== "free";
                   return (
                     <li key={p.id}>
                       <Link to={`/read/${ch.id}#ex-${p.letter}`}>{p.letter}. {KIND_LABEL[p.kind]}</Link>
-                      <span className="exlist-meta">{checked ? "checked" : p.hasSolutions ? "solutions" : "self-marked"} · {pd}/{p.items.length}</span>
+                      <span className="exlist-meta">
+                        <span>{checked ? "checked" : p.hasSolutions ? "solutions" : "self-marked"}</span>
+                        <Meter compact value={pd} max={p.items.length} label={`Set ${p.letter} completed`} />
+                      </span>
                     </li>
                   );
                 })}
