@@ -195,7 +195,7 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
   .side-open { display: block; }
 }
 .chapter { padding: 40px 32px 80px; max-width: calc(var(--measure) + 64px); min-width: 0; overflow-wrap: anywhere; }
-.main { overflow-x: hidden; }
+.main { overflow-x: clip; }
 @media (max-width: 600px) { .chapter { padding: 24px 16px 60px; } }
 .ch-head { margin-bottom: 36px; }
 .ch-label { font-family: var(--sans); color: var(--accent-ink); font-size: 14px; margin-bottom: 4px; }
@@ -312,10 +312,6 @@ table.tt strong { color: var(--accent-ink); }
 .fn-body { display: none; }
 .fn-open .fn-body { display: block; margin: 0.5em 0 0.8em; padding: 10px 14px; border-left: 2px solid var(--rule); background: var(--paper-2); font-size: 0.92em; color: var(--ink-2); }
 .fn-num { font-family: var(--sans); font-size: 0.8em; color: var(--accent-ink); margin-right: 0.3em; }
-@media (min-width: 1180px) {
-  .fn-open .fn-body { position: absolute; left: calc(100% + 36px); top: -0.4em; width: 240px; margin: 0; background: var(--paper); border-left: 2px solid var(--accent); }
-  .chapter { position: relative; }
-}
 /* Glossary term popovers */
 .gls-term { background: none; border: 0; padding: 0; border-bottom: 1px dotted var(--ink-3); color: inherit; cursor: pointer; }
 .gls-pop { display: block; margin: 0.4em 0 0.8em; padding: 10px 14px; border-left: 2px solid var(--accent); background: var(--paper-2); font-size: 0.92em; }
@@ -398,6 +394,8 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 .mc-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 8px 0; }
 .mc-row > .math { font-size: 17px; min-width: 12ch; }
 .raw-formula { font-family: var(--serif); font-size: 17px; }
+.mc-two { flex-direction: column; align-items: flex-start; gap: 6px; }
+.chips-q { color: var(--ink-2); margin-right: 4px; }
 
 /* Proof editor */
 .widget-proof { margin-top: 10px; }

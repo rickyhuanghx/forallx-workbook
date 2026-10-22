@@ -106,6 +106,7 @@ function normName(raw: string): string {
 
 export interface ParseOptions {
   strict?: boolean;
+  outerBrackets?: boolean;   // with strict: the outermost brackets may not be dropped either
   variables?: (name: string) => boolean;
 }
 
@@ -248,7 +249,7 @@ class P {
   // Strict grammar: F ::= atom | ¬F | ∀xF | (F ∧ F) | ... ; outermost brackets optional
   strictFormula(outermost: boolean): Formula {
     const u = this.strictPrimary();
-    if (outermost) {
+    if (outermost && !this.opts.outerBrackets) {
       const op = this.peek();
       if (op.t === "and" || op.t === "or" || op.t === "imp" || op.t === "iff") {
         this.next();

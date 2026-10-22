@@ -23,7 +23,7 @@ export function Home() {
   const exDone = (id: string) => Object.entries(progress.exercises).filter(([k, v]) => k.startsWith(id + ".") && (v.status === "correct" || v.status === "done")).length;
   const totalRead = book.chapters.filter((c) => /^ch/.test(c.id) && done(c.id)).length;
   const totalChapters = book.chapters.filter((c) => /^ch/.test(c.id)).length;
-  const totalEx = Object.values(progress.exercises).filter((v) => v.status === "correct" || v.status === "done").length;
+  const totalEx = Object.entries(progress.exercises).filter(([k, v]) => !k.startsWith("lab.") && (v.status === "correct" || v.status === "done")).length;
 
   return (
     <div className="home">

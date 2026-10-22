@@ -1194,6 +1194,9 @@ def classify_part(chapter_num: int, part: dict) -> dict:
         kind = "main-connective"
     elif "citation" in instr and any(b["type"] == "fitch" for it in items for b in it["children"]):
         kind = "cite"
+    elif "strictly speaking" in instr and "sentence of tfl" in instr and n_math:
+        kind = "is-sentence"
+        sub = "two"
     elif ("sentence of tfl" in instr or "sentences of tfl" in instr or "sentence of fol" in instr or "sentences of fol" in instr) and n_math and "which" in instr:
         kind = "is-sentence"
     return {"kind": kind, "sub": sub, "logic": logic, "hasKey": has_key}

@@ -91,7 +91,7 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
     case "main-connective":
       return <MainConnective exerciseId={id} formulas={formulas} logic={part.logic} solution={sol} chapterId={chapter.id} />;
     case "is-sentence":
-      return <IsSentence exerciseId={id} formulas={formulas} logic={part.logic} solution={sol} chapterId={chapter.id} />;
+      return <IsSentence exerciseId={id} formulas={formulas} logic={part.logic} solution={sol} chapterId={chapter.id} two={part.sub === "two"} />;
     case "cite": {
       const fitch = item.children.find((b) => b.type === "fitch");
       if (!fitch || fitch.type !== "fitch") return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} />;

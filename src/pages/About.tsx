@@ -39,8 +39,18 @@ export function About() {
       <p>
         Changes made in this edition: the chapters were converted to web pages; solutions from the separate solutions booklet
         are shown next to their exercises; exercises gained interactive checkers; three stray brackets and one citation in the
-        source were corrected (listed in the repository's errata file). Nothing else in the text was altered.
+        source were corrected. Nothing else in the text was altered.
       </p>
+      <details className="errata">
+        <summary>Slips in the printed solutions that the checker found</summary>
+        <ul>
+          <li>Chapter 20, A: the theorem ((A→B)→A)→A cites IP 1–8; the subproof is lines 2–8.</li>
+          <li>Chapter 36, D (third proof): line 11 drops the negation that line 10 has. E: F(x) should read F(y); L(j,x) should read L(j,a). F: citation 2––9.</li>
+          <li>Chapter 38, B: an unresolved citation; ∀E used where ∀I is meant; a missing ¬ before line 9. C: an unresolved citation.</li>
+          <li>Chapter 39, A: =E 6, 7 cites its own line; =E 3, 7 should cite line 4; DS 7, 5 treats F(a) as ¬¬F(a). B to D: unbalanced brackets in two premises and one unresolved citation.</li>
+          <li>Chapter 43, A: □I 3–4 for a strict subproof that starts at line 2. B: ¬I 2–6 should be 2–7. E: ∨I 4 cites its own line. F: ¬I 5–9 should be 6–9.</li>
+        </ul>
+      </details>
       <h2>How the checkers work</h2>
       <ul>
         <li><strong>Symbolization.</strong> In TFL your sentence is compared with the book's answer by truth table, so any logically equivalent sentence counts, and you are told when yours is written differently. In FOL the two sentences are compared on a few thousand small interpretations; a disagreement is a real counterexample, agreement is strong evidence.</li>

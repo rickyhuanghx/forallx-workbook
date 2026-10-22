@@ -51,16 +51,22 @@ export function MainConnective({ exerciseId, formulas, logic, solution, chapterI
 }
 
 /** "Is this a sentence of TFL/FOL?" checked with the strict grammar. */
-export function IsSentence({ exerciseId, formulas, logic, solution, chapterId }: { exerciseId: string; formulas: string[]; logic: "tfl" | "fol" | "ml"; solution?: Block[]; chapterId?: string }) {
+export function IsSentence({ exerciseId, formulas, logic, solution, chapterId, two }: { exerciseId: string; formulas: string[]; logic: "tfl" | "fol" | "ml"; solution?: Block[]; chapterId?: string; two?: boolean }) {
   const [progress] = useProgress();
   const rec = progress.exercises[exerciseId];
-  const [choice, setChoice] = useState<Record<number, string>>((rec?.table as Record<number, string>) ?? {});
+  const [choice, setChoice] = useState<Record<string, string>>((rec?.table as Record<string, string>) ?? {});
   const [result, setResult] = useState<{ state: "ok" | "bad"; msg: string } | null>(null);
   const strict = useMemo(() => formulas.map((s) => tryParse(s, { strict: true })), [formulas]);
+  const strictest = useMemo(() => formulas.map((s) => tryParse(s, { strict: true, outerBrackets: true })), [formulas]);
 
   const check = () => {
     let allOk = true;
     strict.forEach((p, i) => {
+      if (two) {
+        if (choice[`${i}a`] !== (strictest[i].ok ? "yes" : "no")) allOk = false;
+        if (choice[`${i}b`] !== (p.ok ? "yes" : "no")) allOk = false;
+        return;
+      }
       const want = p.ok ? "yes" : "no";
       if (choice[i] !== want) allOk = false;
     });
@@ -69,7 +75,21 @@ export function IsSentence({ exerciseId, formulas, logic, solution, chapterId }:
   };
   return (
     <div className="widget">
-      {formulas.map((s, i) => (
+      {formulas.map((s, i) => two ? (
+        <div className="mc-row mc-two" key={i}>
+          <span className="raw-formula">{s}</span>
+          {[["a", "strictly speaking"], ["b", "with relaxed bracketing"]].map(([q, qlabel]) => (
+            <div className="chips" role="radiogroup" aria-label={`A sentence of TFL ${qlabel}?`} key={q}>
+              <span className="chips-q">({q}) {qlabel}:</span>
+              {[["yes", "yes"], ["no", "no"]].map(([k, label]) => (
+                <label key={k} className={"chip" + (choice[`${i}${q}`] === k ? " is-on" : "")}>
+                  <input type="radio" name={`is-${exerciseId}-${i}${q}`} checked={choice[`${i}${q}`] === k} onChange={() => { setChoice({ ...choice, [`${i}${q}`]: k }); setResult(null); }} />{label}
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className="mc-row" key={i}>
           <span className="raw-formula">{s}</span>
           <div className="chips" role="radiogroup" aria-label={`Is this a sentence of ${logic.toUpperCase()}?`}>
