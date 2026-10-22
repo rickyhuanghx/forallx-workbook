@@ -30,7 +30,7 @@ interface Props {
 export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEnter, autoFocus, compact, disabled, strict, label, invalid, noPalette, onFocus, normalizeOnBlur }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const id = useId();
-  const parsed = useMemo(() => (value.trim() ? tryParse(value, { strict }) : null), [value, strict]);
+  const parsed = useMemo(() => (value.trim() ? tryParse(value, { strict, modal: logic === "ml" }) : null), [value, strict, logic]);
 
   const insert = (s: string) => {
     const el = ref.current;
@@ -72,7 +72,7 @@ export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEn
       </div>
       {!compact && (
         <div className="finput-preview" aria-live="polite">
-          {parsed?.ok ? <Math latex={toLatex(parsed.f)} /> : parsed ? <span className="finput-err">{parsed.error}</span> : <span className="finput-hint">Type with the keyboard aliases (~ &amp; v -&gt; &lt;-&gt; @x 3x) or the buttons.</span>}
+          {parsed?.ok ? <Math latex={toLatex(parsed.f)} /> : parsed ? <span className="finput-err">{parsed.error}</span> : <span className="finput-hint">Type with the book's ASCII forms (~ /\ \/ -&gt; &lt;-&gt; Ax Ex, or &amp; @x 3x) or the buttons.</span>}
         </div>
       )}
     </div>

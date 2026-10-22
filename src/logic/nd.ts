@@ -70,7 +70,7 @@ interface Node {
   lines: number[]; // direct lines (1-based) that belong to this subproof
 }
 
-export function checkProof(input: InputLine[], opts: { allowed?: Set<string> } = {}): CheckResult {
+export function checkProof(input: InputLine[], opts: { allowed?: Set<string>; modal?: boolean } = {}): CheckResult {
   const n = input.length;
   const results: LineResult[] = input.map(() => ({ ok: true }));
   const parsed: (Formula | null)[] = [];
@@ -89,7 +89,7 @@ export function checkProof(input: InputLine[], opts: { allowed?: Set<string> } =
     }
     isBox.push(false);
     try {
-      const f = parseFormula(text);
+      const f = parseFormula(text, { modal: opts.modal });
       parsed.push(f);
       results[i].parsed = f;
       if (freeVars(f).size) results[i] = { ok: false, error: `Not a sentence: variable ${[...freeVars(f)][0]} is free`, parsed: f };

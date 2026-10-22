@@ -35,7 +35,7 @@ export function Symbolize({ exerciseId, logic, solution, chapterId }: Props) {
   const book = useMemo(() => (bookLatex ? tryParse(bookLatex) : null), [bookLatex]);
 
   const check = () => {
-    const r = tryParse(value);
+    const r = tryParse(value, { modal: logic === "ml" });
     if (!r.ok) { setResult({ state: "bad", msg: r.error }); return; }
     const mine = r.f;
     if (!book || !book.ok) {

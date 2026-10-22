@@ -58,7 +58,7 @@ export function About() {
         <li><strong>Proofs.</strong> Each line is checked against the rule it cites, including the subproof and name restrictions of the book's system (chapters 17, 19, 21, 36, 38, 39, 43). The checker was validated by replaying the book's own proofs.</li>
       </ul>
       <h2>Typing symbols</h2>
-      <p>Use the symbol buttons, or type aliases: <code>~</code> for ¬, <code>&amp;</code> for ∧, <code>v</code> for ∨, <code>-&gt;</code> for →, <code>&lt;-&gt;</code> for ↔, <code>#</code> for ⊥, <code>@x</code> for ∀x, <code>3x</code> for ∃x, <code>[]</code> for □, <code>dia</code> for ◇. Subscripts: <code>A1</code> or <code>A_1</code>.</p>
+      <p>Use the symbol buttons, or type the ASCII forms the book itself suggests (appendix on accessibility): <code>~</code> or <code>-</code> for ¬, <code>/\</code> or <code>&amp;</code> for ∧, <code>\/</code> for ∨, <code>-&gt;</code> or <code>&gt;</code> for →, <code>&lt;-&gt;</code> for ↔, <code>_|_</code> or <code>!?</code> for ⊥, <code>Ax</code> or <code>@x</code> for ∀x, <code>Ex</code> or <code>3x</code> for ∃x, <code>:.</code> for ∴, <code>|-</code> for ⊢, <code>[]</code> for □ and <code>&lt;&gt;</code> for ◇ (in modal exercises; elsewhere <code>&lt;&gt;</code> is ↔). Also accepted: <code>v</code> for ∨, <code>#</code> for ⊥, <code>dia</code> for ◇. Subscripts: <code>A1</code> or <code>A_1</code>.</p>
       <h2>Your progress</h2>
       <p>Progress lives in this browser only. Export it to move to another device, or to keep a backup.</p>
       <div className="row">

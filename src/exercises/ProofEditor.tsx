@@ -61,9 +61,9 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
     requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(start + s.length, start + s.length); });
   };
 
-  const goal = useMemo(() => tryParse(spec.conclusion), [spec.conclusion]);
+  const goal = useMemo(() => tryParse(spec.conclusion, { modal: logic === "ml" }), [spec.conclusion, logic]);
   const result = useMemo(() => checkProof(lines.map((l): InputLine => ({ formula: l.formula, rule: l.rule, refs: l.refs, depth: l.depth })),
-    availableRules ? { allowed: new Set(availableRules) } : {}), [lines, availableRules]);
+    { allowed: availableRules ? new Set(availableRules) : undefined, modal: logic === "ml" }), [lines, availableRules, logic]);
   const done = result.complete && goal.ok && result.conclusion && eq(result.conclusion, goal.f);
 
   useEffect(() => {

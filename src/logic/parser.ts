@@ -24,7 +24,7 @@ type Tok =
 
 const SUBS: Record<string, string> = { "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4", "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9" };
 
-export function tokenize(src: string): Tok[] {
+export function tokenize(src: string, modal = false): Tok[] {
   const s = src.replace(/\s+/g, " ");
   const toks: Tok[] = [];
   let i = 0;
@@ -50,7 +50,12 @@ export function tokenize(src: string): Tok[] {
     }
     if (rest.startsWith("<->") || rest.startsWith("↔") || rest.startsWith("≡")) { push("iff", rest.startsWith("<->") ? 3 : 1); continue; }
     if (rest.startsWith("->") || rest.startsWith("→") || rest.startsWith("⊃")) { push("imp", rest.startsWith("->") ? 2 : 1); continue; }
-    if (rest.startsWith("<>")) { push("iff", 2); continue; }
+    if (rest.startsWith("<>")) { push(modal ? "dia" : "iff", 2); continue; }
+    if (rest.startsWith("!?")) { push("bot", 2); continue; }
+    if (rest.startsWith(":.")) { push("therefore", 2); continue; }
+    if (rest.startsWith("|-") || rest.startsWith("|=")) { push("turnstile", 2); continue; }
+    // the book's ASCII quantifiers: Ax, Ey (an uppercase A or E directly followed by a variable)
+    if ((m = rest.match(/^([AE])(?=[s-z](?![a-z0-9]))/))) { push(m[1] === "A" ? "forall" : "exists", 1); continue; }
     if (rest.startsWith("[]")) { push("box", 2); continue; }
     if (rest.startsWith("/\\")) { push("and", 2); continue; }
     if (rest.startsWith("\\/")) { push("or", 2); continue; }
@@ -106,6 +111,7 @@ function normName(raw: string): string {
 
 export interface ParseOptions {
   strict?: boolean;
+  modal?: boolean;           // read <> as ◇ (possibility) instead of ↔
   outerBrackets?: boolean;   // with strict: the outermost brackets may not be dropped either
   variables?: (name: string) => boolean;
 }
@@ -113,7 +119,7 @@ export interface ParseOptions {
 const defaultIsVar = (n: string) => /^[s-z]\d*$/.test(n);
 
 export function parseFormula(src: string, opts: ParseOptions = {}): Formula {
-  const toks = tokenize(src);
+  const toks = tokenize(src, opts.modal);
   const p = new P(toks, opts);
   const f = p.formula(true);
   if (p.peek().t !== "end") throw new ParseError("Unexpected input after the formula", p.peek().pos);
@@ -122,7 +128,7 @@ export function parseFormula(src: string, opts: ParseOptions = {}): Formula {
 
 /** Parse "A, B ∴ C" / "A, B ⊢ C" / "∴ C". Returns premises and conclusion. */
 export function parseArgument(src: string, opts: ParseOptions = {}): { premises: Formula[]; conclusion: Formula; system?: string } {
-  const toks = tokenize(src);
+  const toks = tokenize(src, opts.modal);
   const p = new P(toks, opts);
   const premises: Formula[] = [];
   if (p.peek().t !== "therefore" && p.peek().t !== "turnstile") {
