@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Block } from "../content/types";
 import { alphaEq, eq, isSentence } from "../logic/ast";
-import { describeInterpretation, isFOL, sampleEquivalent } from "../logic/fol";
+import { describeInterpretation, isFOL, monadicEquivalent, sampleEquivalent } from "../logic/fol";
 import { tryParse } from "../logic/parser";
 import { toLatex, toUnicode } from "../logic/print";
 import { equivalent, isTFL, valuations, evalTFL, allLetters } from "../logic/tfl";
@@ -30,12 +30,13 @@ export function Symbolize({ exerciseId, logic, solution, chapterId }: Props) {
   const [progress] = useProgress();
   const rec = progress.exercises[exerciseId];
   const [value, setValue] = useState(rec?.answer ?? "");
-  const [result, setResult] = useState<{ state: "ok" | "near" | "bad" | "info"; msg: React.ReactNode } | null>(null);
+  // likely: agreement found only by sampling, so not recorded as correct; the learner may mark it done
+  const [result, setResult] = useState<{ state: "ok" | "near" | "bad" | "info"; msg: React.ReactNode; likely?: boolean } | null>(null);
   const bookLatex = useMemo(() => firstMath(solution), [solution]);
-  const book = useMemo(() => (bookLatex ? tryParse(bookLatex) : null), [bookLatex]);
+  const book = useMemo(() => (bookLatex ? tryParse(bookLatex, { logic }) : null), [bookLatex, logic]);
 
   const check = () => {
-    const r = tryParse(value, { modal: logic === "ml" });
+    const r = tryParse(value, { logic });
     if (!r.ok) { setResult({ state: "bad", msg: r.error }); return; }
     const mine = r.f;
     if (!book || !book.ok) {
@@ -68,10 +69,17 @@ export function Symbolize({ exerciseId, logic, solution, chapterId }: Props) {
       return;
     }
     if (isFOL(mine) && isFOL(theirs) && isSentence(mine) && isSentence(theirs)) {
-      const s = sampleEquivalent(mine, theirs);
-      if (s.equivalent) {
-        setResult({ state: "ok", msg: <>Agrees with the book's <Math latex={toLatex(theirs)} /> on all {s.samples} sampled interpretations, so it is very likely equivalent. Check the form against the key too.</> });
+      // exact where the sentences are monadic without identity; otherwise sampling, which cannot prove equivalence
+      const exact = monadicEquivalent(mine, theirs);
+      if (exact?.equivalent) {
+        setResult({ state: "ok", msg: <>Correct: <Math latex={toLatex(mine)} /> is logically equivalent to the book's <Math latex={toLatex(theirs)} /> (checked on every interpretation that could tell them apart).</> });
         recordExercise(exerciseId, { status: "correct", answer: value });
+        return;
+      }
+      const s = exact ?? sampleEquivalent(mine, theirs);
+      if (s.equivalent) {
+        setResult({ state: "near", likely: true, msg: <>Agrees with the book's <Math latex={toLatex(theirs)} /> on all {s.samples} sampled interpretations, so it is very likely equivalent, but the checker cannot prove it. Compare it with the book's answer, and mark it done if they match.</> });
+        recordExercise(exerciseId, { status: "attempted", answer: value });
       } else {
         setResult({ state: "bad", msg: <>Differs from the book's answer. Counterexample ({describeInterpretation(s.counter!)}): yours and the book's disagree there.</> });
         recordExercise(exerciseId, { status: "attempted", answer: value });
@@ -88,7 +96,7 @@ export function Symbolize({ exerciseId, logic, solution, chapterId }: Props) {
       <FormulaInput value={value} onChange={(v) => { setValue(v); setResult(null); }} logic={logic} onEnter={check} placeholder="Your symbolization" />
       <div className="widget-actions">
         <button type="button" className="btn btn-primary btn-sm" onClick={check} disabled={!value.trim()}>Check</button>
-        {!book && <MarkDone done={done} onChange={(d) => recordExercise(exerciseId, { status: d ? "done" : "attempted", answer: value })} />}
+        {(!book || result?.likely) && <MarkDone done={done} onChange={(d) => recordExercise(exerciseId, { status: d ? "done" : "attempted", answer: value })} />}
       </div>
       <Verdict state={result?.state ?? null}>{result?.msg}</Verdict>
       {solution && <Solution blocks={solution} chapterId={chapterId} onReveal={() => { if (!done) recordExercise(exerciseId, { status: "revealed", answer: value }); }} />}

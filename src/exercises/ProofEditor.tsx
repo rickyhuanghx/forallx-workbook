@@ -3,26 +3,25 @@ import type { Block } from "../content/types";
 import { eq } from "../logic/ast";
 import { checkProof, RULES, type InputLine } from "../logic/nd";
 import { tryParse } from "../logic/parser";
+import { ruleSet } from "../logic/rules";
+import type { ProofSpec } from "../logic/specs";
 import { toLatex } from "../logic/print";
 import { Math } from "../render/Math";
 import { recordExercise, useProgress } from "../state/progress";
 import { FormulaInput, Palette } from "./FormulaInput";
 import { Solution, Verdict } from "./Solution";
 
-export interface ProofSpec {
-  premises: string[];          // logic strings
-  conclusion: string;
-  system?: string;             // K, T, S4, S5 for modal exercises
-}
+export type { ProofSpec };
 
 interface Props {
   exerciseId: string;
   spec: ProofSpec;
   logic: "tfl" | "fol" | "ml";
   solution?: Block[];
-  chapterId?: string;
+  chapterId?: string;          // with partLetter: which rules the book allows at this point (see logic/rules.ts)
+  partLetter?: string;
   title?: React.ReactNode;
-  availableRules?: string[];   // restrict the rule menu (e.g. before derived rules are introduced)
+  availableRules?: string[];   // further restrict the rules (intersected with the book's rule set)
   given?: EditLine[];          // "add the citations" exercises: formulas fixed, rules and refs to fill in
 }
 
@@ -42,7 +41,7 @@ function initialLines(spec: ProofSpec): EditLine[] {
   return prem.length ? [...prem, { formula: "", rule: "", refs: "", depth: 0 }] : [{ formula: "", rule: "AS", refs: "", depth: 1 }];
 }
 
-export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, title, availableRules, given }: Props) {
+export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, partLetter, title, availableRules, given }: Props) {
   const [progress] = useProgress();
   const rec = progress.exercises[exerciseId];
   const saved = rec?.proof as EditLine[] | undefined;
@@ -62,9 +61,17 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
     requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(start + s.length, start + s.length); });
   };
 
-  const goal = useMemo(() => tryParse(spec.conclusion, { modal: logic === "ml" }), [spec.conclusion, logic]);
+  const goal = useMemo(() => tryParse(spec.conclusion, { logic }), [spec.conclusion, logic]);
+  // the rules this exercise allows: logic, modal system, chapter (basic rules before ch19, CQ from ch38, ...)
+  const rules = useMemo(() => {
+    const rs = ruleSet({ logic, system: spec.system, chapterId, part: partLetter });
+    if (availableRules) for (const r of [...rs.allowed]) if (!availableRules.includes(r)) rs.allowed.delete(r);
+    return rs;
+  }, [logic, spec.system, chapterId, partLetter, availableRules]);
+  // PR lines must be the exercise's own premises
+  const premises = useMemo(() => spec.premises.map((p) => tryParse(p, { logic })).flatMap((r) => (r.ok ? [r.f] : [])), [spec.premises, logic]);
   const result = useMemo(() => checkProof(lines.map((l): InputLine => ({ formula: l.formula, rule: l.rule, refs: l.refs, depth: l.depth })),
-    { allowed: availableRules ? new Set(availableRules) : undefined, modal: logic === "ml" }), [lines, availableRules, logic]);
+    { allowed: rules.allowed, disallowed: rules.message, premises, logic }), [lines, rules, premises, logic]);
   const done = result.complete && goal.ok && result.conclusion && eq(result.conclusion, goal.f);
 
   useEffect(() => {
@@ -86,16 +93,19 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
   const indent = (i: number, d: number) => setLine(i, { depth: globalThis.Math.max(0, lines[i].depth + d) });
   const focusLine = (i: number) => (document.querySelector(`#pe-${cssId(exerciseId)} .pl:nth-child(${i + 1}) input.finput-text`) as HTMLInputElement | null)?.focus();
 
-  const groups = RULE_GROUPS.filter((g) => g.logic.includes(logic)).map((g) => ({ ...g, rules: g.rules.filter((r) => !availableRules || availableRules.includes(r) || r === "PR" || r === "AS") }));
+  const groups = RULE_GROUPS.filter((g) => g.logic.includes(logic))
+    .map((g) => ({ ...g, rules: g.rules.filter((r) => rules.allowed.has(r) || r === "AS" || (r === "PR" && spec.premises.length > 0)) }))
+    .filter((g) => g.rules.length > 0);
 
   return (
     <div className="widget widget-proof" id={`pe-${cssId(exerciseId)}`}>
       {title && <div className="pe-title">{title}</div>}
       <div className="pe-goal">
         <span className="pe-goal-k">Goal</span>
-        {spec.premises.length > 0 && <span className="pe-goal-prem">{spec.premises.map((p, i) => { const r = tryParse(p); return <span key={i}>{i > 0 && ", "}{r.ok ? <Math latex={toLatex(r.f)} /> : p}</span>; })}</span>}
+        {spec.premises.length > 0 && <span className="pe-goal-prem">{spec.premises.map((p, i) => { const r = tryParse(p, { logic }); return <span key={i}>{i > 0 && ", "}{r.ok ? <Math latex={toLatex(r.f)} /> : p}</span>; })}</span>}
         <span className="pe-turnstile">⊢{spec.system ? <sub>{spec.system}</sub> : null}</span>
         {goal.ok ? <Math latex={toLatex(goal.f)} /> : <span>{spec.conclusion}</span>}
+        {rules.note && <span className="muted"> {rules.note}</span>}
       </div>
       <div className="fitch fitch-edit" role="table">
         {lines.map((l, i) => {
@@ -111,8 +121,8 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
                 {Array.from({ length: l.depth + 1 }, (_, d) => <span className="bar" key={d} />)}
                 <span className={"fl-formula" + (hypoLast ? " hypo-last" : "")}>
                   {l.locked || l.fixed
-                    ? <Math latex={latexOf(l.formula)} />
-                    : <FormulaInput compact noPalette normalizeOnBlur value={l.formula} onChange={(v) => setLine(i, { formula: v })} logic={logic} onEnter={() => insertAfter(i)} label={`Line ${i + 1} formula`} invalid={showCheck && !res.ok && !!l.formula} onFocus={() => setFocused(i)} onHelp={() => setHelp((o) => !o)} />}
+                    ? <Math latex={latexOf(l.formula, logic)} />
+                    : <FormulaInput compact noPalette normalizeOnBlur value={l.formula} onChange={(v) => setLine(i, { formula: v })} logic={logic} onEnter={() => insertAfter(i)} label={`Line ${i + 1} formula`} invalid={showCheck && !res.ok && !!l.formula} onFocus={() => setFocused(i)} onHelp={() => setHelp((o) => !o)} helpOpen={help} />}
                 </span>
               </span>
               <span className="fl-just pl-just" role="cell">
@@ -144,7 +154,15 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
         <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCheck(true)}>Check proof</button>
         {!given && <button type="button" className="btn btn-sm" onClick={() => insertAfter(lines.length - 1, lines[lines.length - 1].depth + 1, "AS")}>New subproof</button>}
         {!given && <button type="button" className="btn btn-sm" onClick={() => insertAfter(lines.length - 1, globalThis.Math.max(0, lines[lines.length - 1].depth - 1))}>End subproof</button>}
-        <button type="button" className="btn btn-sm" onClick={() => { if (confirmClear) { setLines(fresh()); setShowCheck(false); setConfirmClear(false); } else { setConfirmClear(true); setTimeout(() => setConfirmClear(false), 3000); } }}>{confirmClear ? "Really clear?" : "Clear"}</button>
+        <button type="button" className="btn btn-sm" onClick={() => {
+          if (confirmClear) {
+            // save the cleared proof too, or the old one comes back on reload; the status is kept
+            const cleared = fresh();
+            setLines(cleared);
+            if (rec) recordExercise(exerciseId, { status: rec.status, proof: cleared });
+            setShowCheck(false); setConfirmClear(false);
+          } else { setConfirmClear(true); setTimeout(() => setConfirmClear(false), 3000); }
+        }}>{confirmClear ? "Really clear?" : "Clear"}</button>
       </div>
       {showCheck && (
         done
@@ -166,7 +184,7 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
   );
 }
 
-function latexOf(s: string): string { const r = tryParse(s); return r.ok ? toLatex(r.f) : s; }
+function latexOf(s: string, logic: "tfl" | "fol" | "ml"): string { const r = tryParse(s, { logic }); return r.ok ? toLatex(r.f) : s; }
 
 function cssId(s: string) { return s.replace(/[^a-zA-Z0-9]/g, "_"); }
 

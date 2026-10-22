@@ -37,12 +37,14 @@ const RULES: Rule[] = [
   { re: /&$/, to: "∧" },
   { re: /\^$/, to: "∧" },
   { re: /#$/, to: "⊥" },
-  // " v " as disjunction, fired by the space after the v
-  { re: /(^|[\s(])v $/, to: (m) => `${m[1]}∨ `, prose: true },
+  // " v " as disjunction, fired by the space after the v, only after something that can end a formula
+  // (a letter, digit, ) or ⊥), so "x = v ", "(v ", "R(a, v " and "∀ v " keep v as a variable
+  { re: /([A-Za-z0-9₀-₉)⊥])(\s+)v $/, to: (m) => `${m[1]}${m[2]}∨ `, prose: true },
   // quantifier letters, the book's own ASCII: Ax, Ey (only in FOL, and only when the A or E starts a word)
   { re: /(^|[^A-Za-z0-9_])([AE])([s-z])$/, to: (m) => `${m[1]}${m[2] === "A" ? "∀" : "∃"}${m[3]}`, logic: ["fol"] },
-  { re: /@([s-z])$/, to: (m) => `∀${m[1]}`, prose: true },
-  { re: /(^|[^A-Za-z0-9_])3([s-z])$/, to: (m) => `${m[1]}∃${m[2]}`, prose: true },
+  // @x and 3x only at the start of a word (so "joe@yahoo" stays), and 3x not in prose ("3x faster")
+  { re: /(^|[^A-Za-z0-9_.@])@([s-z])$/, to: (m) => `${m[1]}∀${m[2]}`, prose: true },
+  { re: /(^|[^A-Za-z0-9_])3([s-z])$/, to: (m) => `${m[1]}∃${m[2]}` },
   // LaTeX-style names, converted when the following non-letter is typed
   { re: /\\([A-Za-z]+)([^A-Za-z])$/, to: (m) => (WORDS[m[1]] ? WORDS[m[1]] + (m[2] === " " ? "" : m[2]) : m[0]), prose: true },
 ];

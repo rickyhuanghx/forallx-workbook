@@ -6,7 +6,12 @@ import { checkProof, type InputLine } from "../src/logic/nd";
 import { parseFormula, parseArgument } from "../src/logic/parser";
 import { toUnicode, displayTokens } from "../src/logic/print";
 import { truthTable, equivalent, isTFL } from "../src/logic/tfl";
-import { sampleEquivalent } from "../src/logic/fol";
+import { sampleEquivalent, sampleCounterexample, monadicEquivalent, isFOL } from "../src/logic/fol";
+import { counterexample } from "../src/logic/tfl";
+import { ruleSet } from "../src/logic/rules";
+import { proofSpecs } from "../src/logic/specs";
+import { normalizeRule } from "../src/logic/nd";
+import { eq as fEq } from "../src/logic/ast";
 import { isSentence } from "../src/logic/ast";
 import { applyShortcuts } from "../src/logic/shortcuts";
 import { mergeProgress } from "../src/state/sync";
@@ -218,6 +223,13 @@ const shortcutCases: [string, "tfl" | "fol" | "ml", boolean, string][] = [
   ["Smith & Jones", "fol", true, "Smith & Jones"],
   ["so A ->", "fol", true, "so A →"],
   ["Ax", "fol", true, "Ax"],
+  // v next to = or ( is a variable; @ and 3 only start a word; 3x is left alone in prose
+  ["x = v ", "fol", false, "x = v "],
+  ["(v ", "fol", false, "(v "],
+  ["R(a, v ", "fol", false, "R(a, v "],
+  ["F(a) v ", "fol", false, "F(a) ∨ "],
+  ["joe@y", "tfl", true, "joe@y"],
+  ["it is 3x", "tfl", true, "it is 3x"],
 ];
 for (const [input, logic, prose, want] of shortcutCases) {
   const got = applyShortcuts(input, input.length, logic, prose).text;
@@ -229,6 +241,190 @@ for (const [input, logic, prose, want] of shortcutCases) {
   if (r.text === "A → B" && r.caret === 3) pass++; else { fail++; failures.push(`shortcut caret: ${JSON.stringify(r)}`); }
 }
 
+
+// ---------------------------------------------------------------- engine: must-reject / must-pass
+// The replay above only shows that correct proofs pass. These check that wrong ones fail.
+const check = (name: string, ok: boolean, detail = "") => { if (ok) pass++; else { fail++; failures.push(`${name}${detail ? ": " + detail : ""}`); } };
+const P = (src: string) => src.trim().split("\n").map((l): InputLine => {
+  const [d, f, r, refs] = l.split("|").map((x) => x.trim());
+  return { depth: +d, formula: f, rule: r ?? "", refs: refs ?? "" };
+});
+const errs = (r: ReturnType<typeof checkProof>) => r.lines.map((x, i) => (x.ok ? "" : `L${i + 1} ${x.error}`)).filter(Boolean).join("; ");
+
+// the book's 15 deliberately wrong proofs ("naughty attempt to invoke ...", "incorrect use of ..."): each marked line must fail
+{
+  let n = 0;
+  for (const file of chapters) {
+    const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+    const proofs: any[] = [];
+    walk(ch.blocks, (x) => { if (x.type === "fitch") proofs.push(x); });
+    for (const part of ch.exercises) walk(part, (x) => { if (x.type === "fitch") proofs.push(x); });
+    for (const pf of proofs) {
+      const lines = pf.lines as any[];
+      const wrong = lines.map((l, i) => (/naught?y|incorrect|attempt|invoke/i.test(l.ruleText ?? "") ? i : -1)).filter((i) => i >= 0);
+      if (!wrong.length) continue;
+      const input: InputLine[] = lines.map((l) => ({
+        formula: String(l.formula).trim() === "\\Box" ? "□" : String(l.formula).replace(/\\mathcal\{([A-Z])\}/g, "$1"),
+        rule: String(l.ruleText ?? (l.hypo ? (l.depth === 0 ? "PR" : "AS") : "")).replace(/^.*?(invoke|use of)\s*/i, "").trim(),
+        refs: l.refs ?? "", depth: l.depth,
+      }));
+      const res = checkProof(input, { modal: /Box/.test(JSON.stringify(lines)) });
+      for (const i of wrong) { n++; check(`book's wrong proof in ${file}, line ${i + 1} (${lines[i].ruleText}) must fail`, !res.lines[i].ok); }
+    }
+  }
+  check("found the book's 15 wrong proof steps", n === 15, `found ${n}`);
+}
+
+// PR lines must be the exercise's premises (order and repetition are fine)
+{
+  const prem = (fs_: string[]) => fs_.map((f) => parseFormula(f));
+  let r = checkProof(P(`
+0 | A | PR
+0 | B | PR`), { premises: prem(["A"]) });
+  check("extra premise equal to the goal must fail", !r.lines[1].ok && !r.complete, errs(r));
+  r = checkProof(P(`0 | A ∨ ¬A | PR`), { premises: [] });
+  check("PR in an exercise without premises must fail", !r.complete);
+  r = checkProof(P(`
+0 | A | PR
+0 | A → B | PR
+0 | A | PR
+0 | B | →E | 2, 3`), { premises: prem(["A → B", "A"]) });
+  check("premises in another order, one repeated, pass", r.complete, errs(r));
+}
+
+// rule sets: modal system, chapter, part restrictions
+{
+  const ml = (sys: string, part?: string) => { const rs = ruleSet({ logic: "ml", system: sys, chapterId: "ch43", part }); return { allowed: rs.allowed, disallowed: rs.message, modal: true }; };
+  let r = checkProof(P(`
+0 | □A | PR
+0 | A | RT | 1`), ml("K"));
+  check("RT in system K must fail, naming the system", !r.complete && /system K/.test(r.lines[1].error ?? ""), errs(r));
+  r = checkProof(P(`
+0 | □A | PR
+0 | A | RT | 1`), ml("T"));
+  check("RT in system T passes", r.complete, errs(r));
+  r = checkProof(P(`
+0 | ¬□A | PR
+1 | □ |
+1 | ¬□A | R5 | 1
+0 | □¬□A | □I | 2-3`), ml("S4"));
+  check("R5 in system S4 must fail", !r.complete);
+  r = checkProof(P(`
+0 | ¬□A | PR
+0 | ◇¬A | MC | 1`), ml("K", "B"));
+  check("MC in ch43 B (without Modal Conversion) must fail", !r.complete);
+  r = checkProof(P(`
+0 | ¬□A | PR
+0 | ◇¬A | MC | 1`), ml("K", "C"));
+  check("MC in ch43 C passes", r.complete, errs(r));
+  const b17 = ruleSet({ logic: "tfl", chapterId: "ch17" });
+  r = checkProof(P(`
+0 | A ∨ B | PR
+0 | ¬A | PR
+0 | B | DS | 1, 2`), { allowed: b17.allowed, disallowed: b17.message });
+  check("DS in a chapter 17 exercise (basic rules only) must fail", !r.complete);
+}
+
+// strict subproofs side by side are fine
+{
+  let r = checkProof(P(`
+0 | □(A ∧ B) | PR
+1 | □ |
+1 | A ∧ B | □E | 1
+1 | A | ∧E | 3
+1 | □ |
+1 | A ∧ B | □E | 1
+1 | B | ∧E | 6
+0 | □A | □I | 2-4
+0 | □B | □I | 5-7
+0 | □A ∧ □B | ∧I | 8, 9`), { modal: true });
+  check("adjacent strict subproofs pass", r.complete, errs(r));
+  r = checkProof(P(`
+1 | A | AS
+1 | A | R | 1
+1 | □ |
+2 | B | AS
+2 | B | R | 4
+1 | B → B | →I | 4-5
+0 | A → A | →I | 1-2
+0 | □(B → B) | □I | 3-6`), { modal: true });
+  check("strict subproof right after an ordinary one at the same depth passes", r.lines.every((x) => x.ok), errs(r));
+  r = checkProof(P(`
+0 | A | PR
+1 | □ |
+1 | A | R | 1
+0 | □A | □I | 2-3`), { modal: true });
+  check("R across a strict boundary still fails", !r.complete);
+}
+
+// FOL equivalence: the ch28.B.7 readings differ (needs five objects); exact monadic check
+{
+  const d4 = "¬w = x ∧ ¬w = y ∧ ¬w = z ∧ ¬x = y ∧ ¬x = z ∧ ¬y = z";
+  const atLeast4 = parseFormula(`∃w∃x∃y∃z(${d4} ∧ D(w) ∧ D(x) ∧ D(y) ∧ D(z))`);
+  const exactly4 = parseFormula(`∃w∃x∃y∃z(${d4} ∧ D(w) ∧ D(x) ∧ D(y) ∧ D(z) ∧ ∀u(D(u) → (u = w ∨ u = x ∨ u = y ∨ u = z)))`);
+  check("ch28.B.7: 'at least four' and 'exactly four' are told apart", !sampleEquivalent(atLeast4, exactly4).equivalent);
+  check("at most four things is not a validity", !sampleEquivalent(parseFormula("∀s∀t∀u∀w∀z(s = t ∨ s = u ∨ s = w ∨ s = z ∨ t = u ∨ t = w ∨ t = z ∨ u = w ∨ u = z ∨ w = z)"), parseFormula("∀x x = x")).equivalent);
+  check("monadic exact: ∀x(F(x) ∧ G(x)) ≡ ∀xF(x) ∧ ∀xG(x)", monadicEquivalent(parseFormula("∀x(F(x) ∧ G(x))"), parseFormula("∀x F(x) ∧ ∀x G(x)"))?.equivalent === true);
+  check("monadic exact: ∀x(F(x) → G(x)) ≢ ∀xF(x) → ∀xG(x)", monadicEquivalent(parseFormula("∀x(F(x) → G(x))"), parseFormula("∀x F(x) → ∀x G(x)"))?.equivalent === false);
+  check("monadic exact declines identity", monadicEquivalent(atLeast4, exactly4) === null);
+}
+
+// parser: v, ≠, brackets, ASCII quantifiers
+{
+  const throws = (s: string, o = {}) => { try { parseFormula(s, o); return false; } catch { return true; } };
+  const reads = (s: string, want: string, o = {}) => { try { return toUnicode(parseFormula(s, o)) === want; } catch { return false; } };
+  check("AvB is an error outside TFL (not ∀v B)", throws("AvB"));
+  check("AvB in TFL is A ∨ B", reads("AvB", "A ∨ B", { logic: "tfl" }));
+  check("Ax(F(x) → G(x)) still reads as ∀x", reads("Ax(F(x) -> G(x))", "∀x(F(x) → G(x))"));
+  check("∀v(v = a) round-trips", reads(toUnicode(parseFormula("∀v(v = a)")), "∀v v = a"));
+  check("x = v ∨ v = a parses", reads("∀v∀x(x = v ∨ v = a)", "∀v∀x(x = v ∨ v = a)"));
+  check("a ≠ b reads as ¬a = b", reads("a ≠ b", "¬a = b") && reads("a \\neq b", "¬a = b"));
+  check("(A ∧ B] is rejected", throws("(A ∧ B]"));
+  check("F(a] is rejected", throws("F(a]"));
+  check("unbalanced { is rejected", throws("A ∧ {B"));
+  check("[A ∧ B] → C still parses", reads("[A ∧ B] → C", "(A ∧ B) → C"));
+}
+
+// every proof exercise asks for the right thing: premises/conclusion parse, TFL ones are valid,
+// FOL ones have no countermodel except the book's "valid or not?" items, and the book's own
+// solutions use only rules the exercise allows
+{
+  const expectInvalid = new Set(["ch36.H.1", "ch36.H.2", "ch36.H.4", "ch36.H.5", "ch36.I.2", "ch36.I.3", "ch36.I.6", "ch36.I.8", "ch36.I.9"]);
+  const invalid: string[] = [];
+  const txt = (n: any): string => Array.isArray(n) ? n.map(txt).join("") : n && typeof n === "object" ? (n.type === "text" ? n.text : n.type === "math" ? n.latex : Object.values(n).map(txt).join("")) : "";
+  let items = 0;
+  for (const file of chapters) {
+    const ch = JSON.parse(fs.readFileSync(path.join(BUILD, file), "utf8"));
+    for (const part of ch.exercises) {
+      if (part.kind !== "proof") continue;
+      const para = part.blocks.find((b: any) => b.type === "para");
+      const instr = para ? txt(para.children).toLowerCase() : "";
+      for (const it of part.items) {
+        items++;
+        const specs = proofSpecs(it.formulas ?? [], instr);
+        if (!specs.length) { check(`proof item ${it.id} has a spec`, false); continue; }
+        const used = new Set<string>();
+        walk(it.solution, (x) => { if (x.type === "fitch") for (const l of x.lines) { const r = normalizeRule(String(l.ruleText ?? "").split(/\s/)[0]); if (r && r !== "PR" && r !== "AS") used.add(r); } });
+        for (const s of specs) {
+          try {
+            const ps = s.premises.map((q) => parseFormula(q, { logic: part.logic }));
+            const c = parseFormula(s.conclusion, { logic: part.logic });
+            const all = [...ps, c];
+            if (all.every(isTFL) ? counterexample(ps, c) : part.logic === "fol" && all.every(isFOL) && sampleCounterexample(ps, c)) invalid.push(it.id);
+            const rs = ruleSet({ logic: part.logic, system: s.system, chapterId: ch.id, part: part.letter });
+            const bad = [...used].filter((r) => !rs.allowed.has(r));
+            check(`book solution of ${it.id} uses only allowed rules`, !bad.length, bad.join(" "));
+            pass++;
+          } catch (e) { check(`proof item ${it.id} spec parses`, false, `${JSON.stringify(s)}: ${(e as Error).message}`); }
+        }
+      }
+    }
+  }
+  const unexpected = invalid.filter((id) => !expectInvalid.has(id));
+  check("no proof exercise asks for an invalid argument (besides the book's valid-or-not items)", !unexpected.length && [...expectInvalid].every((id) => invalid.includes(id)), `unexpected ${unexpected.join(", ")}; got ${[...new Set(invalid)].join(", ")}`);
+  check("proof items found", items > 100, String(items));
+}
+void fEq;
 
 // ---------------------------------------------------------------- progress merge
 {
@@ -304,5 +500,5 @@ for (const [input, logic, prose, want] of shortcutCases) {
 
 console.log(`proofs checked: ${proofsChecked}, truth tables checked: ${ttChecked}, symbolization solutions: ${symb}, arguments: ${args}`);
 console.log(`pass ${pass}, fail ${fail}, skipped ${skipped}`);
-for (const f of failures.slice(0, 40)) console.log("FAIL", f);
+for (const f of failures.slice(0, 80)) console.log("FAIL", f);
 if (fail) process.exit(1);

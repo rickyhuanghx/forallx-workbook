@@ -30,13 +30,14 @@ export function Lab() {
 function ProofLab() {
   const [arg, setArg] = useState("A → B, ¬B ∴ ¬A");
   const [logic, setLogic] = useState<"tfl" | "fol" | "ml">("tfl");
-  const [spec, setSpec] = useState<{ premises: string[]; conclusion: string; system?: string } | null>({ premises: ["A → B", "¬B"], conclusion: "¬A" });
+  // `key` is the saved-progress key of the argument that was set up, not of whatever is typed now
+  const [spec, setSpec] = useState<{ premises: string[]; conclusion: string; system?: string; key: string } | null>({ premises: ["A → B", "¬B"], conclusion: "¬A", key: toKey("A → B, ¬B ∴ ¬A") });
   const [err, setErr] = useState<string | null>(null);
   const [key, setKey] = useState(0);
   const go = () => {
     try {
-      const a = parseArgument(arg);
-      setSpec({ premises: a.premises.map((p) => toUnicode(p)), conclusion: toUnicode(a.conclusion), system: a.system });
+      const a = parseArgument(arg, { logic });
+      setSpec({ premises: a.premises.map((p) => toUnicode(p)), conclusion: toUnicode(a.conclusion), system: a.system, key: toKey(arg) });
       setErr(null);
       setKey((k) => k + 1);
     } catch (e) { setErr((e as Error).message); }
@@ -51,7 +52,7 @@ function ProofLab() {
         <button type="button" className="btn btn-primary btn-sm" onClick={go}>Set up</button>
       </div>
       {err && <p className="finput-err">{err}</p>}
-      {spec && <ProofEditor key={key} exerciseId={`lab.${toKey(arg)}`} spec={spec} logic={logic} />}
+      {spec && <ProofEditor key={key} exerciseId={`lab.${spec.key}`} spec={spec} logic={logic} />}
     </div>
   );
 }

@@ -4,7 +4,7 @@
 
 import type { Formula } from "./ast";
 import { eq, freeVars, isBinary, names, someNameToVar, someReplaced, substVar } from "./ast";
-import { parseFormula, ParseError } from "./parser";
+import { parseFormula, ParseError, type Logic } from "./parser";
 
 export interface InputLine {
   formula: string;   // text; "□" alone marks a strict (modal) subproof assumption
@@ -70,7 +70,15 @@ interface Node {
   lines: number[]; // direct lines (1-based) that belong to this subproof
 }
 
-export function checkProof(input: InputLine[], opts: { allowed?: Set<string>; modal?: boolean } = {}): CheckResult {
+export interface CheckOptions {
+  allowed?: Set<string>;                    // rules usable in this proof (PR and AS are always allowed)
+  disallowed?: (rule: string) => string;    // the message for a rule outside `allowed`
+  premises?: Formula[];                     // when given, every PR line must be one of these
+  modal?: boolean;
+  logic?: Logic;
+}
+
+export function checkProof(input: InputLine[], opts: CheckOptions = {}): CheckResult {
   const n = input.length;
   const results: LineResult[] = input.map(() => ({ ok: true }));
   const parsed: (Formula | null)[] = [];
@@ -83,13 +91,14 @@ export function checkProof(input: InputLine[], opts: { allowed?: Set<string>; mo
       parsed.push(null);
       isBox.push(true);
       results[i].isBoxMarker = true;
-      if (!(input[i].depth > 0 && (i === 0 || input[i - 1].depth < input[i].depth)))
-        results[i] = { ok: false, error: "A □ marker must be the assumption line that opens a subproof", isBoxMarker: true };
+      // a □ line always opens a strict subproof (a sibling one when it follows a subproof at the same depth)
+      if (!(input[i].depth > 0))
+        results[i] = { ok: false, error: "A □ marker must be the assumption line that opens a subproof: indent it", isBoxMarker: true };
       continue;
     }
     isBox.push(false);
     try {
-      const f = parseFormula(text, { modal: opts.modal });
+      const f = parseFormula(text, { modal: opts.modal, logic: opts.logic });
       parsed.push(f);
       results[i].parsed = f;
       if (freeVars(f).size) results[i] = { ok: false, error: `Not a sentence: variable ${[...freeVars(f)][0]} is free`, parsed: f };
@@ -205,7 +214,10 @@ export function checkProof(input: InputLine[], opts: { allowed?: Set<string>; mo
     const refs = refsOrErr;
     if (isBox[i]) { if (rule && rule !== "AS") fail("A □ marker takes no rule"); continue; }
     if (!f) continue;
-    if (opts.allowed && rule && !opts.allowed.has(rule) && rule !== "PR" && rule !== "AS") { fail(`The rule ${rule} is not available in this exercise`); continue; }
+    if (opts.allowed && rule && !opts.allowed.has(rule) && rule !== "PR" && rule !== "AS") {
+      fail(opts.disallowed ? opts.disallowed(rule) : `The rule ${rule} is not available in this exercise`);
+      continue;
+    }
 
     const lineRefs = refs.filter((r): r is Extract<Ref, { kind: "line" }> => r.kind === "line");
     const subRefs = refs.filter((r): r is Extract<Ref, { kind: "sub" }> => r.kind === "sub");
@@ -243,6 +255,10 @@ export function checkProof(input: InputLine[], opts: { allowed?: Set<string>; mo
       case "PR":
         if (nodeOf[i] !== root) fail("Premises can only appear in the main proof");
         else if (i > 0 && !input.slice(0, i).every((l) => normalizeRule(l.rule) === "PR")) fail("Premises must come first, before any other line");
+        else if (opts.premises && !opts.premises.some((p) => eq(p, f)))
+          fail(opts.premises.length
+            ? `${show(f)} is not a premise of this exercise. PR may only be used for ${opts.premises.map(show).join(", ")}`
+            : "This exercise has no premises. Start with an assumption (AS) in a subproof instead");
         break;
       case "AS":
         break; // structure already checked

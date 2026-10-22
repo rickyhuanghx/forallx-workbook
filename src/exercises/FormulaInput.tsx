@@ -24,7 +24,11 @@ export function SymbolHelp({ logic, open: openProp, onToggle }: { logic: ShortLo
   const toggle = onToggle ?? (() => setOwn((o) => !o));
   return (
     <>
-      <button type="button" className="help-btn" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={toggle} aria-expanded={open} aria-label="Typing shortcuts" title="Typing shortcuts (or press ? in the box)">?</button>
+      {/* reachable with Tab (the symbol buttons are not), so keyboard users can open the legend from any box,
+          including written-answer boxes where "?" is typed as text; Escape on it closes the legend */}
+      <button type="button" className="help-btn" onMouseDown={(e) => e.preventDefault()} onClick={toggle}
+        onKeyDown={(e) => { if (e.key === "Escape" && open) { e.preventDefault(); toggle(); } }}
+        aria-expanded={open} aria-label="Typing shortcuts" title="Typing shortcuts (or press ? in a formula box)">?</button>
       {open && (
         <div className="shortcut-help" role="note">
           <p>Type these and they turn into symbols as you go. Buttons and pasted ASCII work too.</p>
@@ -69,16 +73,17 @@ interface Props {
   onFocus?: () => void;
   normalizeOnBlur?: boolean;   // rewrite the text in the book's notation once it parses
   onHelp?: () => void;         // with noPalette: what a typed "?" does (the owner's palette shows the legend)
+  helpOpen?: boolean;          // with onHelp: whether the owner's legend is open, so Escape can close it
 }
 
 /** Text field for a formula, with live typing shortcuts, a symbol palette and a typeset preview. */
-export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEnter, autoFocus, compact, disabled, strict, label, invalid, noPalette, onFocus, normalizeOnBlur, onHelp }: Props) {
+export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEnter, autoFocus, compact, disabled, strict, label, invalid, noPalette, onFocus, normalizeOnBlur, onHelp, helpOpen }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const [help, setHelp] = useState(false);
   const toggleHelp = onHelp ?? (() => setHelp((o) => !o));
   const pendingCaret = useRef<number | null>(null);
   const id = useId();
-  const parsed = useMemo(() => (value.trim() ? tryParse(value, { strict, modal: logic === "ml" }) : null), [value, strict, logic]);
+  const parsed = useMemo(() => (value.trim() ? tryParse(value, { strict, logic }) : null), [value, strict, logic]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -116,7 +121,7 @@ export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEn
             if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); }
             // "?" is never part of a formula: it opens the typing legend instead of landing in the box
             else if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggleHelp(); }
-            else if (e.key === "Escape" && !onHelp && help) { e.preventDefault(); setHelp(false); }
+            else if (e.key === "Escape" && (onHelp ? helpOpen : help)) { e.preventDefault(); toggleHelp(); }
           }}
           placeholder={placeholder}
           autoFocus={autoFocus}
