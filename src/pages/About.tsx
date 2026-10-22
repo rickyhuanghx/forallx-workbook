@@ -174,7 +174,7 @@ function SyncPanel({ setNote }: { setNote: (s: string) => void }) {
     <div className="sync-box">
       <p className="sync-status">{line}</p>
       {sent ? (
-        <p>Check your inbox for a message from the forall x workbook. The link in it works once and expires in 15 minutes. Nothing to see here until then: progress keeps saving in this browser.</p>
+        <p>Check your inbox for a message from the forall x workbook. The link in it works once and expires in 15 minutes. Until then, progress keeps saving in this browser.</p>
       ) : (
         <>
           <p>Save your progress to an account so it follows you between devices. Enter your email and you will get a sign-in link; there is no password.</p>
