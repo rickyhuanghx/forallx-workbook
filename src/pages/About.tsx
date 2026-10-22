@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { exportProgress, importProgress, resetProgress, useProgress } from "../state/progress";
 import {
   deleteAccount, disableSync, enableSync, formatCode, getAccountEmail, getSyncCode, joinSync, pullAndMerge,
@@ -16,10 +16,9 @@ export function About() {
     if (el) el.scrollIntoView({ block: "start" });
   }, [loc.hash]);
   const [, update] = useProgress();
-  const [params] = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
   const [armed, setArmed] = useState(false);
-  const [note, setNote] = useState<string | null>(() => (params.get("signedin") ? "You are signed in. Your progress now follows you to any device you sign in on." : null));
+  const [note, setNote] = useState<string | null>(null);
   const download = () => {
     const blob = new Blob([exportProgress()], { type: "application/json" });
     const a = document.createElement("a");

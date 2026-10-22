@@ -51,7 +51,7 @@ export function App() {
         <form className="search-form" role="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/search?q=${encodeURIComponent(q.trim())}`); }}>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the book" aria-label="Search the book" />
         </form>
-        <Link to="/about#progress" className="account-link" title={email ? `Signed in as ${email}. Progress is saved to your account.` : "Sign in to save your progress across devices"}>
+        <Link to={email ? "/about#progress" : "/login"} className="account-link" title={email ? `Signed in as ${email}. Progress is saved to your account.` : "Sign in to save your progress across devices"}>
           {email ? email : "Sign in"}
         </Link>
         <button type="button" className="theme-btn" onClick={cycleTheme} title={`Theme: ${theme}`} aria-label={`Theme: ${theme}. Click to change`}>
