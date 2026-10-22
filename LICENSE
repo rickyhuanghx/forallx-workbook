@@ -1,0 +1,39 @@
+This repository contains two kinds of material under two licences.
+
+1. The software (everything outside content/ and public/content/: the converter, the
+   logic engine, the web app and the API) is released under the MIT License below.
+
+2. The book. content/source/ is the unmodified LaTeX source of "forall x: Calgary. An
+   Introduction to Formal Logic" by P. D. Magnus, Tim Button, J. Robert Loftis, Robert
+   Trueman, Aaron Thomas-Bolduc and Richard Zach, licensed under the Creative Commons
+   Attribution 4.0 International License (CC BY 4.0); the licence text is in
+   content/source/LICENSE.md and the credits are in the book's preface. content/build/ and
+   public/content/ are derived from that source (converted to JSON, solutions placed next to
+   their exercises, a handful of bracket and citation slips corrected, see docs/ERRATA.md) and
+   remain under CC BY 4.0. This project is not affiliated with or endorsed by the authors.
+
+Fonts are loaded from Google Fonts at run time (STIX Two Text and Source Sans 3, both under the
+SIL Open Font License). KaTeX is used under the MIT License.
+
+Questions or concerns, including from rights holders: hh695@cam.ac.uk
+
+---------------------------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 Ricky Huang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+and associated documentation files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

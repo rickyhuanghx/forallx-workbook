@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getProgress, onProgressSaved, replaceProgress, type ExerciseRecord, type Progress } from "./progress";
 
 const CODE_KEY = "forallx-sync-code";
+const ACCOUNT_KEY = "forallx-account";
 const ENDPOINT = "/api/progress";
 
 export interface SyncStatus {
@@ -21,6 +22,22 @@ export function getSyncCode(): string | null {
 }
 function setSyncCode(code: string | null) {
   try { if (code) localStorage.setItem(CODE_KEY, code); else localStorage.removeItem(CODE_KEY); } catch { /* ignore */ }
+}
+
+/** Email of the signed-in account as this browser last saw it (the cookie is the real session). */
+export function getAccountEmail(): string | null {
+  try { return localStorage.getItem(ACCOUNT_KEY); } catch { return null; }
+}
+function setAccountEmail(email: string | null) {
+  try { if (email) localStorage.setItem(ACCOUNT_KEY, email); else localStorage.removeItem(ACCOUNT_KEY); } catch { /* ignore */ }
+}
+
+type Target = { kind: "account" } | { kind: "code"; code: string };
+/** Where this browser syncs to: the signed-in account first, otherwise a sync code, otherwise nowhere. */
+function target(): Target | null {
+  if (getAccountEmail()) return { kind: "account" };
+  const code = getSyncCode();
+  return code ? { kind: "code", code } : null;
 }
 
 export function newSyncCode(): string {
@@ -79,16 +96,28 @@ export function mergeProgress(local: Progress, remote: Progress): Progress {
 
 // ------------------------------------------------------------------ transport
 
-async function fetchRemote(code: string): Promise<{ data: Progress; updated: number } | null> {
-  // the code travels in a header, not the URL, so it stays out of request logs
-  const r = await fetch(ENDPOINT, { cache: "no-store", headers: { "x-sync-code": code } });
+class SignedOut extends Error { constructor() { super("signed out"); } }
+
+/** A 401 in account mode means the session cookie is gone: forget the account locally. */
+function signedOutLocally() {
+  setAccountEmail(null);
+  setStatus({ state: "off" });
+}
+
+async function fetchRemote(t: Target): Promise<{ data: Progress; updated: number } | null> {
+  // a sync code travels in a header, not the URL, so it stays out of request logs
+  const headers: Record<string, string> = t.kind === "code" ? { "x-sync-code": t.code } : {};
+  const r = await fetch(ENDPOINT, { cache: "no-store", headers, credentials: "same-origin" });
   if (r.status === 404) return null;
+  if (r.status === 401 && t.kind === "account") throw new SignedOut();
   if (!r.ok) throw new Error(`server ${r.status}`);
   return r.json();
 }
 
-async function pushRemote(code: string, data: Progress): Promise<number> {
-  const r = await fetch(ENDPOINT, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ code, data }) });
+async function pushRemote(t: Target, data: Progress): Promise<number> {
+  const body = t.kind === "code" ? { code: t.code, data } : { data };
+  const r = await fetch(ENDPOINT, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" });
+  if (r.status === 401 && t.kind === "account") throw new SignedOut();
   if (!r.ok) throw new Error(`server ${r.status}`);
   return (await r.json()).updated as number;
 }
@@ -98,23 +127,23 @@ let pushing = false;
 let dirty = false;
 
 function schedulePush(delay = 1500) {
-  const code = getSyncCode();
-  if (!code) return;
+  if (!target()) return;
   dirty = true;
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(() => { pushTimer = null; void pushNow(); }, delay);
 }
 
 async function pushNow(): Promise<void> {
-  const code = getSyncCode();
-  if (!code || pushing) return;
+  const t = target();
+  if (!t || pushing) return;
   pushing = true;
   dirty = false;
   setStatus({ state: "syncing", at: status.at });
   try {
-    const at = await pushRemote(code, getProgress());
+    const at = await pushRemote(t, getProgress());
     setStatus({ state: "synced", at });
   } catch (e) {
+    if (e instanceof SignedOut) { dirty = false; signedOutLocally(); return; }
     dirty = true;
     setStatus({ state: "error", at: status.at, error: (e as Error).message });
   } finally {
@@ -125,22 +154,23 @@ async function pushNow(): Promise<void> {
 
 /** Pull the server copy, merge it into local storage, and push the result if anything differed. */
 export async function pullAndMerge(): Promise<void> {
-  const code = getSyncCode();
-  if (!code) return;
+  const t = target();
+  if (!t) return;
   setStatus({ state: "syncing", at: status.at });
   try {
-    const remote = await fetchRemote(code);
+    const remote = await fetchRemote(t);
     const local = getProgress();
     const merged = remote ? mergeProgress(local, remote.data) : local;
     const localJson = JSON.stringify(local);
     if (JSON.stringify(merged) !== localJson) replaceProgress(merged, { silent: true });
     if (!remote || JSON.stringify(remote.data) !== JSON.stringify(merged)) {
-      const at = await pushRemote(code, merged);
+      const at = await pushRemote(t, merged);
       setStatus({ state: "synced", at });
     } else {
       setStatus({ state: "synced", at: remote.updated });
     }
   } catch (e) {
+    if (e instanceof SignedOut) { signedOutLocally(); return; }
     setStatus({ state: "error", at: status.at, error: (e as Error).message });
   }
 }
@@ -158,7 +188,7 @@ export async function joinSync(input: string): Promise<"ok" | "notfound" | "erro
   const code = normalizeCode(input);
   if (!/^[a-z0-9]{20,64}$/.test(code)) return "notfound";
   try {
-    const remote = await fetchRemote(code);
+    const remote = await fetchRemote({ kind: "code", code });
     if (!remote) return "notfound";
     setSyncCode(code);
     await pullAndMerge();
@@ -182,10 +212,65 @@ export function startSync() {
   started = true;
   onProgressSaved(() => schedulePush());
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && getSyncCode()) { if (dirty) void pushNow(); else void pullAndMerge(); }
+    if (document.visibilityState === "visible" && target()) { if (dirty) void pushNow(); else void pullAndMerge(); }
   });
   window.addEventListener("online", () => { if (dirty) void pushNow(); });
-  if (getSyncCode()) void pullAndMerge();
+  if (target()) void pullAndMerge();
+}
+
+// ------------------------------------------------------------------ email sign-in
+
+/** Ask the server to email a one-time sign-in link. */
+export async function requestSignIn(email: string): Promise<"ok" | "bademail" | "limited" | "error"> {
+  try {
+    const r = await fetch("/api/auth/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email }) });
+    if (r.ok) return "ok";
+    if (r.status === 400) return "bademail";
+    if (r.status === 429) return "limited";
+    return "error";
+  } catch { return "error"; }
+}
+
+/**
+ * Finish signing in from a link. Order matters: any sync-code progress is pulled first (the code
+ * stops being used once a session exists), then the session is created, then the account's own
+ * progress is merged in and the result pushed. Local progress is never lost.
+ */
+export async function signInWithToken(token: string): Promise<"ok" | "invalid" | "error"> {
+  if (getSyncCode() && !getAccountEmail()) await pullAndMerge();
+  let email: string;
+  try {
+    const r = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }), credentials: "same-origin" });
+    if (r.status === 400) return "invalid";
+    if (!r.ok) return "error";
+    email = (await r.json()).email as string;
+  } catch { return "error"; }
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = null;
+  setSyncCode(null);
+  setAccountEmail(email);
+  await pullAndMerge();
+  return status.state === "error" ? "error" : "ok";
+}
+
+/** End the session on this browser. Progress stays here and on the account. */
+export async function signOut(): Promise<void> {
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = null;
+  try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* cookie may linger; the next 401 clears local state */ }
+  signedOutLocally();
+}
+
+/** Delete the account record and its server-side progress. Local progress is left alone. */
+export async function deleteAccount(): Promise<"ok" | "error"> {
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = null;
+  try {
+    const r = await fetch("/api/account", { method: "DELETE", credentials: "same-origin" });
+    if (!r.ok && r.status !== 401) return "error";
+  } catch { return "error"; }
+  signedOutLocally();
+  return "ok";
 }
 
 export function useSyncStatus(): SyncStatus {

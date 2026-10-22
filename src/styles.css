@@ -490,3 +490,11 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 .sync-status.is-error { color: var(--bad); }
 .sync-join { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .sync-join input { flex: 1 1 220px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-family: ui-monospace, Menlo, monospace; min-width: 0; }
+
+/* Site footer (legal notice) */
+.site-foot { margin-top: 48px; padding: 18px 24px 28px; border-top: 1px solid var(--rule-soft); font-family: var(--sans); font-size: 13px; color: var(--ink-3); }
+.site-foot p { max-width: var(--measure); margin: 0 auto; line-height: 1.5; }
+.site-foot a { color: var(--ink-2); }
+.sync-join input[type="email"] { font: inherit; color: var(--ink); }
+.sync-alt { margin-top: 12px; }
+.sync-alt summary { cursor: pointer; color: var(--ink-2); }

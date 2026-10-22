@@ -10,6 +10,7 @@ import { sampleEquivalent } from "../src/logic/fol";
 import { isSentence } from "../src/logic/ast";
 import { applyShortcuts } from "../src/logic/shortcuts";
 import { mergeProgress } from "../src/state/sync";
+import { normalizeEmail, parseCookies, sessionCookie, signSession, verifySession, COOKIE } from "../src/server/auth";
 import type { Progress } from "../src/state/progress";
 
 const BUILD = path.join(process.cwd(), "content", "build", "chapters");
@@ -260,6 +261,35 @@ for (const [input, logic, prose, want] of shortcutCases) {
   checks.push(["remote reset drops older local, keeps newer", !m3.exercises["a"] && m3.exercises["b"]?.status === "done" && m3.exercises["z"]?.status === "done"]);
   checks.push(["merge is idempotent", JSON.stringify(mergeProgress(m, m)) === JSON.stringify(m)]);
   for (const [name, ok] of checks) { if (ok) pass++; else { fail++; failures.push(`merge: ${name}`); } }
+}
+
+// ---------------------------------------------------------------- sessions and sign-in helpers
+{
+  const checks: [string, boolean][] = [];
+  const secret = "test-secret-test-secret-test-secret-0123";
+  const uid = "0123456789abcdef01234567";
+  const now = 1_800_000_000_000;
+  const tok = signSession(uid, secret, now);
+  checks.push(["session round-trips", verifySession(tok, secret, now + 1000) === uid]);
+  checks.push(["session expires", verifySession(tok, secret, now + 181 * 86400_000) === null]);
+  checks.push(["wrong secret rejected", verifySession(tok, "other-secret-other-secret-other-secret", now) === null]);
+  checks.push(["tampered uid rejected", verifySession(tok.replace(uid, "ffffffffffffffffffffffff"), secret, now) === null]);
+  checks.push(["tampered exp rejected", verifySession(tok.replace(String(now + 180 * 86400_000), String(now + 365 * 86400_000)), secret, now) === null]);
+  checks.push(["garbage rejected", verifySession("v1.x.y", secret, now) === null && verifySession("", secret) === null && verifySession(null, secret) === null]);
+  const c = parseCookies(`a=1; ${COOKIE}=${tok}; b=x%20y`);
+  checks.push(["cookie parsed", c[COOKIE] === tok && c.a === "1" && c.b === "x y"]);
+  checks.push(["cookie header shape", /HttpOnly/.test(sessionCookie(tok)) && /Secure/.test(sessionCookie(tok)) && /SameSite=Lax/.test(sessionCookie(tok))]);
+  checks.push(["email normalized", normalizeEmail("  Someone@Example.ORG ") === "someone@example.org"]);
+  checks.push(["bad emails rejected", normalizeEmail("nope") === null && normalizeEmail("a@b") === null && normalizeEmail(42) === null]);
+  // signing in with a sync code: code blob, local, account blob all merge without loss
+  const base = (): Progress => ({ read: {}, visited: {}, exercises: {}, notes: {}, bookmarks: [], flash: {} });
+  const codeBlob = base(); codeBlob.exercises["c1"] = { status: "done", updated: 100 };
+  const local = base(); local.exercises["l1"] = { status: "attempted", updated: 200 };
+  const account = base(); account.exercises["a1"] = { status: "correct", updated: 300 }; account.exercises["l1"] = { status: "done", updated: 250 };
+  const afterCode = mergeProgress(local, codeBlob);
+  const afterAccount = mergeProgress(afterCode, account);
+  checks.push(["sign-in migration keeps code, local and account records", afterAccount.exercises["c1"]?.status === "done" && afterAccount.exercises["a1"]?.status === "correct" && afterAccount.exercises["l1"]?.status === "done"]);
+  for (const [name, ok] of checks) { if (ok) pass++; else { fail++; failures.push(`auth: ${name}`); } }
 }
 
 console.log(`proofs checked: ${proofsChecked}, truth tables checked: ${ttChecked}, symbolization solutions: ${symb}, arguments: ${args}`);

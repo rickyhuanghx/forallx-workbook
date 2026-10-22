@@ -12,6 +12,7 @@ import { About } from "./pages/About";
 import { Search } from "./pages/Search";
 import { Lab } from "./pages/Lab";
 import { Exercises } from "./pages/Exercises";
+import { Login } from "./pages/Login";
 
 startSync();
 createRoot(document.getElementById("root")!).render(
@@ -26,6 +27,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/search" element={<Search />} />
           <Route path="/lab" element={<Lab />} />
           <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Home />} />
         </Route>
       </Routes>
