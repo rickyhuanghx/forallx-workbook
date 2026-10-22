@@ -22,7 +22,7 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [linkState, setLinkState] = useState<"ready" | "invalid" | "offline">("ready");
 
-  useEffect(() => { document.title = "Sign in | forall x workbook"; }, []);
+  useEffect(() => { const prev = document.title; document.title = "Sign in | forall x workbook"; return () => { document.title = prev; }; }, []);
 
   const request = async () => {
     const email = entry.trim();
@@ -96,6 +96,7 @@ export function Login() {
       <>
         <p className="login-lede" role="status">We have sent a link to <strong>{sentTo}</strong>. Open it on this device to finish. It works once and expires in 15 minutes.</p>
         <p className="login-foot">Nothing yet? Check your spam folder, or <button type="button" className="link-btn" disabled={busy} onClick={request}>{busy ? "sending..." : "send it again"}</button>.</p>
+        {error && <p className="login-error" role="alert">{error}</p>}
         <p className="login-foot"><button type="button" className="link-btn" onClick={() => { setSentTo(null); setError(null); }}>Use a different address</button></p>
       </>
     );
