@@ -80,7 +80,8 @@ export function mergeProgress(local: Progress, remote: Progress): Progress {
 // ------------------------------------------------------------------ transport
 
 async function fetchRemote(code: string): Promise<{ data: Progress; updated: number } | null> {
-  const r = await fetch(`${ENDPOINT}?code=${code}`, { cache: "no-store" });
+  // the code travels in a header, not the URL, so it stays out of request logs
+  const r = await fetch(ENDPOINT, { cache: "no-store", headers: { "x-sync-code": code } });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`server ${r.status}`);
   return r.json();
@@ -180,12 +181,11 @@ export function startSync() {
   if (started) return;
   started = true;
   onProgressSaved(() => schedulePush());
-  if (!getSyncCode()) return;
-  void pullAndMerge();
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && getSyncCode()) { if (dirty) void pushNow(); else void pullAndMerge(); }
   });
   window.addEventListener("online", () => { if (dirty) void pushNow(); });
+  if (getSyncCode()) void pullAndMerge();
 }
 
 export function useSyncStatus(): SyncStatus {

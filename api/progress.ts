@@ -1,6 +1,6 @@
 // Progress sync: one private JSON blob per sync code in Vercel Blob.
-// GET  /api/progress?code=...        -> { data, updated } or 404
-// PUT  /api/progress  { code, data } -> { updated }
+// GET  /api/progress  (header x-sync-code) -> { data, updated } or 404
+// PUT  /api/progress  { code, data }       -> { updated }
 // The code is a secret the learner holds; there are no accounts. Only the server holds the Blob token.
 import { get, put } from "@vercel/blob";
 
@@ -13,7 +13,7 @@ const json = (status: number, body: unknown) =>
 const pathFor = (code: string) => `progress/${code}.json`;
 
 export async function GET(request: Request): Promise<Response> {
-  const code = new URL(request.url).searchParams.get("code") ?? "";
+  const code = request.headers.get("x-sync-code") ?? "";
   if (!CODE.test(code)) return json(400, { error: "bad code" });
   const r = await get(pathFor(code), { access: "private", useCache: false });
   if (!r) return json(404, { error: "not found" });
