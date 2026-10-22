@@ -1,7 +1,8 @@
 import type { Block, Chapter, ExercisePart, ListItem } from "../content/types";
 import { Blocks } from "../render/Blocks";
 import { Inlines, plainText } from "../render/Inline";
-import { isComplete, useProgress } from "../state/progress";
+import { useEffect } from "react";
+import { isComplete, recordExercise, useProgress } from "../state/progress";
 import { Meter } from "../render/Meter";
 import { FreeResponse } from "./FreeResponse";
 import { IsSentence, MainConnective } from "./MainConnective";
@@ -113,11 +114,8 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
     case "proof": {
       const specs = proofSpecs(formulas, instr);
       if (!specs.length) return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
-      return (
-        <>
-          {specs.map((s, i) => <ProofEditor key={i} exerciseId={specs.length > 1 ? `${id}.${i + 1}` : id} spec={s} logic={part.logic} solution={i === specs.length - 1 ? sol : undefined} chapterId={chapter.id} title={specs.length > 1 ? `Proof ${i + 1} of ${specs.length}` : undefined} />)}
-        </>
-      );
+      if (specs.length === 1) return <ProofEditor exerciseId={id} spec={specs[0]} logic={part.logic} solution={sol} chapterId={chapter.id} />;
+      return <MultiProof id={id} specs={specs} logic={part.logic} solution={sol} chapterId={chapter.id} />;
     }
     default:
       return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
@@ -125,7 +123,20 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
 }
 
 /** Work out what has to be proved from the item's formulas and the part's instruction. */
-export function proofSpecs(formulas: string[], instr: string): ProofSpec[] {
+export /** An item with several proofs: each proof saves under id.k; the item itself is recorded correct once every proof is. */
+function MultiProof({ id, specs, logic, solution, chapterId }: { id: string; specs: ProofSpec[]; logic: ExercisePart["logic"]; solution?: Block[]; chapterId: string }) {
+  const [progress] = useProgress();
+  const allDone = specs.every((_, i) => progress.exercises[`${id}.${i + 1}`]?.status === "correct");
+  const recorded = progress.exercises[id]?.status === "correct";
+  useEffect(() => { if (allDone && !recorded) recordExercise(id, { status: "correct" }); }, [allDone, recorded, id]);
+  return (
+    <>
+      {specs.map((s, i) => <ProofEditor key={i} exerciseId={`${id}.${i + 1}`} spec={s} logic={logic} solution={i === specs.length - 1 ? solution : undefined} chapterId={chapterId} title={`Proof ${i + 1} of ${specs.length}`} />)}
+    </>
+  );
+}
+
+function proofSpecs(formulas: string[], instr: string): ProofSpec[] {
   const arg = formulas.find((f) => /[∴⊢]/.test(f));
   if (arg) {
     const m = arg.match(/^(.*?)\s*[∴⊢]\s*(?:_\s*\{?\\?(?:mathbf\{)?([A-Za-z0-9]+)\}?\}?\s*)?(.*)$/);

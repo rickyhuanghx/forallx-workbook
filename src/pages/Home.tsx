@@ -39,7 +39,7 @@ export function Home() {
               : <Link className="btn btn-primary" to="/read/ch01">Start with chapter 1</Link>}
             <Link className="btn" to="/read/preface">Preface</Link>
           </div>
-          <div className="mast-stats" aria-label="Your progress">
+          <div className="mast-stats" role="group" aria-label="Your progress">
             <div className="mast-stat">
               <span className="mast-stat-k">Chapters read</span>
               <Meter value={totalRead} max={totalChapters} label="Chapters read" />
