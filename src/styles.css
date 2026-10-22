@@ -493,7 +493,7 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 
 /* Site footer (legal notice) */
 .site-foot { margin-top: 48px; padding: 18px 24px 28px; border-top: 1px solid var(--rule-soft); font-family: var(--sans); font-size: 13px; color: var(--ink-3); }
-.site-foot p { max-width: var(--measure); margin: 0 auto; line-height: 1.5; }
+.site-foot p { max-width: var(--measure); margin: 0 auto; line-height: 1.5; text-align: center; }
 .site-foot a { color: var(--ink-2); }
 .sync-join input[type="email"] { font: inherit; color: var(--ink); }
 .sync-alt { margin-top: 12px; }

@@ -108,8 +108,8 @@ export function About() {
         data (your IP address and browser details) when a page loads.
       </p>
       <p>
-        You can delete everything held about you at any time with the button in the sign-in box above, and the deletion takes effect
-        immediately. Accounts unused for two years may be removed. Questions about your data: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+        Once signed in, you can delete everything held about you at any time with the Delete my account button in the box above, and
+        the deletion takes effect immediately. Accounts unused for two years may be removed. Questions about your data: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
       </p>
     </div>
   );
