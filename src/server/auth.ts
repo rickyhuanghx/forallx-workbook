@@ -15,9 +15,11 @@ export const COOKIE = "forallx_session";
 export const SESSION_DAYS = 180;
 export const LINK_MINUTES = 15;
 export const PER_EMAIL_PER_HOUR = 5;
-export const PER_IP_PER_HOUR = 20;      // generous: a classroom can share one address
-export const PER_IP_PER_DAY = 60;
-export const NEW_CODES_PER_IP_PER_DAY = 30;
+// Per network address: high enough for a whole school signing up behind one address, low enough that one
+// machine scripting the form cannot use up the site-wide daily email allowance on its own.
+export const PER_IP_PER_HOUR = 200;
+export const PER_IP_PER_DAY = 500;
+export const NEW_CODES_PER_IP_PER_DAY = 300;
 export const GLOBAL_PER_DAY = 2000;
 export const CONTACT = "hh695@cam.ac.uk";
 
