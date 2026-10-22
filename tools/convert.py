@@ -148,6 +148,14 @@ def convert_math(raw: str) -> str:
     s = s.replace("\\textsc{", "\\text{")
     # KaTeX has no \S in math; use the glyph
     s = s.replace("\\S ", "\\text{§}")
+    # KaTeX's array does not accept @{} column separators (the book uses them to tighten
+    # truth-table columns); drop them, the widths are cosmetic.
+    s = re.sub(r"\\begin\{array\}\{((?:[^{}]|@\{\})*)\}",
+               lambda m: "\\begin{array}{" + m.group(1).replace("@{}", "") + "}", s)
+    # \fbox inside math is text mode in KaTeX (its contents and the nested $...$ fail);
+    # \boxed is the math-mode equivalent, and the $ switches become redundant.
+    if "\\fbox{" in s:
+        s = s.replace("\\fbox{", "\\boxed{").replace("$", "")
     s = re.sub(r"\s+", " ", s).strip()
     # leftover unknown macros?
     for m in re.finditer(r"\\([A-Za-z]+)", s):
@@ -170,7 +178,7 @@ backslash setminus implies iff impliedby lceil rceil lfloor rfloor rule
 smallskip medskip bigskip textsc small normalsize varnothing ll gg Longrightarrow
 longrightarrow Leftarrow leftarrow uparrow downarrow nearrow searrow mathord
 mathbin mathrel textrm textsf texttt color textcolor kern mkern mskip
-triangleright triangleleft blacktriangleright bullet circ ddots raisebox begin end hline array fbox heartsuit supset overbrace underbrace nu intertext
+triangleright triangleleft blacktriangleright bullet circ ddots raisebox begin end hline array fbox boxed heartsuit supset overbrace underbrace nu intertext
 """.split())
 
 
