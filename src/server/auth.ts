@@ -4,16 +4,20 @@
 //   progress/u_<uid>.json          { data, updated }        (account progress)
 //   progress/<code>.json           { data, updated }        (legacy sync-code progress)
 //   auth/pending/<sha256(token)>.json { email, exp }        (one magic link, 15 minutes)
-//   auth/rl/<bucket>.json          { n }                    (rate-limit counters)
+//   auth/rl/<bucket>.json          { n }                    (rate-limit counters, keyed by HMAC, never by raw email or IP)
+// Pending links and counters are swept daily by api/cron/cleanup.ts.
 // Secrets never leave the server: AUTH_SECRET signs sessions, BLOB_READ_WRITE_TOKEN reads the store,
 // RESEND_API_KEY sends mail. Session cookie: forallx_session=v1.<uid>.<exp>.<hmac>, HttpOnly.
 import { createHmac, createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { del, get, put } from "@vercel/blob";
+import { BlobNotFoundError, del, get, head, list, put } from "@vercel/blob";
 
 export const COOKIE = "forallx_session";
 export const SESSION_DAYS = 180;
 export const LINK_MINUTES = 15;
 export const PER_EMAIL_PER_HOUR = 5;
+export const PER_IP_PER_HOUR = 20;      // generous: a classroom can share one address
+export const PER_IP_PER_DAY = 60;
+export const NEW_CODES_PER_IP_PER_DAY = 30;
 export const GLOBAL_PER_DAY = 2000;
 export const CONTACT = "hh695@cam.ac.uk";
 
@@ -60,9 +64,35 @@ export function parseCookies(header: string | null): Record<string, string> {
     const i = part.indexOf("=");
     if (i < 0) continue;
     const k = part.slice(0, i).trim();
-    if (k) out[k] = decodeURIComponent(part.slice(i + 1).trim());
+    const v = part.slice(i + 1).trim();
+    // a malformed escape in any cookie on the domain must not take the API down
+    if (k) { try { out[k] = decodeURIComponent(v); } catch { out[k] = v; } }
   }
   return out;
+}
+
+/**
+ * True for a browser request sent from another site. Browsers attach Origin to every POST/PUT/DELETE
+ * (forms and no-cors fetches included) and Sec-Fetch-Site to every request, so checking both stops
+ * cross-site form posts (login CSRF, forced logout) without relying on content-type.
+ */
+export function crossSite(request: Request): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin" && site !== "none") return true;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  try { return new URL(origin).host !== host; } catch { return true; }
+}
+
+/** The client address Vercel reports, with IPv6 cut to its /64 so one host cannot rotate through addresses. */
+export function clientBucket(request: Request): string {
+  const raw = (request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0] ?? "").trim();
+  if (!raw.includes(":")) return raw || "unknown";
+  const [left, right = ""] = raw.toLowerCase().split("::");
+  const l = left ? left.split(":") : [], r = right ? right.split(":") : [];
+  const groups = raw.includes("::") ? [...l, ...Array(Math.max(0, 8 - l.length - r.length)).fill("0"), ...r] : l;
+  return groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "")).join(":") + "::/64";
 }
 
 export function sessionCookie(token: string, days = SESSION_DAYS): string {
@@ -95,6 +125,23 @@ export async function writeJson(path: string, value: unknown): Promise<void> {
 
 export async function deletePath(path: string): Promise<void> {
   try { await del(path); } catch { /* already gone */ }
+}
+
+export async function exists(path: string): Promise<boolean> {
+  try { await head(path); return true; }
+  catch (e) { if (e instanceof BlobNotFoundError) return false; throw e; }
+}
+
+/** Delete every blob under `prefix` last written before `before`. Returns how many went. */
+export async function sweep(prefix: string, before: number): Promise<number> {
+  let cursor: string | undefined, n = 0;
+  do {
+    const page = await list({ prefix, cursor, limit: 1000 });
+    const old = page.blobs.filter((b) => b.uploadedAt.getTime() < before).map((b) => b.url);
+    if (old.length) { await del(old); n += old.length; }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return n;
 }
 
 // ------------------------------------------------------------------ sessions
@@ -157,17 +204,41 @@ export async function consumePending(token: string): Promise<string | null> {
   return p.email;
 }
 
-/** Counter-based rate limit. Racy under concurrency, which is fine at this traffic. */
-export async function overLimit(email: string): Promise<boolean> {
-  const now = new Date();
-  const hour = `${now.toISOString().slice(0, 13)}`;
-  const day = now.toISOString().slice(0, 10);
-  const perEmail = `auth/rl/${sha256(email)}-${hour}.json`;
-  const global = `auth/rl/global-${day}.json`;
-  const [e, g] = await Promise.all([readJson<{ n: number }>(perEmail), readJson<{ n: number }>(global)]);
-  const en = (e?.n ?? 0) + 1, gn = (g?.n ?? 0) + 1;
-  await Promise.all([writeJson(perEmail, { n: en }), writeJson(global, { n: gn })]);
-  return en > PER_EMAIL_PER_HOUR || gn > GLOBAL_PER_DAY;
+/** Keyed hash for counter names, so the store never holds a guessable hash of an email or IP. */
+const counterKey = (kind: string, value: string) =>
+  `${kind}-${createHmac("sha256", secret()).update(`${kind}:${value}`).digest("hex").slice(0, 32)}`;
+
+/**
+ * Counter-based rate limit over several buckets at once. A request already over any limit is refused
+ * without writing, so a flood costs only reads. Racy under concurrency, which is fine at this traffic.
+ */
+async function bump(buckets: [path: string, limit: number][]): Promise<boolean> {
+  const counts = await Promise.all(buckets.map(([p]) => readJson<{ n: number }>(p).then((c) => c?.n ?? 0)));
+  if (counts.some((n, i) => n >= buckets[i][1])) return true;
+  await Promise.all(buckets.map(([p], i) => writeJson(p, { n: counts[i] + 1 })));
+  return false;
+}
+
+function stamps() {
+  const iso = new Date().toISOString();
+  return { hour: iso.slice(0, 13), day: iso.slice(0, 10) };
+}
+
+/** Sign-in emails: per address per hour, per client per hour and per day, and a global daily cap. */
+export async function overLimit(email: string, client: string): Promise<boolean> {
+  const { hour, day } = stamps();
+  return bump([
+    [`auth/rl/${counterKey("e", email)}-${hour}.json`, PER_EMAIL_PER_HOUR],
+    [`auth/rl/${counterKey("ip", client)}-${hour}.json`, PER_IP_PER_HOUR],
+    [`auth/rl/${counterKey("ip", client)}-${day}.json`, PER_IP_PER_DAY],
+    [`auth/rl/global-${day}.json`, GLOBAL_PER_DAY],
+  ]);
+}
+
+/** New sync codes (each one a fresh blob anyone could create) per client per day. */
+export async function overCodeLimit(client: string): Promise<boolean> {
+  const { day } = stamps();
+  return bump([[`auth/rl/${counterKey("code", client)}-${day}.json`, NEW_CODES_PER_IP_PER_DAY]]);
 }
 
 // ------------------------------------------------------------------ mail

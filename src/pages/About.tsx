@@ -101,16 +101,18 @@ export function About() {
       {note && <p className="muted" role="status">{note}</p>}
       <h2 id="privacy">Privacy</h2>
       <p>
-        Without an account, nothing about you leaves your browser except the requests that fetch the pages. Your progress sits in this
-        browser's local storage.
+        Without an account or a sync code, nothing about you leaves your browser except the requests that fetch the pages. Your progress
+        sits in this browser's local storage.
       </p>
       <p>
         If you sign in with your email, the site stores your email address, a random account id, your progress (exercises attempted,
         answers, proofs and notes, chapters read, the glossary card schedule) and the time of each save. That is all it stores. The data
         is kept in a private storage bucket at Vercel, the hosting provider, and is used only to show your progress back to you. It is
         not shared or sold, and there is no analytics or advertising script on the site. The one cookie is the session cookie that keeps
-        you signed in. Sign-in emails are sent through Resend. Fonts are loaded from Google Fonts, so Google receives the usual request
-        data (your IP address and browser details) when a page loads.
+        you signed in. Sign-in emails are sent through Resend. To stop abuse, the site also counts how many sign-in links and new sync
+        codes each email address and each network (IP) address asks for. The counts are stored under scrambled keys, not the addresses
+        themselves, and are deleted after two days, as are sign-in links nobody used. Fonts are loaded from Google Fonts, so Google
+        receives the usual request data (your IP address and browser details) when a page loads.
       </p>
       <p>
         Once signed in, you can delete everything held about you at any time with the Delete my account button in the box above, and

@@ -10,7 +10,7 @@ import { sampleEquivalent } from "../src/logic/fol";
 import { isSentence } from "../src/logic/ast";
 import { applyShortcuts } from "../src/logic/shortcuts";
 import { mergeProgress } from "../src/state/sync";
-import { normalizeEmail, parseCookies, sessionCookie, signSession, verifySession, COOKIE } from "../src/server/auth";
+import { clientBucket, crossSite, normalizeEmail, parseCookies, sessionCookie, signSession, verifySession, COOKIE } from "../src/server/auth";
 import type { Progress } from "../src/state/progress";
 
 const BUILD = path.join(process.cwd(), "content", "build", "chapters");
@@ -281,6 +281,16 @@ for (const [input, logic, prose, want] of shortcutCases) {
   checks.push(["cookie header shape", /HttpOnly/.test(sessionCookie(tok)) && /Secure/.test(sessionCookie(tok)) && /SameSite=Lax/.test(sessionCookie(tok))]);
   checks.push(["email normalized", normalizeEmail("  Someone@Example.ORG ") === "someone@example.org"]);
   checks.push(["bad emails rejected", normalizeEmail("nope") === null && normalizeEmail("a@b") === null && normalizeEmail(42) === null]);
+  checks.push(["malformed cookie escape does not throw", parseCookies(`x=%E0%A4%A; ${COOKIE}=${tok}`)[COOKIE] === tok]);
+  const req = (h: Record<string, string>) => new Request("https://forallxworkbook.com/api/auth/verify", { method: "POST", headers: h });
+  checks.push(["same-origin browser request allowed", !crossSite(req({ host: "forallxworkbook.com", origin: "https://forallxworkbook.com", "sec-fetch-site": "same-origin" }))]);
+  checks.push(["non-browser request allowed", !crossSite(req({ host: "forallxworkbook.com" }))]);
+  checks.push(["foreign origin refused", crossSite(req({ host: "forallxworkbook.com", origin: "https://evil.example" }))]);
+  checks.push(["cross-site fetch refused", crossSite(req({ host: "forallxworkbook.com", "sec-fetch-site": "cross-site" })) && crossSite(req({ host: "forallxworkbook.com", "sec-fetch-site": "same-site" }))]);
+  checks.push(["opaque origin refused", crossSite(req({ host: "forallxworkbook.com", origin: "null" }))]);
+  checks.push(["IPv4 bucket is the address", clientBucket(req({ "x-real-ip": "203.0.113.9" })) === "203.0.113.9" && clientBucket(req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" })) === "203.0.113.9"]);
+  checks.push(["IPv6 bucket is the /64", clientBucket(req({ "x-real-ip": "2001:db8:0:1:aaaa::1" })) === "2001:db8:0:1::/64" && clientBucket(req({ "x-real-ip": "2001:DB8:0:1:bbbb:cccc:dddd:eeee" })) === "2001:db8:0:1::/64" && clientBucket(req({ "x-real-ip": "2001:db8::5" })) === "2001:db8:0:0::/64"]);
+  checks.push(["missing address has a bucket", clientBucket(req({})) === "unknown"]);
   // signing in with a sync code: code blob, local, account blob all merge without loss
   const base = (): Progress => ({ read: {}, visited: {}, exercises: {}, notes: {}, bookmarks: [], flash: {} });
   const codeBlob = base(); codeBlob.exercises["c1"] = { status: "done", updated: 100 };

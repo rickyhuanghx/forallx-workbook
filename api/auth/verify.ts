@@ -1,10 +1,11 @@
 // POST /api/auth/verify { token } -> { email } and sets the session cookie.
 // POST rather than GET so that link-prefetching mail clients cannot burn the one-time token.
-import { consumePending, findOrCreateAccount, json, secret, sessionCookie, signSession } from "../../src/server/auth.js";
+import { consumePending, crossSite, findOrCreateAccount, json, secret, sessionCookie, signSession } from "../../src/server/auth.js";
 
 export async function POST(request: Request): Promise<Response> {
+  if (crossSite(request)) return json(403, { error: "cross-site" });
   let body: { token?: unknown };
-  try { body = await request.json(); } catch { return json(400, { error: "bad json" }); }
+  try { body = (await request.json()) ?? {}; } catch { return json(400, { error: "bad json" }); }
   const token = typeof body.token === "string" ? body.token : "";
   const email = await consumePending(token);
   if (!email) return json(400, { error: "invalid or expired" });

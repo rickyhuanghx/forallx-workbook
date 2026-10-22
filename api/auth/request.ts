@@ -1,12 +1,13 @@
 // POST /api/auth/request { email } -> { ok: true }. Emails a one-time sign-in link.
-import { appUrl, createPending, json, normalizeEmail, overLimit, sendMail, signInEmail } from "../../src/server/auth.js";
+import { appUrl, clientBucket, createPending, crossSite, json, normalizeEmail, overLimit, sendMail, signInEmail } from "../../src/server/auth.js";
 
 export async function POST(request: Request): Promise<Response> {
+  if (crossSite(request)) return json(403, { error: "cross-site" });
   let body: { email?: unknown };
-  try { body = await request.json(); } catch { return json(400, { error: "bad json" }); }
+  try { body = (await request.json()) ?? {}; } catch { return json(400, { error: "bad json" }); }
   const email = normalizeEmail(body.email);
   if (!email) return json(400, { error: "bad email" });
-  if (await overLimit(email)) return json(429, { error: "too many requests" });
+  if (await overLimit(email, clientBucket(request))) return json(429, { error: "too many requests" });
   const token = await createPending(email);
   const link = `${appUrl(request)}/login?token=${token}`;
   try {
