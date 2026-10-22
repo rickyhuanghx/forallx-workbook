@@ -44,6 +44,15 @@ export function BlockNode({ block, chapterId }: { block: Block; chapterId?: stri
       );
     }
     case "displaymath":
+      // a numbered float without a tabular (e.g. Table 47.1, a list of equivalences)
+      if (block.id || block.caption) {
+        return (
+          <figure className="tbl-wrap" id={block.id}>
+            <Math latex={alignedLatex(block.latex, block.env)} display />
+            {block.caption && <figcaption>{block.number && <span className="tbl-num">Table {block.number}.</span>} <Inlines nodes={block.caption} chapterId={chapterId} /></figcaption>}
+          </figure>
+        );
+      }
       return <Math latex={alignedLatex(block.latex, block.env)} display />;
     case "fitch":
       return <Fitch lines={block.lines} />;
@@ -51,7 +60,9 @@ export function BlockNode({ block, chapterId }: { block: Block; chapterId?: stri
       return <Table block={block} chapterId={chapterId} />;
     case "figure":
       return block.svg
-        ? <figure className="figure" aria-label={block.alt} dangerouslySetInnerHTML={{ __html: block.svg }} />
+        ? block.alt
+          ? <figure className="figure" aria-label={block.alt} dangerouslySetInnerHTML={{ __html: block.svg }} />
+          : <figure className="figure" aria-hidden="true" dangerouslySetInnerHTML={{ __html: block.svg }} />
         : <figure className="figure figure-alt"><figcaption>{block.alt}</figcaption></figure>;
     case "space":
       return <div className="vspace" />;
@@ -111,7 +122,7 @@ function List({ block, chapterId }: { block: Extract<Block, { type: "list" }>; c
     return (
       <ol className={kind}>
         {block.items.map((it, i) => (
-          <li key={i} className={it.label !== undefined && it.label.length === 0 ? "li-unlabelled" : undefined}>
+          <li key={i} id={it.anchor} className={it.label !== undefined && it.label.length === 0 ? "li-unlabelled" : undefined}>
             {it.label && it.label.length ? <span className="li-label"><Inlines nodes={it.label} chapterId={chapterId} /></span> : null}
             <ItemBody item={it} chapterId={chapterId} />
           </li>

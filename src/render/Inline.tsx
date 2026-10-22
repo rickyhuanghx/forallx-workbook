@@ -30,7 +30,7 @@ export function InlineNode({ node, chapterId }: { node: Inline; chapterId?: stri
     case "code":
       return <code>{node.text}</code>;
     case "define":
-      return <dfn className="define" id={"def-" + slug(node.term)}><Inlines nodes={node.children} chapterId={chapterId} /></dfn>;
+      return <dfn className="define" id={node.anchor ?? "def-" + slug(node.term)}><Inlines nodes={node.children} chapterId={chapterId} /></dfn>;
     case "math":
       return <Math latex={node.latex} display={!!node.display} />;
     case "footnote":
@@ -59,13 +59,22 @@ export function InlineNode({ node, chapterId }: { node: Inline; chapterId?: stri
 const pb = (n: Inline): Inline => (n.type === "parbreak" ? { type: "br" } : n);
 
 function RefLink({ node, chapterId }: { node: Extract<Inline, { type: "ref" }>; chapterId?: string }) {
+  // "chapters 7, 18 and 29", "parts II to IV": each number links to its own target
+  if (node.segments && !node.children) {
+    return <>{node.segments.map((s, i) => s.href
+      ? <RefAnchor key={i} href={s.href} chapterId={chapterId}>{s.text}</RefAnchor>
+      : <Fragment key={i}>{s.text}</Fragment>)}</>;
+  }
   const text = node.children ? <Inlines nodes={node.children} chapterId={chapterId} /> : node.text ?? "?";
   if (!node.href) return <span className="ref-missing">{text}</span>;
+  return <RefAnchor href={node.href} chapterId={chapterId}>{text}</RefAnchor>;
+}
+
+function RefAnchor({ href, chapterId, children }: { href: string; chapterId?: string; children: ReactNode }) {
   // same-chapter anchors use plain hash links so the browser scrolls
-  const href = node.href;
   const sameChapter = chapterId && href.startsWith(`/read/${chapterId}#`);
-  if (sameChapter) return <a className="ref" href={href.slice(href.indexOf("#"))}>{text}</a>;
-  return <Link className="ref" to={href}>{text}</Link>;
+  if (sameChapter) return <a className="ref" href={href.slice(href.indexOf("#"))}>{children}</a>;
+  return <Link className="ref" to={href}>{children}</Link>;
 }
 
 function Footnote({ n, children }: { n: number; children: ReactNode }) {

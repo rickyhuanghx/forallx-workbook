@@ -4,10 +4,10 @@ export type Inline =
   | { type: "text"; text: string }
   | { type: "emph" | "strong" | "sc" | "nobr" | "u" | "sup" | "box"; children: Inline[] }
   | { type: "code"; text: string }
-  | { type: "define"; term: string; children: Inline[] }
+  | { type: "define"; term: string; anchor?: string; children: Inline[] }
   | { type: "math"; latex: string; display?: boolean }
   | { type: "footnote"; n: number; children: Inline[] }
-  | { type: "ref"; label: string; variant: string; text?: string; href?: string; hrefs?: string[]; children?: Inline[] }
+  | { type: "ref"; label: string; variant: string; text?: string; href?: string; hrefs?: string[]; href2?: string; segments?: RefSegment[]; children?: Inline[] }
   | { type: "gls"; key: string; text?: string; plural?: boolean }
   | { type: "link"; href: string; children: Inline[] }
   | { type: "blank"; sub?: string }
@@ -15,6 +15,9 @@ export type Inline =
   | { type: "br" }
   | { type: "parbreak" }
   | { type: "block"; block: Block };
+
+/** One piece of a multi-target reference ("chapters 7, 18 and 29"); pieces with an href are links. */
+export interface RefSegment { text: string; href?: string }
 
 export interface FitchLine {
   num: string;
@@ -35,7 +38,7 @@ export type Block =
   | { type: "heading"; level: number; number?: string; children: Inline[]; id: string }
   | { type: "list"; kind: string; items: ListItem[] }
   | { type: "quote" | "center" | "factoid" | "columns" | "answer"; children: Block[] }
-  | { type: "displaymath"; latex: string; env?: string }
+  | { type: "displaymath"; latex: string; env?: string; id?: string; number?: string; caption?: Inline[] }
   | { type: "fitch"; lines: FitchLine[] }
   | { type: "table"; cols: TableCol[]; rows: TableRow[]; truthTable: boolean; caption?: Inline[]; number?: string; id?: string }
   | { type: "figure"; svg: string | null; alt: string }
@@ -48,6 +51,8 @@ export interface ListItem {
   label?: Inline[];
   children: Block[];
   id?: string;
+  /** DOM anchor of a labelled item in a numbered list of running text */
+  anchor?: string;
   formulas?: string[];
   solution?: Block[];
 }

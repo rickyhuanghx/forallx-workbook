@@ -595,15 +595,19 @@ class Renderer:
                 flush()
                 out.append({"type": "displaymath", "latex": convert_math(n.raw)})
             elif isinstance(n, Env):
+                # render the buffered text first, so a \label in it binds to the
+                # heading before it and not to the last item of the list that follows
+                flush()
                 blk = self.env_block(n)
-                if blk is None:
-                    cur.append(n)
-                else:
-                    flush()
-                    if isinstance(blk, list):
-                        out.extend(blk)
-                    else:
-                        out.append(blk)
+                if isinstance(blk, list):
+                    out.extend(blk)
+                elif blk is not None:
+                    out.append(blk)
+            elif isinstance(n, Cmd) and n.name == "bmlDescription":
+                # the accessible description that follows a tikzpicture
+                fig = out[-1] if out and out[-1].get("type") == "figure" else None
+                if fig is not None and not fig.get("alt") and n.args:
+                    fig["alt"] = re.sub(r"\s+", " ", plain(self.inlines(n.args[0].children))).strip()
             elif isinstance(n, Cmd) and n.name in self.macros:
                 flush()
                 out.extend(self.blocks(self.macros[n.name].children))
@@ -732,24 +736,30 @@ class Renderer:
         if name in ("flushleft", "flushright", "raggedright", "raggedleft", "minipage",
                     "Spacing", "spacing", "small", "footnotesize", "table", "figure",
                     "sidewaystable", "document", "bmlimage", "arialabel"):
-            inner = self.blocks(e.children)
             if name in ("table", "sidewaystable"):
+                # number the float before its contents, so the \label after \caption
+                # binds to this table (not to the previous target)
                 self.table_num += 1
                 num = f"{self.chap_label()}.{self.table_num}"
+                anchor = f"table-{num.replace('.', '-')}"
+                self.set_target("table", num, anchor, "Table " + num)
+            inner = self.blocks(e.children)
+            if name in ("table", "sidewaystable"):
                 cap = [b for b in inner if b["type"] == "caption"]
-                self.set_target("table", num, f"table-{num.replace('.', '-')}", "Table " + num)
-                # attach caption + label to the table block
-                for b in inner:
-                    if b["type"] == "table":
-                        b["number"] = num
-                        b["id"] = f"table-{num.replace('.', '-')}"
-                        if cap:
-                            b["caption"] = cap[0]["children"]
-                inner = [b for b in inner if b["type"] != "caption"]
-                # labels inside the table env come after the caption; re-bind
-                for n in e.children:
-                    if isinstance(n, Cmd) and n.name == "label":
-                        self.add_label(n.args[0].raw.strip())
+                # attach number, anchor and caption to the table block; a float with no
+                # tabular (e.g. an align* of equivalences) carries them on its first block
+                host = next((b for b in inner if b["type"] == "table"), None)
+                if host is None:
+                    host = next((b for b in inner if b["type"] == "displaymath"), None)
+                if host is not None:
+                    host["number"] = num
+                    host["id"] = anchor
+                    if cap:
+                        host["caption"] = cap[0]["children"]
+                    inner = [b for b in inner if b["type"] != "caption"]
+                else:
+                    inner = [{"type": "para", "children": b["children"]} if b["type"] == "caption" else b
+                             for b in inner]
             if name == "flushright":
                 for b in inner:
                     if b["type"] == "para":
@@ -827,12 +837,26 @@ class Renderer:
             else:
                 cur["nodes"].append(n)
         out_items = []
+        if kind == "enumerate" and e.opts and e.opts[0]:
+            m = re.search(r"start\s*=\s*(\d+)", e.opts[0])
+            if m:
+                self.enum = int(m.group(1)) - 1
+        local = 0
         for it in items:
             item = {}
             if kind == "enumerate":
                 self.enum += 1
                 item["n"] = self.enum
                 self.set_target("item", str(self.enum), f"item-{self.enum}", f"sentence {self.enum}")
+            elif kind in ("compactlist", "numberlist", "factoidnumber") and it["label"] is None:
+                # a numbered list in running text (e.g. the Subsidiary Results of the
+                # Functional Completeness Theorem): a \label in an item refers to its number
+                local += 1
+                labs = [x.args[0].raw.strip() for x in it["nodes"] if isinstance(x, Cmd) and x.name == "label"]
+                if labs and not self.in_exercises:
+                    anchor = "li-" + slug(labs[0])
+                    self.set_target("item", str(local), anchor, f"item {local}")
+                    item["anchor"] = anchor
             if it["label"] is not None:
                 raw = it["label"]
                 if kind == "ekey" and re.fullmatch(r"[A-Za-z](_\{?\d+\}?)?", raw.strip()):
@@ -969,10 +993,18 @@ class Renderer:
         cell = []
         hline_pending = 0
         caption = None
+        multi = None   # a \multicolumn is the whole content of its cell
 
         def end_cell():
-            nonlocal cell
-            row.append({"children": trim_inlines(self.inlines(cell))})
+            nonlocal cell, multi
+            if multi is not None:
+                stray = trim_inlines(self.inlines(cell))
+                if stray:
+                    multi["children"] = multi["children"] + stray
+                row.append(multi)
+                multi = None
+            else:
+                row.append({"children": trim_inlines(self.inlines(cell))})
             cell = []
 
         def end_row():
@@ -996,7 +1028,7 @@ class Renderer:
                 hline_pending = max(hline_pending, 1)
             elif isinstance(n, Cmd) and n.name == "multicolumn":
                 span = int(n.args[0].raw.strip())
-                row.append({"children": trim_inlines(self.inlines(n.args[2].children)), "colspan": span})
+                multi = {"children": trim_inlines(self.inlines(n.args[2].children)), "colspan": span}
                 cell = []
             elif isinstance(n, Cmd) and n.name == "caption":
                 caption = self.arg_inlines(n, len(n.args) - 1)
@@ -1007,7 +1039,7 @@ class Renderer:
             else:
                 cell.append(n)
         # final row (no trailing \\)
-        if row or (cell and any(isinstance(x, (Cmd, Math, Group)) or (isinstance(x, Text) and x.text.strip()) for x in cell)):
+        if row or multi is not None or (cell and any(isinstance(x, (Cmd, Math, Group)) or (isinstance(x, Text) and x.text.strip()) for x in cell)):
             end_row()
         else:
             if hline_pending:
@@ -1108,6 +1140,62 @@ def split_chapters(nodes):
     return chunks
 
 
+_DEF_RE = re.compile(r"\\def\\([A-Za-z@]+)\s*\{")
+_CS_RE = re.compile(r"\\([A-Za-z@]+)")
+
+
+def expand_defs(src: str) -> str:
+    """Expand parameterless \\def\\name{body} macros at the text level, in source order.
+
+    TeX expands a macro with the definition current at the point of use, so a macro
+    redefined later in the file (\\tmptable in the proof-theory chapter) must not be
+    replaced by its last definition. Expanding before parsing also puts any `&` and
+    `\\\\` in the body where the tabular parser can see them. Comments are copied
+    verbatim (never expanded into). Macros the converter already maps natively
+    (e.g. \\mathem) are left to the node-level handler, so their output is unchanged."""
+    native = set(MATH_SIMPLE) | IGNORE_CMDS | set(TEXT_CMDS) | set(SYMBOL_CMDS)
+    native.discard("def")
+    macros: dict[str, str] = {}
+    out = []
+    i, n = 0, len(src)
+    while i < n:
+        c = src[i]
+        if c == "%":
+            j = src.find("\n", i)
+            j = n if j == -1 else j
+            out.append(src[i:j])
+            i = j
+            continue
+        if c != "\\":
+            out.append(c)
+            i += 1
+            continue
+        m = _DEF_RE.match(src, i)
+        if m and m.group(1) not in native:
+            k, d = m.end(), 1
+            while k < n and d:
+                if src[k] == "\\":
+                    k += 2
+                    continue
+                if src[k] == "{":
+                    d += 1
+                elif src[k] == "}":
+                    d -= 1
+                k += 1
+            macros[m.group(1)] = src[m.end():k - 1]
+            i = k
+            continue
+        m = _CS_RE.match(src, i)
+        if m:
+            name = m.group(1)
+            out.append(macros[name] if name in macros else m.group(0))
+            i = m.end()
+            continue
+        out.append(src[i:i + 2])  # control symbol such as \% or \\
+        i += 2
+    return "".join(out)
+
+
 def handle_defs(nodes, r: Renderer):
     """Process \\def\\name{body} (parameterless) anywhere in the node list."""
     out = []
@@ -1163,6 +1251,22 @@ def flatten_items(blocks):
         elif b["type"] in ("columns", "center"):
             items.extend(flatten_items(b["children"]))
     return items
+
+
+def fold_example_enumerate(part):
+    """A part whose only numbered list is an `enumerate` of example sentences (26 A:
+    "Consider the sentence, 19. Every officer except Pavel ... Symbolize this sentence")
+    asks one question; it is not a list of exercise items. The whole part becomes a
+    single item, so the instructions come before the answer box and the sentence keeps
+    its book number and its #item-N anchor. (The item count stays one, so the item id
+    is unchanged.)"""
+    lists = [b for b in part["blocks"]
+             if b["type"] == "list" and b["kind"] in ("compactlist", "numberlist", "enumerate")]
+    if len(lists) != 1 or lists[0]["kind"] != "enumerate":
+        return
+    if flatten_items([b for b in part["blocks"] if b is not lists[0]]):
+        return  # other item lists nested in columns/center: leave alone
+    part["blocks"] = [{"type": "list", "kind": "compactlist", "items": [{"children": part["blocks"]}]}]
 
 
 def classify_part(chapter_num: int, part: dict) -> dict:
@@ -1267,7 +1371,7 @@ def convert_book():
         path = os.path.join(SRC, fname)
         with open(path, encoding="utf-8") as f:
             src = preprocess(f.read())
-        src = protect_urls(src)
+        src = expand_defs(protect_urls(src))
         p = Parser(src, report, fname)
         nodes = p.parse()
         nodes = handle_defs(nodes, r)
@@ -1310,6 +1414,7 @@ def convert_book():
             body, parts = build_exercises(blocks, r.chap_num, r)
             ch["blocks"] = body
             for part in parts:
+                fold_example_enumerate(part)
                 part["items"] = flatten_items(part["blocks"])
                 for idx, it in enumerate(part["items"], 1):
                     it["id"] = f"{cid}.{part['letter']}.{idx}"
@@ -1359,10 +1464,21 @@ def convert_book():
     merge_solutions(chapters_out, sols)
 
     # ---- resolve refs & glossary links, count things
+    PART_FIRST.clear()
+    PART_FIRST.update({p["number"]: p["chapters"][0]["id"] for p in book["parts"] if p["chapters"]})
     gloss_keys = {g["key"]: g for g in book["glossary"]}
     for ch in chapters_out:
+        walk_lists(ch, strip_page_prefix)
         walk(ch, lambda n: resolve_inline(n, book["labels"], gloss_keys, ch))
+        walk(ch, flatten_nested_refs)
+        unique_define_anchors(ch)
         count_blocks(ch)
+    # glossary descriptions carry refs and terms too
+    for g in book["glossary"]:
+        where = {"id": g.get("chapter") or "glossary"}
+        for key in ("nameInlines", "description"):
+            walk(g[key], lambda n: resolve_inline(n, book["labels"], gloss_keys, where))
+            walk(g[key], flatten_nested_refs)
 
     # ---- write
     for ch in chapters_out:
@@ -1400,7 +1516,7 @@ def convert_solutions(book):
         path = os.path.join(SRC, "solutions", f"forallx-sol-{f}.tex")
         with open(path, encoding="utf-8") as fh:
             src = preprocess(fh.read())
-        src = protect_urls(src)
+        src = expand_defs(protect_urls(src))
         p = Parser(src, report, "sol-" + f)
         nodes = handle_defs(p.parse(), r)
         # split by chapter / stepcounter
@@ -1434,6 +1550,10 @@ def convert_solutions(book):
                 parts[b["letter"]] = cur
             elif cur is not None:
                 cur["blocks"].append(b)
+        if not parts and blocks:
+            # a chapter whose exercises have no \problempart (chapter 1): the book's
+            # part has the empty letter, so the whole chapter is that part's solution
+            parts[""] = {"letter": "", "blocks": blocks}
         for letter, part in parts.items():
             part["items"] = extract_item_answers(part["blocks"])
             part["partAnswers"] = [b for b in part["blocks"] if b["type"] == "answer"]
@@ -1471,14 +1591,60 @@ def extract_item_answers(blocks):
     return items
 
 
+def _question_text(blocks) -> str:
+    """Normalised text + maths of exercise questions, for matching book against solutions."""
+    out = []
+
+    def fn(n):
+        t = n.get("type")
+        if t == "text":
+            out.append(n["text"])
+        elif t in ("math", "displaymath"):
+            out.append(n["latex"])
+        elif t == "fitch":
+            out.extend(ln["formula"] for ln in n["lines"])
+    walk(blocks, fn)
+    s = re.sub(r"\\[A-Za-z]+", " ", " ".join(out).lower())
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+def match_solution_parts(ch, sol_parts):
+    """Map each book part letter to a solutions part letter.
+
+    By default the letters correspond. When a part's questions clearly differ from the
+    same-letter solutions part but clearly match another one (the solutions booklet
+    prints the T and S4 parts of chapter 44 in the opposite order), use that one."""
+    from difflib import SequenceMatcher
+    book_txt = {p["letter"]: _question_text([it["children"] for it in p["items"]]) for p in ch["exercises"]}
+    sol_txt = {L: _question_text([it["question"] for it in sp["items"]]) for L, sp in sol_parts.items()}
+
+    def sim(a, b):
+        return SequenceMatcher(None, a, b, autojunk=False).ratio() if a and b else None
+
+    assign = {L: L for L in book_txt}
+    suspect = {L for L in book_txt if (s := sim(book_txt[L], sol_txt.get(L, ""))) is not None and s < 0.6}
+    taken = set()
+    for L in sorted(suspect):
+        cands = [(sim(book_txt[L], sol_txt[M]), M) for M in sol_txt
+                 if M != L and M not in taken and (M in suspect or M not in book_txt)]
+        cands = [(s, M) for s, M in cands if s is not None and s >= 0.8]
+        if cands:
+            s, M = max(cands)
+            assign[L] = M
+            taken.add(M)
+            note("solution part matched by content", f"{ch['id']} part {L} <- solutions part {M} ({s:.2f})")
+    return assign
+
+
 def merge_solutions(chapters, sols):
     for ch in chapters:
         if not ch["id"].startswith("ch"):
             continue
         n = int(ch["id"][2:])
         sol_parts = sols.get(n, {})
+        assign = match_solution_parts(ch, sol_parts)
         for part in ch["exercises"]:
-            sp = sol_parts.get(part["letter"])
+            sp = sol_parts.get(assign[part["letter"]])
             if not sp:
                 continue
             counts["parts-with-solution-file"] += 1
@@ -1528,7 +1694,9 @@ def resolve_inline(n: dict, labels: dict, gloss: dict, ch: dict):
                 note("unresolved ref", f"{ch['id']}: {lab}")
             n["text"] = n.get("text") or "?"
             return
-        n["href"] = ref_href(tgt)
+        href = ref_href(tgt)
+        if href:
+            n["href"] = href
         v = n.get("variant", "cref")
         if v == "hyperref":
             return
@@ -1537,20 +1705,42 @@ def resolve_inline(n: dict, labels: dict, gloss: dict, ch: dict):
             return
         if v == "pageref":
             v = "cref"
-        text = ref_text(tgt, cap=v[0] == "C")
+        cap = v[0] == "C"
+        text = ref_text(tgt, cap=cap)
         if n.get("labels"):
             tgts = [labels.get(x) for x in n["labels"]]
             if all(tgts):
-                nums = [t["num"] for t in tgts]
-                joined = ", ".join(nums[:-1]) + " and " + nums[-1]
-                n["text"] = ref_text(tgts[0], cap=v[0] == "C", plural=True).rsplit(" ", 1)[0] + " " + joined
-                n["hrefs"] = [ref_href(t) for t in tgts]
+                hrefs = [ref_href(t) for t in tgts]
+                nouns = {simple_noun(t) for t in tgts}
+                if len(nouns) == 1 and None not in nouns:
+                    # "chapters 7, 18, 29, 35 and 47": one plural noun, each number linked
+                    heads = [ref_text(tgts[0], cap=cap, plural=True)] + [t["num"] for t in tgts[1:]]
+                else:
+                    # mixed kinds: "section 10.3 and chapter 13"
+                    heads = [ref_text(t, cap=cap and i == 0) for i, t in enumerate(tgts)]
+                segs = []
+                for i, (h, u) in enumerate(zip(heads, hrefs)):
+                    if i:
+                        segs.append({"text": " and " if i == len(heads) - 1 else ", "})
+                    segs.append({"text": h, "href": u} if u else {"text": h})
+                n["segments"] = segs
+                n["text"] = "".join(s["text"] for s in segs)
+                n["hrefs"] = hrefs
                 return
         if v in ("crefrange", "Crefrange"):
             t2 = labels.get(n.get("label2", ""))
             if t2:
-                text = ref_text(tgt, cap=v[0] == "C", plural=True) + " to " + (t2["num"])
-                n["href2"] = ref_href(t2)
+                if simple_noun(tgt) is not None and simple_noun(tgt) == simple_noun(t2):
+                    first, second = ref_text(tgt, cap=cap, plural=True), t2["num"]
+                else:
+                    first, second = text, ref_text(t2)
+                h2 = ref_href(t2)
+                n["segments"] = [{"text": first, "href": href} if href else {"text": first},
+                                 {"text": " to "},
+                                 {"text": second, "href": h2} if h2 else {"text": second}]
+                text = first + " to " + second
+                if h2:
+                    n["href2"] = h2
         n["text"] = text
     elif t == "gls":
         key = n["key"]
@@ -1567,14 +1757,87 @@ def resolve_inline(n: dict, labels: dict, gloss: dict, ch: dict):
         n["text"] = txt
 
 
+PART_FIRST: dict[str, str] = {}   # part number (roman) -> id of its first chapter
+
+
 def ref_href(tgt):
     chap = tgt.get("chapter")
     anchor = tgt.get("anchor") or ""
     if tgt["kind"] == "part":
-        return f"/part/{tgt['num']}"
+        # the app has no part pages; a part reference opens the part's first chapter
+        first = PART_FIRST.get(tgt["num"])
+        return f"/read/{first}" if first else None
     if tgt["kind"] == "chapter":
         return f"/read/{chap}"
     return f"/read/{chap}#{anchor}" if anchor else f"/read/{chap}"
+
+
+def simple_noun(tgt):
+    """The noun of a 'noun number' reference (None for exercise-style references)."""
+    return {"part": "part", "chapter": "chapter", "section": "section", "subsection": "section",
+            "item": "sentence", "table": "table"}.get(tgt["kind"])
+
+
+def walk_lists(obj, fn):
+    """Call fn(list) on every list inside obj (children arrays and the like)."""
+    if isinstance(obj, dict):
+        for v in obj.values():
+            walk_lists(v, fn)
+    elif isinstance(obj, list):
+        fn(obj)
+        for v in obj:
+            walk_lists(v, fn)
+
+
+_PAGE_PREFIX = re.compile(r"(?:\bpp?\.|\bpage)[\s ]*$")
+
+
+def strip_page_prefix(seq):
+    """`p.~\\pageref{x}`: pages do not exist on the web, so drop the `p.` before the link."""
+    for i in range(1, len(seq)):
+        n, prev = seq[i], seq[i - 1]
+        if isinstance(n, dict) and n.get("type") == "ref" and n.get("variant") == "pageref" \
+                and isinstance(prev, dict) and prev.get("type") == "text":
+            prev["text"] = _PAGE_PREFIX.sub("", prev["text"])
+
+
+def flatten_nested_refs(n):
+    """A reference inside a \\hyperref's link text becomes plain text (no link inside a link)."""
+    if n.get("type") != "ref" or not n.get("children"):
+        return
+
+    def flat(nodes):
+        out = []
+        for x in nodes:
+            if x.get("type") == "ref":
+                x = {"type": "text", "text": x.get("text") or plain(x.get("children", []))}
+            elif isinstance(x.get("children"), list):
+                x = dict(x, children=flat(x["children"]))
+            if x.get("type") == "text" and out and out[-1].get("type") == "text":
+                out[-1] = {"type": "text", "text": out[-1]["text"] + x["text"]}
+            else:
+                out.append(x)
+        return out
+    n["children"] = flat(n["children"])
+
+
+def js_slug(s: str) -> str:
+    """Same as slug() in src/render/Inline.tsx."""
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+
+
+def unique_define_anchors(ch):
+    """A term defined twice in one chapter would give two elements the same id; the
+    second and later ones get an explicit, numbered anchor."""
+    seen: Counter = Counter()
+
+    def fn(n):
+        if n.get("type") == "define":
+            base = "def-" + js_slug(n.get("term", ""))
+            seen[base] += 1
+            if seen[base] > 1:
+                n["anchor"] = f"{base}-{seen[base]}"
+    walk(ch, fn)
 
 
 def ref_text(tgt, cap=False, plural=False):
