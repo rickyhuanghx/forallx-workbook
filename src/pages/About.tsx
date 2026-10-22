@@ -41,8 +41,8 @@ export function About() {
         truth tables, symbolizations and natural-deduction proofs, is new, and so are the progress tracking and glossary cards.
       </p>
       <p>
-        The project is open source and has no advertising and no fees. The code is released under the MIT licence; the
-        repository link will appear here once it is published. The project is not affiliated with or endorsed by the book's
+        The project is open source and has no advertising and no fees. The code is released under the MIT licence and is at
+        {" "}<a href="https://github.com/rickyhuanghx/forallx-workbook" target="_blank" rel="noreferrer">github.com/rickyhuanghx/forallx-workbook</a>. The project is not affiliated with or endorsed by the book's
         authors, the Open Logic Project or the University of Calgary. It is offered as is, without warranty. The checkers were
         validated against the book's own proofs, but they can still be wrong, and where they disagree with the book, the book is right.
       </p>
