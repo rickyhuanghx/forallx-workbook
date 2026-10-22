@@ -11,7 +11,7 @@ import {
 } from "../src/server/auth.js";
 
 const CODE = /^[a-z0-9]{20,64}$/;
-const MAX_BYTES = 512 * 1024;
+const MAX_BYTES = 1024 * 1024;   // a fully worked book is about 400 KB
 
 async function pathFor(request: Request, code: string): Promise<Response | { path: string; kind: "account" | "code" }> {
   const uid = uidFromRequest(request);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useProgress } from "./state/progress";
 import { getAccountEmail, useSyncStatus } from "./state/sync";
@@ -59,7 +59,7 @@ export function App() {
         </button>
       </header>
       <main id="main" className="main">
-        <Outlet />
+        <PageBoundary key={loc.pathname}><Outlet /></PageBoundary>
       </main>
       <footer className="site-foot">
         <p>
@@ -69,4 +69,20 @@ export function App() {
       </footer>
     </div>
   );
+}
+
+/** Catches a render error on one page and shows a way out instead of a blank screen. */
+class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error("page error", e); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="page page-narrow prose">
+        <h1>This page could not be shown</h1>
+        <p>Something went wrong while displaying it. Your progress is safe. <Link to="/">Go to the contents</Link> or <button type="button" className="linkish" onClick={() => location.reload()}>reload</button>.</p>
+      </div>
+    );
+  }
 }

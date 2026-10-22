@@ -55,14 +55,20 @@ export function Search() {
   const [params] = useSearchParams();
   const q = params.get("q") ?? "";
   const [index, setIndex] = useState<Entry[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!book) return;
     const titles: Record<string, string> = {};
     for (const c of book.chapters) titles[c.id] = c.number ? `${c.number}. ${c.title}` : c.title;
     if (!indexPromise) indexPromise = buildIndex(chapterOrder(book), titles);
-    indexPromise.then(setIndex);
-  }, [book]);
+    let live = true;
+    setFailed(false);
+    // a failed build is forgotten so the next attempt fetches again
+    indexPromise.then((i) => { if (live) setIndex(i); }).catch(() => { indexPromise = null; if (live) setFailed(true); });
+    return () => { live = false; };
+  }, [book, attempt]);
 
   const results = useMemo(() => {
     if (!index || !q.trim()) return [];
@@ -78,7 +84,9 @@ export function Search() {
   return (
     <div className="page page-narrow">
       <header className="page-head"><h1>Search</h1><p className="page-lede">{q ? <>Results for <em>{q}</em></> : "Type a word or symbol in the search box above."}</p></header>
-      {!index && q && <p className="loading">Building the index</p>}
+      {!index && q && (failed
+        ? <p>The search index could not be loaded. Check your connection, then <button type="button" className="linkish" onClick={() => setAttempt((n) => n + 1)}>try again</button>.</p>
+        : <p className="loading">Building the index</p>)}
       {index && q && results.length === 0 && <p className="empty">Nothing matched. Try a different word, or a logical symbol such as ∀.</p>}
       <ol className="results">
         {results.map(({ e }, i) => (

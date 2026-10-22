@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { chapterOrder, useBook, useChapter } from "../content/loader";
-import { useProgress } from "../state/progress";
+import { now, setRead, useProgress } from "../state/progress";
 import { Blocks } from "../render/Blocks";
 import { Inlines } from "../render/Inline";
 import { ExerciseSection } from "../exercises/ExerciseSection";
@@ -15,10 +15,11 @@ export function Reader() {
   const [tocOpen, setTocOpen] = useState(false);
 
   // remember position
+  const loadedId = chapter?.id;
   useEffect(() => {
-    if (!id) return;
-    update((p) => { p.visited[id] = Date.now(); p.last = { chapter: id }; });
-  }, [id]);
+    if (!loadedId) return;
+    update((p) => { p.visited[loadedId] = now(); p.last = { chapter: loadedId }; });
+  }, [loadedId]);
 
   // scroll to hash once content is in
   useEffect(() => {
@@ -99,7 +100,7 @@ export function Reader() {
         {chapter.exercises.length > 0 && <ExerciseSection chapter={chapter} />}
         <footer className="ch-foot">
           <label className="read-toggle">
-            <input type="checkbox" checked={isRead} onChange={(e) => update((p) => { if (e.target.checked) p.read[chapter.id] = Date.now(); else delete p.read[chapter.id]; })} />
+            <input type="checkbox" checked={isRead} onChange={(e) => setRead(chapter.id, e.target.checked)} />
             <span>{isRead ? "Marked as read" : "Mark this chapter as read"}</span>
           </label>
           <nav className="pager" aria-label="Chapter pager">

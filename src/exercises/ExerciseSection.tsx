@@ -2,11 +2,12 @@ import type { Block, Chapter, ExercisePart, ListItem } from "../content/types";
 import { Blocks } from "../render/Blocks";
 import { Inlines, plainText } from "../render/Inline";
 import { useEffect } from "react";
-import { isComplete, recordExercise, useProgress } from "../state/progress";
+import { externalRevision, isComplete, recordExercise, useProgress } from "../state/progress";
 import { Meter } from "../render/Meter";
 import { FreeResponse } from "./FreeResponse";
 import { IsSentence, MainConnective } from "./MainConnective";
-import { ProofEditor, type EditLine, type ProofSpec } from "./ProofEditor";
+import { ProofEditor, type EditLine } from "./ProofEditor";
+import { proofSpecs, type ProofSpec } from "../logic/specs";
 import { tryParse } from "../logic/parser";
 import { toUnicode } from "../logic/print";
 import { Solution } from "./Solution";
@@ -81,7 +82,8 @@ function ExerciseItem({ item, n, part, chapter, instr }: { item: ListItem; n: nu
   return (
     <li className={"exitem" + (isComplete(st) ? " is-done" : st ? " is-tried" : "")} id={`ex-${part.letter}-${n}`}>
       <div className="exitem-q">{body}</div>
-      <Widget item={item} id={id} part={part} chapter={chapter} instr={instr} />
+      {/* remounts when the saved record changes from another device or tab, so the widget shows the newer answer */}
+      <Widget key={externalRevision(id)} item={item} id={id} part={part} chapter={chapter} instr={instr} />
     </li>
   );
 }
@@ -102,69 +104,52 @@ function Widget({ item, id, part, chapter, instr }: { item: ListItem; id: string
       const fitch = item.children.find((b) => b.type === "fitch");
       if (!fitch || fitch.type !== "fitch") return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
       const given: EditLine[] = fitch.lines.map((l) => {
-        const r = tryParse(l.formula);
+        const r = tryParse(l.formula, { logic: part.logic });
         const formula = r.ok ? toUnicode(r.f) : l.formula;
         const rule = l.hypo ? (l.depth === 0 ? "PR" : "AS") : "";
         return { formula, rule, refs: "", depth: l.depth, fixed: true, locked: l.hypo };
       });
       const premises = given.filter((l) => l.depth === 0 && l.rule === "PR").map((l) => l.formula);
       const conclusion = given[given.length - 1].formula;
-      return <ProofEditor exerciseId={id} spec={{ premises, conclusion }} logic={part.logic} solution={sol} chapterId={chapter.id} given={given} />;
+      return <ProofEditor exerciseId={id} spec={{ premises, conclusion }} logic={part.logic} solution={sol} chapterId={chapter.id} partLetter={part.letter} given={given} />;
     }
     case "proof": {
       const specs = proofSpecs(formulas, instr);
       if (!specs.length) return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
-      if (specs.length === 1) return <ProofEditor exerciseId={id} spec={specs[0]} logic={part.logic} solution={sol} chapterId={chapter.id} />;
-      return <MultiProof id={id} specs={specs} logic={part.logic} solution={sol} chapterId={chapter.id} />;
+      const proof = specs.length === 1
+        ? <ProofEditor exerciseId={id} spec={specs[0]} logic={part.logic} solution={sol} chapterId={chapter.id} partLetter={part.letter} />
+        : <MultiProof id={id} specs={specs} logic={part.logic} solution={sol} chapterId={chapter.id} partLetter={part.letter} />;
+      // "give a proof, or an interpretation showing there is none" (ch36 H, I): some items have no proof, so every
+      // item also takes a written interpretation the learner marks done; offered on all items, it gives nothing away
+      if (!/construct an interpretation/.test(instr)) return proof;
+      return (
+        <>
+          {proof}
+          <div className="either-or">
+            <p className="muted">No proof possible? Describe an interpretation that shows it, then mark the exercise done.</p>
+            <FreeResponse exerciseId={id} chapterId={chapter.id} logic={part.logic} />
+          </div>
+        </>
+      );
     }
     default:
       return <FreeResponse exerciseId={id} solution={sol} chapterId={chapter.id} logic={part.logic} />;
   }
 }
 
-/** Work out what has to be proved from the item's formulas and the part's instruction. */
-export /** An item with several proofs: each proof saves under id.k; the item itself is recorded correct once every proof is. */
-function MultiProof({ id, specs, logic, solution, chapterId }: { id: string; specs: ProofSpec[]; logic: ExercisePart["logic"]; solution?: Block[]; chapterId: string }) {
+/** An item with several proofs: each proof saves under id.k; the item itself is recorded correct once every proof is. */
+export function MultiProof({ id, specs, logic, solution, chapterId, partLetter }: { id: string; specs: ProofSpec[]; logic: ExercisePart["logic"]; solution?: Block[]; chapterId: string; partLetter?: string }) {
   const [progress] = useProgress();
   const allDone = specs.every((_, i) => progress.exercises[`${id}.${i + 1}`]?.status === "correct");
   const recorded = progress.exercises[id]?.status === "correct";
   useEffect(() => { if (allDone && !recorded) recordExercise(id, { status: "correct" }); }, [allDone, recorded, id]);
   return (
     <>
-      {specs.map((s, i) => <ProofEditor key={i} exerciseId={`${id}.${i + 1}`} spec={s} logic={logic} solution={i === specs.length - 1 ? solution : undefined} chapterId={chapterId} title={`Proof ${i + 1} of ${specs.length}`} />)}
+      {specs.map((s, i) => <ProofEditor key={i} exerciseId={`${id}.${i + 1}`} spec={s} logic={logic} solution={i === specs.length - 1 ? solution : undefined} chapterId={chapterId} partLetter={partLetter} title={`Proof ${i + 1} of ${specs.length}`} />)}
     </>
   );
 }
 
-function proofSpecs(formulas: string[], instr: string): ProofSpec[] {
-  const arg = formulas.find((f) => /[∴⊢]/.test(f));
-  if (arg) {
-    const m = arg.match(/^(.*?)\s*[∴⊢]\s*(?:_\s*\{?\\?(?:mathbf\{)?([A-Za-z0-9]+)\}?\}?\s*)?(.*)$/);
-    if (!m) return [];
-    const premises = m[1].trim() ? splitTop(m[1]) : [];
-    return [{ premises, conclusion: m[3].trim(), system: m[2] }];
-  }
-  if (!formulas.length) return [];
-  if (/interderivable|provably equivalent|equivalent/.test(instr) && formulas.length >= 2) {
-    return [{ premises: [formulas[0]], conclusion: formulas[1] }, { premises: [formulas[1]], conclusion: formulas[0] }];
-  }
-  if (/contrary|inconsistent/.test(instr)) return [{ premises: formulas, conclusion: "⊥" }];
-  if (/theorem/.test(instr) || formulas.length === 1) return [{ premises: [], conclusion: formulas[0] }];
-  return [];
-}
-
-/** Split "A, B ∧ C, D" on top-level commas (commas inside predicate arguments are kept). */
-function splitTop(s: string): string[] {
-  const out: string[] = [];
-  let depth = 0, cur = "";
-  for (const ch of s) {
-    if (ch === "(" || ch === "[") depth++;
-    if (ch === ")" || ch === "]") depth--;
-    if (ch === "," && depth === 0) { out.push(cur.trim()); cur = ""; continue; }
-    cur += ch;
-  }
-  if (cur.trim()) out.push(cur.trim());
-  return out;
-}
+// proofSpecs (what each proof item asks for) lives in ../logic/specs.ts so the tests can check every item.
 
 export type { Block };

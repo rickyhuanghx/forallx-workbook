@@ -14,6 +14,9 @@ export function FreeResponse({ exerciseId, solution, chapterId, logic = "tfl" }:
   const done = rec?.status === "done" || rec?.status === "correct";
   const ref = useRef<HTMLTextAreaElement>(null);
   const pendingCaret = useRef<number | null>(null);
+  // only text the learner typed here is saved; an untouched box must never overwrite an answer saved elsewhere
+  const edited = useRef(false);
+  const answer = () => (edited.current ? text : rec?.answer ?? text);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -24,7 +27,7 @@ export function FreeResponse({ exerciseId, solution, chapterId, logic = "tfl" }:
     }
   });
 
-  const save = (t: string) => { if (t !== (rec?.answer ?? "")) recordExercise(exerciseId, { status: done ? rec!.status : "attempted", answer: t }); };
+  const save = (t: string) => { if (edited.current && t !== (rec?.answer ?? "")) recordExercise(exerciseId, { status: done ? rec!.status : "attempted", answer: t }); };
 
   return (
     <div className="widget widget-free">
@@ -36,18 +39,19 @@ export function FreeResponse({ exerciseId, solution, chapterId, logic = "tfl" }:
               const el = e.target;
               const r = applyShortcuts(el.value, el.selectionStart ?? el.value.length, logic, true);
               if (r.text !== el.value) pendingCaret.current = r.caret;
+              edited.current = true;
               setText(r.text);
             }}
             onBlur={() => save(text)} />
-          <Palette logic={logic} className="free-palette" onInsert={(s) => { const r = insertAtCaret(ref.current, text, s); pendingCaret.current = r.caret; setText(r.text); ref.current?.focus(); }} />
+          <Palette logic={logic} className="free-palette" onInsert={(s) => { const r = insertAtCaret(ref.current, text, s); pendingCaret.current = r.caret; edited.current = true; setText(r.text); ref.current?.focus(); }} />
         </>
       ) : (
         <button type="button" className="linkish" onClick={() => setOpen(true)}>Write an answer</button>
       )}
       <div className="widget-actions">
-        <MarkDone done={done} onChange={(d) => recordExercise(exerciseId, { status: d ? "done" : "attempted", answer: text })} />
+        <MarkDone done={done} onChange={(d) => recordExercise(exerciseId, { status: d ? "done" : "attempted", answer: answer() })} />
       </div>
-      {solution && <Solution blocks={solution} chapterId={chapterId} onReveal={() => { if (!done) recordExercise(exerciseId, { status: "revealed", answer: text }); }} />}
+      {solution && <Solution blocks={solution} chapterId={chapterId} onReveal={() => { if (!done) recordExercise(exerciseId, { status: "revealed", answer: answer() }); }} />}
     </div>
   );
 }

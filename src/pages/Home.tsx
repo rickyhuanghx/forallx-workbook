@@ -35,7 +35,7 @@ export function Home() {
           <p className="mast-sub">An introduction to formal logic, as an interactive study edition. Read each chapter, then work the exercises with a checker that marks truth tables, symbolizations and natural-deduction proofs as you go.</p>
           <div className="mast-actions">
             {lastRef
-              ? <Link className="btn btn-primary" to={`/read/${lastRef.id}${last?.anchor ? "#" + last.anchor : ""}`}>Continue: {lastRef.number ? `Chapter ${lastRef.number}` : lastRef.title}</Link>
+              ? <Link className="btn btn-primary" to={`/read/${lastRef.id}${last?.anchor ? "#" + last.anchor : ""}`}>Continue: {lastRef.number ? `${lastRef.id.startsWith("app") ? "Appendix" : "Chapter"} ${lastRef.number}` : lastRef.title}</Link>
               : <Link className="btn btn-primary" to="/read/ch01">Start with chapter 1</Link>}
             <Link className="btn" to="/read/preface">Preface</Link>
           </div>

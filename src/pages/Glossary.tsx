@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useBook } from "../content/loader";
 import { Inlines } from "../render/Inline";
-import { useProgress } from "../state/progress";
+import { now, useProgress } from "../state/progress";
 
 export function Glossary() {
   const book = useBook();
@@ -19,13 +19,21 @@ export function Glossary() {
     return needle ? sorted.filter((g) => g.name.toLowerCase().includes(needle)) : sorted;
   }, [book, q]);
 
+  // a term pop-up links to /glossary#g-<key>; scroll there once the list is in
+  const loc = useLocation();
+  useEffect(() => {
+    if (!book || !loc.hash.startsWith("#g-")) return;
+    const el = document.getElementById(decodeURIComponent(loc.hash.slice(1)));
+    if (el) { el.scrollIntoView({ block: "start" }); el.classList.add("target-flash"); setTimeout(() => el.classList.remove("target-flash"), 1600); }
+  }, [book, loc.hash]);
+
   if (!book) return <div className="loading">Loading</div>;
 
   // spaced repetition: due cards first (box 0 = new)
-  const now = Date.now();
+  const nowMs = now();
   const due = book.glossary
     .map((g) => ({ g, f: progress.flash[g.key] ?? { box: 0, due: 0 } }))
-    .filter((x) => x.f.due <= now)
+    .filter((x) => x.f.due <= nowMs)
     .sort((a, b) => a.f.box - b.f.box || a.f.due - b.f.due);
   const current = showing ? book.glossary.find((g) => g.key === showing) : due[0]?.g ?? null;
   const grade = (ok: boolean) => {
@@ -33,7 +41,7 @@ export function Glossary() {
     const prev = progress.flash[current.key] ?? { box: 0, due: 0 };
     const box = ok ? Math.min(prev.box + 1, 5) : 0;
     const days = [0, 1, 3, 7, 14, 30][box];
-    update((p) => { p.flash[current.key] = { box, due: Date.now() + days * 86400000 + (ok ? 0 : 60000) }; });
+    update((p) => { p.flash[current.key] = { box, due: now() + days * 86400000 + (ok ? 0 : 60000) }; });
     setRevealed(false);
     setShowing(null);
   };

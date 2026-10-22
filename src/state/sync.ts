@@ -1,7 +1,7 @@
 // Cross-device sync of the learner's progress through /api/progress, keyed by a secret sync code
 // kept in localStorage. Local storage stays the source of truth; the server copy is merged in.
 import { useEffect, useState } from "react";
-import { getProgress, onProgressSaved, replaceProgress, type ExerciseRecord, type Progress } from "./progress";
+import { getProgress, mergeProgress, onProgressSaved, replaceProgress, setClockOffset, type Progress } from "./progress";
 
 const CODE_KEY = "forallx-sync-code";
 const ACCOUNT_KEY = "forallx-account";
@@ -53,46 +53,8 @@ export function normalizeCode(s: string): string { return s.toLowerCase().replac
 
 // ------------------------------------------------------------------ merge (pure)
 
-function ts(x: unknown): number { return typeof x === "number" && Number.isFinite(x) ? x : 0; }
-
-/** Merge two copies of the progress. Newer wins per record; nothing older than the latest reset survives. */
-export function mergeProgress(local: Progress, remote: Progress): Progress {
-  const clearedAt = Math.max(ts(local.clearedAt), ts(remote.clearedAt));
-  const keep = (t: number) => t >= clearedAt;
-
-  const exercises: Record<string, ExerciseRecord> = {};
-  for (const id of new Set([...Object.keys(local.exercises ?? {}), ...Object.keys(remote.exercises ?? {})])) {
-    const a = local.exercises?.[id], b = remote.exercises?.[id];
-    const pick = !a ? b : !b ? a : ts(b.updated) > ts(a.updated) ? b : a;
-    if (pick && keep(ts(pick.updated))) exercises[id] = pick;
-  }
-
-  const maxMap = (x: Record<string, number> = {}, y: Record<string, number> = {}) => {
-    const out: Record<string, number> = {};
-    for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
-      const v = Math.max(ts(x[k]), ts(y[k]));
-      if (keep(v)) out[k] = v;
-    }
-    return out;
-  };
-  const read = maxMap(local.read, remote.read);
-  const visited = maxMap(local.visited, remote.visited);
-
-  const latest = (m: Record<string, number> = {}) => Math.max(0, ...Object.values(m).map(ts));
-  const last = latest(remote.visited) > latest(local.visited) ? (remote.last ?? local.last) : (local.last ?? remote.last);
-
-  const flash: Progress["flash"] = {};
-  for (const k of new Set([...Object.keys(local.flash ?? {}), ...Object.keys(remote.flash ?? {})])) {
-    const a = local.flash?.[k], b = remote.flash?.[k];
-    flash[k] = (!a ? b : !b ? a : ts(b.due) > ts(a.due) ? b : a)!;
-  }
-
-  const notes: Record<string, string> = { ...(remote.notes ?? {}) };
-  for (const [k, v] of Object.entries(local.notes ?? {})) if (v) notes[k] = v;
-  const bookmarks = Array.from(new Set([...(remote.bookmarks ?? []), ...(local.bookmarks ?? [])]));
-
-  return { ...local, exercises, read, visited, last, flash, notes, bookmarks, clearedAt: clearedAt || undefined, theme: local.theme };
-}
+// The merge lives in progress.ts, where other tabs are merged in too; re-exported for callers and tests.
+export { mergeProgress } from "./progress";
 
 // ------------------------------------------------------------------ transport
 
@@ -104,10 +66,20 @@ function signedOutLocally() {
   setStatus({ state: "off" });
 }
 
+/** Server clock minus this device's, from the Date header, so a device with a wrong clock stamps records sensibly. */
+function measureClock(r: Response, sentAt: number) {
+  const d = Date.parse(r.headers.get("date") ?? "");
+  if (Number.isFinite(d)) setClockOffset(d + 500 - (sentAt + Date.now()) / 2);
+}
+
+class TooLarge extends Error { constructor() { super("Your saved progress is too large to sync. Export a backup on this page, then remove old Lab work."); } }
+
 async function fetchRemote(t: Target): Promise<{ data: Progress; updated: number } | null> {
   // a sync code travels in a header, not the URL, so it stays out of request logs
   const headers: Record<string, string> = t.kind === "code" ? { "x-sync-code": t.code } : {};
+  const sentAt = Date.now();
   const r = await fetch(ENDPOINT, { cache: "no-store", headers, credentials: "same-origin" });
+  measureClock(r, sentAt);
   if (r.status === 404) return null;
   if (r.status === 401 && t.kind === "account") throw new SignedOut();
   if (!r.ok) throw new Error(`server ${r.status}`);
@@ -118,6 +90,7 @@ async function pushRemote(t: Target, data: Progress): Promise<number> {
   const body = t.kind === "code" ? { code: t.code, data } : { data };
   const r = await fetch(ENDPOINT, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" });
   if (r.status === 401 && t.kind === "account") throw new SignedOut();
+  if (r.status === 413) throw new TooLarge();
   if (!r.ok) throw new Error(`server ${r.status}`);
   return (await r.json()).updated as number;
 }
@@ -133,30 +106,30 @@ function schedulePush(delay = 1500) {
   pushTimer = setTimeout(() => { pushTimer = null; void pushNow(); }, delay);
 }
 
+/**
+ * Upload local changes. The server keeps one whole copy, so this always reads and merges the server copy first
+ * (pullAndMerge); a blind upload would erase whatever another device saved since this one last pulled.
+ */
 async function pushNow(): Promise<void> {
-  const t = target();
-  if (!t || pushing) return;
+  if (!target() || pushing) return;
   pushing = true;
   dirty = false;
-  setStatus({ state: "syncing", at: status.at });
   try {
-    const at = await pushRemote(t, getProgress());
-    setStatus({ state: "synced", at });
-  } catch (e) {
-    if (e instanceof SignedOut) { dirty = false; signedOutLocally(); return; }
-    dirty = true;
-    setStatus({ state: "error", at: status.at, error: (e as Error).message });
+    await pullAndMerge();
+    if (status.state === "error" && !tooLarge) dirty = true;
   } finally {
     pushing = false;
     if (dirty) schedulePush(5000);
   }
 }
+let tooLarge = false;
 
 /** Pull the server copy, merge it into local storage, and push the result if anything differed. */
 export async function pullAndMerge(): Promise<void> {
   const t = target();
   if (!t) return;
   setStatus({ state: "syncing", at: status.at });
+  tooLarge = false;
   try {
     const remote = await fetchRemote(t);
     const local = getProgress();
@@ -170,7 +143,8 @@ export async function pullAndMerge(): Promise<void> {
       setStatus({ state: "synced", at: remote.updated });
     }
   } catch (e) {
-    if (e instanceof SignedOut) { signedOutLocally(); return; }
+    if (e instanceof SignedOut) { dirty = false; signedOutLocally(); return; }
+    tooLarge = e instanceof TooLarge;
     setStatus({ state: "error", at: status.at, error: (e as Error).message });
   }
 }
@@ -237,7 +211,11 @@ export async function requestSignIn(email: string): Promise<"ok" | "bademail" | 
  * progress is merged in and the result pushed. Local progress is never lost.
  */
 export async function signInWithToken(token: string): Promise<"ok" | "invalid" | "error"> {
-  if (getSyncCode() && !getAccountEmail()) await pullAndMerge();
+  if (getSyncCode() && !getAccountEmail()) {
+    // the code stops being used once signed in, so its progress must be here first; the token is not spent yet
+    await pullAndMerge();
+    if (status.state === "error") return "error";
+  }
   let email: string;
   try {
     const r = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }), credentials: "same-origin" });
@@ -249,8 +227,9 @@ export async function signInWithToken(token: string): Promise<"ok" | "invalid" |
   pushTimer = null;
   setSyncCode(null);
   setAccountEmail(email);
+  // signed in from here on, even if this first merge fails: the token is spent, and sync retries on the next save
   await pullAndMerge();
-  return status.state === "error" ? "error" : "ok";
+  return "ok";
 }
 
 /** End the session on this browser. Progress stays here and on the account. */
