@@ -64,7 +64,7 @@ export function App() {
       <footer className="site-foot">
         <p>
           An independent, free study edition of <em>forall x: Calgary</em> (text CC BY 4.0, code MIT). Not affiliated with or endorsed by the book's authors.
-          Questions or concerns: <a href="mailto:hh695@cam.ac.uk">hh695@cam.ac.uk</a>. <Link to="/about">About and privacy</Link>.
+          Made by Hexuan "Ricky" Huang. Questions or concerns: <a href="mailto:hh695@cam.ac.uk">hh695@cam.ac.uk</a>. <Link to="/about">About and privacy</Link>.
         </p>
       </footer>
     </div>
