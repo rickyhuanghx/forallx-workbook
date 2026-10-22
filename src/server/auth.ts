@@ -14,7 +14,7 @@ export const COOKIE = "forallx_session";
 export const SESSION_DAYS = 180;
 export const LINK_MINUTES = 15;
 export const PER_EMAIL_PER_HOUR = 5;
-export const GLOBAL_PER_DAY = 300;
+export const GLOBAL_PER_DAY = 2000;
 export const CONTACT = "hh695@cam.ac.uk";
 
 export const json = (status: number, body: unknown, extra: Record<string, string> = {}) =>

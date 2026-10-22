@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useProgress } from "./state/progress";
+import { getAccountEmail, useSyncStatus } from "./state/sync";
 
 export function App() {
   const [progress, update] = useProgress();
@@ -8,6 +9,8 @@ export function App() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const theme = progress.theme ?? "auto";
+  useSyncStatus(); // re-render when sign-in state changes
+  const email = getAccountEmail();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -41,6 +44,9 @@ export function App() {
         <form className="search-form" role="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/search?q=${encodeURIComponent(q.trim())}`); }}>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the book" aria-label="Search the book" />
         </form>
+        <Link to="/about#progress" className="account-link" title={email ? `Signed in as ${email}. Progress is saved to your account.` : "Sign in to save your progress across devices"}>
+          {email ? email : "Sign in"}
+        </Link>
         <button type="button" className="theme-btn" onClick={cycleTheme} title={`Theme: ${theme}`} aria-label={`Theme: ${theme}. Click to change`}>
           {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
         </button>

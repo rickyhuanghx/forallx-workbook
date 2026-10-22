@@ -117,6 +117,8 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
 .search-form { margin-left: auto; }
 .search-form input { width: 180px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); }
 .search-form input:focus { width: 240px; border-color: var(--accent); outline: none; }
+.account-link { border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; color: var(--ink-2); font-size: 13px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-link:hover { background: var(--paper-2); text-decoration: none; }
 .theme-btn { background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; color: var(--ink-2); font-size: 13px; }
 @media (max-width: 860px) {
   .topbar { gap: 10px; padding: 0 12px; height: auto; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
@@ -465,7 +467,7 @@ td.is-wrong .tt-cell { border-color: var(--bad); color: var(--bad); }
 
 /* Print */
 @media print {
-  .topbar, .side, .toc-toggle, .widget-actions, .palette, .pl-tools, .theme-btn { display: none !important; }
+  .topbar, .side, .toc-toggle, .widget-actions, .palette, .pl-tools, .theme-btn, .account-link { display: none !important; }
   .reader { display: block; }
   body { background: #fff; color: #000; }
 }

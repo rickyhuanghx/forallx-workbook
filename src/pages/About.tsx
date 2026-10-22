@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { exportProgress, importProgress, resetProgress, useProgress } from "../state/progress";
 import {
   deleteAccount, disableSync, enableSync, formatCode, getAccountEmail, getSyncCode, joinSync, pullAndMerge,
@@ -9,6 +9,12 @@ import {
 const CONTACT = "hh695@cam.ac.uk";
 
 export function About() {
+  const loc = useLocation();
+  useEffect(() => {
+    if (!loc.hash) return;
+    const el = document.getElementById(loc.hash.slice(1));
+    if (el) el.scrollIntoView({ block: "start" });
+  }, [loc.hash]);
   const [, update] = useProgress();
   const [params] = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
