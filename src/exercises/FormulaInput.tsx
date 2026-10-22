@@ -18,11 +18,13 @@ export function insertAtCaret(el: HTMLInputElement | HTMLTextAreaElement | null,
 }
 
 /** The "?" button and the legend of typing shortcuts. Renders inside a flex-wrap palette; the legend takes a full row. */
-export function SymbolHelp({ logic }: { logic: ShortLogic }) {
-  const [open, setOpen] = useState(false);
+export function SymbolHelp({ logic, open: openProp, onToggle }: { logic: ShortLogic; open?: boolean; onToggle?: () => void }) {
+  const [own, setOwn] = useState(false);
+  const open = openProp ?? own;
+  const toggle = onToggle ?? (() => setOwn((o) => !o));
   return (
     <>
-      <button type="button" className="help-btn" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Typing shortcuts">?</button>
+      <button type="button" className="help-btn" tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={toggle} aria-expanded={open} aria-label="Typing shortcuts" title="Typing shortcuts (or press ? in the box)">?</button>
       {open && (
         <div className="shortcut-help" role="note">
           <p>Type these and they turn into symbols as you go. Buttons and pasted ASCII work too.</p>
@@ -39,14 +41,14 @@ export function SymbolHelp({ logic }: { logic: ShortLogic }) {
 }
 
 /** Symbol buttons for a logic, plus the help toggle. */
-export function Palette({ logic, onInsert, disabled, className, extra }: { logic: ShortLogic; onInsert: (s: string) => void; disabled?: boolean; className?: string; extra?: React.ReactNode }) {
+export function Palette({ logic, onInsert, disabled, className, extra, helpOpen, onHelpToggle }: { logic: ShortLogic; onInsert: (s: string) => void; disabled?: boolean; className?: string; extra?: React.ReactNode; helpOpen?: boolean; onHelpToggle?: () => void }) {
   return (
     <div className={"palette" + (className ? " " + className : "")} role="toolbar" aria-label="Symbols">
       {SYMBOLS[logic].map((s) => (
         <button type="button" key={s} tabIndex={-1} onMouseDown={(e) => e.preventDefault()} onClick={() => onInsert(s)} disabled={disabled} aria-label={`Insert ${s}`}>{s}</button>
       ))}
       {extra}
-      <SymbolHelp logic={logic} />
+      <SymbolHelp logic={logic} open={helpOpen} onToggle={onHelpToggle} />
     </div>
   );
 }
@@ -66,11 +68,14 @@ interface Props {
   noPalette?: boolean;
   onFocus?: () => void;
   normalizeOnBlur?: boolean;   // rewrite the text in the book's notation once it parses
+  onHelp?: () => void;         // with noPalette: what a typed "?" does (the owner's palette shows the legend)
 }
 
 /** Text field for a formula, with live typing shortcuts, a symbol palette and a typeset preview. */
-export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEnter, autoFocus, compact, disabled, strict, label, invalid, noPalette, onFocus, normalizeOnBlur }: Props) {
+export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEnter, autoFocus, compact, disabled, strict, label, invalid, noPalette, onFocus, normalizeOnBlur, onHelp }: Props) {
   const ref = useRef<HTMLInputElement>(null);
+  const [help, setHelp] = useState(false);
+  const toggleHelp = onHelp ?? (() => setHelp((o) => !o));
   const pendingCaret = useRef<number | null>(null);
   const id = useId();
   const parsed = useMemo(() => (value.trim() ? tryParse(value, { strict, modal: logic === "ml" }) : null), [value, strict, logic]);
@@ -107,7 +112,12 @@ export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEn
           type="text"
           value={value}
           onChange={(e) => handleChange(e.target)}
-          onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); }
+            // "?" is never part of a formula: it opens the typing legend instead of landing in the box
+            else if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggleHelp(); }
+            else if (e.key === "Escape" && !onHelp && help) { e.preventDefault(); setHelp(false); }
+          }}
           placeholder={placeholder}
           autoFocus={autoFocus}
           disabled={disabled}
@@ -119,7 +129,7 @@ export function FormulaInput({ value, onChange, logic = "tfl", placeholder, onEn
           onFocus={onFocus}
           onBlur={() => { if (normalizeOnBlur && parsed?.ok) { const u = toUnicode(parsed.f); if (u !== value) onChange(u); } }}
         />
-        {!noPalette && <Palette logic={logic} onInsert={insert} disabled={disabled} />}
+        {!noPalette && <Palette logic={logic} onInsert={insert} disabled={disabled} helpOpen={help} onHelpToggle={toggleHelp} />}
       </div>
       {!compact && (
         <div className="finput-preview" aria-live="polite">

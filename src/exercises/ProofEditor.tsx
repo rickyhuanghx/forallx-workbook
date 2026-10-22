@@ -51,6 +51,7 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
   const [showCheck, setShowCheck] = useState(!!saved);
   const [focused, setFocused] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [help, setHelp] = useState(false);   // typing legend under the palette; "?" in any line toggles it
   const insertSymbol = (s: string) => {
     const i = focused ?? lines.findIndex((l) => !l.locked && !l.fixed);
     if (i < 0) return;
@@ -111,7 +112,7 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
                 <span className={"fl-formula" + (hypoLast ? " hypo-last" : "")}>
                   {l.locked || l.fixed
                     ? <Math latex={latexOf(l.formula)} />
-                    : <FormulaInput compact noPalette normalizeOnBlur value={l.formula} onChange={(v) => setLine(i, { formula: v })} logic={logic} onEnter={() => insertAfter(i)} label={`Line ${i + 1} formula`} invalid={showCheck && !res.ok && !!l.formula} onFocus={() => setFocused(i)} />}
+                    : <FormulaInput compact noPalette normalizeOnBlur value={l.formula} onChange={(v) => setLine(i, { formula: v })} logic={logic} onEnter={() => insertAfter(i)} label={`Line ${i + 1} formula`} invalid={showCheck && !res.ok && !!l.formula} onFocus={() => setFocused(i)} onHelp={() => setHelp((o) => !o)} />}
                 </span>
               </span>
               <span className="fl-just pl-just" role="cell">
@@ -137,7 +138,7 @@ export function ProofEditor({ exerciseId, spec, logic, solution, chapterId, titl
         })}
       </div>
       {!given && (
-        <Palette logic={logic} className="pe-palette" onInsert={insertSymbol} />
+        <Palette logic={logic} className="pe-palette" onInsert={insertSymbol} helpOpen={help} onHelpToggle={() => setHelp((o) => !o)} />
       )}
       <div className="widget-actions">
         <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowCheck(true)}>Check proof</button>
